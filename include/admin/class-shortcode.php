@@ -595,22 +595,25 @@ class Shortcode {
                 $properties_data = $properties_data_all;
                 $api_data = [];
                 $categories = [];
-
-                foreach ($properties_data as $key => $value) {
-                    foreach ($value as $key1 => $value1) {
-                        foreach($value1 as $key2 => $value2) {
-                            foreach ($value2['api_data'] as $index => $api_item) {
-                                $new_data = ["page_slug" => $key2];
-                                $id_position = array_search('id', array_keys($api_item));
-                                $properties_data[$key2]['api_data'][$index] = array_merge(
-                                    array_slice($api_item, 0, $id_position + 1),
-                                    $new_data,
-                                    array_slice($api_item, $id_position + 1)
-                                );
+                
+                if(is_array($properties_data) && !empty($properties_data)) {
+                    foreach ($properties_data as $key => $value) {
+                        foreach ($value as $key1 => $value1) {
+                            foreach($value1 as $key2 => $value2) {
+                                foreach ($value2['api_data'] as $index => $api_item) {
+                                    $new_data = ["page_slug" => $key2];
+                                    $id_position = array_search('id', array_keys($api_item));
+                                    $properties_data[$key2]['api_data'][$index] = array_merge(
+                                        array_slice($api_item, 0, $id_position + 1),
+                                        $new_data,
+                                        array_slice($api_item, $id_position + 1)
+                                    );
+                                }
                             }
                         }
                     }
                 }
+
 
                 $api_token = get_option('bragbook_api_token');
                 $websiteproperty_id = get_option('bragbook_websiteproperty_id');
@@ -888,11 +891,6 @@ class Shortcode {
                         </p>
                     </div>
                 </div>
-                <div class="bb-bottom-bar">
-                    <img src="<?php echo BB_PLUGIN_DIR_PATH?>assets/images/myfavs-logo.svg" alt="logo">
-                    <p><span>Use the MyFavorites tool</span> to help communicate your specific goals. If a result speaks to
-                        you, tap the heart.</p>
-                </div>
             </main>
         </div>
         <script>
@@ -1120,7 +1118,7 @@ class Shortcode {
 
         ob_start();
         ?>
-        <div class="bb-main">
+        <div class="bb-main bb-category-shortcode-main">
             <div class="bb-content-boxes">
                 <?php 
                 $patient_count = 1;

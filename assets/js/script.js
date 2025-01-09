@@ -444,10 +444,14 @@ jQuery(document).ready(function ($) {
       type: 'POST',
       url: bb_plugin_data.ajaxurl, // WordPress AJAX URL
       data: formData + '&action=handle_form_submission', // Add action parameter
+      beforeSend: function () {
+        $(".bb-is-required-success").text('Submitting form...');
+      },
       success: function (response) {
+        console.log(response);
         var successMessage = response.data;
         $(".bb-is-required-success").text(successMessage);
-        $(".bb-consultation-form").addClass("bb-display-none");
+        // $(".bb-consultation-form").addClass("bb-display-none");
 
       },
       error: function (xhr, status, error) {
@@ -493,6 +497,7 @@ jQuery(document).ready(function ($) {
   // Intercept the form submission
   $('#bragbook_setting_page').on('submit', function (e) {
     e.preventDefault(); // Prevent the default form submission
+    $('.bb-save-api-settings-status').text('');
     const dataToSend = [];
     const inputs = document.querySelectorAll('input[name^="bb_gallery_page_slug"]');
     inputs.forEach((input) => {
@@ -513,12 +518,18 @@ jQuery(document).ready(function ($) {
         form_data: formData, // Pass serialized form data
         bb_page_keys: dataToSend
       },
+      beforeSend: function() {
+          $('.bb-save-api-status').text('Loading...');
+          $(this).prop('disabled', true);
+      },
       success: function (response) {
         if (response.success) {
-          alert('Settings saved successfully.');
+          $('.bb-save-api-status').text('');
+          $('.bb-save-api-settings-status').text('Settings saved successfully.');
         } else {
-          alert('There was an error saving the settings.');
-        }
+          $('.bb-save-api-status').text('');
+          $('.bb-save-api-settings-status').text('There was an error saving the settings.');
+        } 
       },
       error: function () {
         alert('AJAX request failed.');

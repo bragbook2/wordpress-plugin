@@ -9,9 +9,9 @@ class Ajax_Handler {
         add_action('wp_ajax_handle_form_submission', [$this, 'handle_form_submission']);
         add_action('wp_ajax_nopriv_handle_form_submission', [$this, 'handle_form_submission']);
 
-        add_action( 'wp_ajax_consultation-pagination-load-posts', [$this, 'bb_consultation_pagination_load_posts']);
+        add_action('wp_ajax_consultation-pagination-load-posts', [$this, 'bb_consultation_pagination_load_posts']);
 
-        add_action( 'wp_ajax_nopriv_consultation-pagination-load-posts', [$this, 'bb_consultation_pagination_load_posts']); 
+        add_action('wp_ajax_nopriv_consultation-pagination-load-posts', [$this, 'bb_consultation_pagination_load_posts']); 
         add_action('wp_ajax_bragbook_my_favorite', [$this, 'bragbook_my_favorite_handler']);
         add_action('wp_ajax_nopriv_bragbook_my_favorite', [$this, 'bragbook_my_favorite_handler']);
         add_action('wp_ajax_bb_save_bragbook_settings', [$this, 'bb_save_bragbook_settings']);
@@ -540,12 +540,15 @@ class Ajax_Handler {
             $api_token = get_option('bragbook_api_token');
             $websiteproperty_id = get_option('bragbook_websiteproperty_id');
 
-            $url = "https://www.bragbookv2.com/api/plugin/consultations?apiToken=". $api_token ."&websitepropertyId=". $websiteproperty_id;
+            $api_token_first_index = key($api_token);
+            $api_token_first_value = reset($api_token);
+
+            $url = "https://www.bragbookv2.com/api/plugin/consultations?apiToken=". $api_token_first_value ."&websitepropertyId=". $websiteproperty_id[$api_token_first_index];
             $data = [
                 'name' => $name,
                 'email' => $email,
                 'phone' => $phone,
-                'description' => $description
+                'details' => $description
             ];
             
             $jsonData = json_encode($data);
@@ -562,6 +565,7 @@ class Ajax_Handler {
             $response = curl_exec($ch);
             $responseData = json_decode($response, true);
             curl_close($ch);
+            // $websiteproperty_id[$api_token_first_index]
 
             if (isset($responseData['success']) && $responseData['success'] === true) {
                 $post_id = wp_insert_post(array(
@@ -574,7 +578,8 @@ class Ajax_Handler {
                 if ($post_id) {
                     update_post_meta($post_id, 'bb_email', $email);
                     update_post_meta($post_id, 'bb_phone', $phone);
-                    wp_send_json_success('Thank you!');
+                     wp_send_json_success('Thank you!'); 
+                   // echo "Thank you!";
                 }else {
                     wp_send_json_error('Form submission failed.');
                 }
@@ -991,7 +996,16 @@ class Ajax_Handler {
                                 </td>
                             </tr>
                         </table>
-                        <?php submit_button(); ?>
+                        <table class="form-table submit-button-table">
+                            <tr valign="top">
+                                <td>
+                                    <?php submit_button(); ?>
+                                    <p class="bb-save-api-settings-status"></p>
+                                    <span class="bb-save-api-status"></span>
+                                </td>
+                            </tr>
+                        </table>
+                        
                     </form>
                 </div>                
             </div>
@@ -1119,7 +1133,7 @@ class Ajax_Handler {
     // SEO stuff for plugin selection
     public function bb_get_current_url() {
         $current_link = 'http';
-        if ( $_SERVER["HTTPS"] == "on" ) {
+        if ( isset($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] == "on" ) {
             $current_link .= "s";
         }
         $current_link .= "://";

@@ -24,7 +24,7 @@ Template Name: Consultation Page Template
             <textarea rows="6" name="description" placeholder="How can we help?"></textarea>
             <button type="submit" name="submit">Submit</button>
         </form>
-        <span class="bb-is-required-success">Submitting form...</span>
+        <span class="bb-is-required-success"></span>
     </div>
     <div class="bb-bottom-bar">
         <img src="<?php echo BB_PLUGIN_DIR_PATH; ?>assets/images/fav-logo.svg" alt="logo">

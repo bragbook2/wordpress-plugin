@@ -846,7 +846,7 @@ button.bb-sidebar-toggle.bb-sidebar-head-toggle img {
 }
 
 .bb-content-box-inner-left p,
-.bb-content-box-inner-left p * {
+.bb-content-box-inner-left p *, .case-details {
     font-size: 15px;
     font-family: "Manrope", sans-serif;
 	font-weight: 300;
@@ -2074,12 +2074,25 @@ p.bb-fav-modal-close-button {
 
 
 }
-
+.bb-category-shortcode-main {
+    padding-left: 20px;
+    padding-right: 20px;
+}
 @media only screen and (max-width: 767px) {
    .bb-content-box {
         width: calc(100% - 8px) !important;
     }
+    .bb-category-shortcode-main {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+    .bb-category-shortcode-main .bb-content-box-inner-left {
+        width: 100%;
+    }
 }
+/* .bb-bottom-bar>p {
+    margin: auto;
+} */
 
 @container (max-width: 767px) {
     .bb-sidebar-btn.mobile-footer {
@@ -2268,7 +2281,7 @@ p.bb-fav-modal-close-button {
         flex-direction: column;
         align-items: start;
         min-height: 213px;
-        padding-top: 40px;
+        /* padding-top: 40px; */
         gap: 25px;
         background-position: 70% 50%;
     }
@@ -2276,7 +2289,7 @@ p.bb-fav-modal-close-button {
     .bb-main .bb-bottom-bar>img {
         height: fit-content;
         width: 160px;
-        margin-bottom: 25px;
+        /* margin-bottom: 25px; */
     }
 
     .bb-main>.bb-bottom-bar {
@@ -2284,11 +2297,22 @@ p.bb-fav-modal-close-button {
     }
 
     .bb-main .bb-content-area .bb-bottom-bar {
-        display: none;
-        width: calc(100% + 40px);
-        translate: -20px;
-	min-height: unset;
-    	height: 260px;
+        /* display: none; */
+        /* width: calc(100% + 40px);
+        translate: -20px; */
+    	/* height: 260px; */
+    	min-height: unset;
+        flex-direction: column;
+        align-items: center;
+        height: auto;
+        padding-block: 20px;
+    }
+    .bb-bottom-bar>img {
+        margin-bottom: 10px;
+    }
+    .bb-bottom-bar>p {
+        text-align: center;
+        margin: auto;
     }
 
     .bb-sidebar .search-container {
@@ -2419,7 +2443,7 @@ p.bb-fav-modal-close-button {
     }
 
     .bb-content-boxes {
-        margin-bottom: 130px;
+        /* margin-bottom: 130px; */
     }
 
     .bb-patient-features {
@@ -2506,4 +2530,7 @@ p.bb-fav-modal-close-button {
     color: #ffffff !important;
     background-color: #404040;
     border-radius: 3px;
+}
+.submit-button-table p.submit {
+    padding-bottom: 0;
 }
