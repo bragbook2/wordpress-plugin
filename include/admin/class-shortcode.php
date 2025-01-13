@@ -885,7 +885,7 @@ class Shortcode {
                     
                     <a href="<?=$bb_page_name?>consultation/" class="bb-sidebar-btn">REQUEST A CONSULTATION</a>
                     <div class="bb-bottom-bar">
-                        <img src="<?php echo BB_PLUGIN_DIR_PATH?>assets/images/myfavs-logo.svg" alt="logo">
+                        <img src="<?php echo BB_PLUGIN_DIR_PATH?>assets/images/myfavs-logo.png" alt="logo">
                         <p>
                             <span>Use the MyFavorites tool</span> to help communicate your specific goals. If a result speaks to
                             you, tap the heart.

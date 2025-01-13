@@ -768,7 +768,7 @@ if ($bbrag_case_url == "/".$parts[0]."/consultation/") {
             <div class="bb-fav-modal">
                 <div class="bb-fav-modal-inner">
                     <p class="bb-fav-modal-close-button" onClick="closeModal()">X</p>
-                    <img class="bb-thumbnail" src="<?php echo BB_PLUGIN_DIR_PATH; ?>assets/images/myfavs-logo.svg" alt="logo">
+                    <img class="bb-thumbnail" src="<?php echo BB_PLUGIN_DIR_PATH; ?>assets/images/myfavs-logo.png" alt="logo">
                     <h3>You are Loving these!</h3>
                     <p>To improve the communication between us, keep hearting cases that speak to you. During our
                         consultation, we'll review this collection together so we can discuss your specific goals and
@@ -795,7 +795,7 @@ if ($bbrag_case_url == "/".$parts[0]."/consultation/") {
             </div>
 
             <div class="bb-bottom-bar">
-                <img src="<?php echo BB_PLUGIN_DIR_PATH?>assets/images/myfavs-logo.svg" alt="logo">
+                <img src="<?php echo BB_PLUGIN_DIR_PATH?>assets/images/myfavs-logo.png" alt="logo">
                 <p>
                     <span>Use the MyFavorites tool</span> to help communicate your specific goals. If a result speaks to
                     you, tap the heart.
@@ -1386,7 +1386,7 @@ if ($bbrag_case_url == "/".$parts[0]."/consultation/") {
                 ?>
                 <a href="/<?php echo $parts[0]; ?>/consultation/" class="bb-sidebar-btn mobile-footer">REQUEST A CONSULTATION</a>
                 <div class="bb-bottom-bar">
-                    <img src="<?php echo BB_PLUGIN_DIR_PATH?>assets/images/myfavs-logo.svg" alt="logo">
+                    <img src="<?php echo BB_PLUGIN_DIR_PATH?>assets/images/myfavs-logo.png" alt="logo">
                     <p>
                         <span>Use the MyFavorites tool</span> to help communicate your specific goals. If a result speaks to
                         you, tap the heart.
