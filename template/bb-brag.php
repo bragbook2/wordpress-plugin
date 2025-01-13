@@ -8,7 +8,11 @@ $bbrag_case_url = strtok($_SERVER["REQUEST_URI"], '?');
 $bbragbook_case_url = trim($bbrag_case_url, '/');
 $parts = explode('/', $bbragbook_case_url);
 $page = get_page_by_path($parts[0]);
-$page_id_via_slug = $page->ID;
+
+$page_id_via_slug = "";
+if($page) {
+    $page_id_via_slug = $page->ID;
+}
 
 if (strpos($bbrag_case_url, '/favorites/') !== false) {
     if (count($parts) >= 3) {
@@ -577,7 +581,17 @@ if ($bbrag_case_url == "/".$parts[0]."/consultation/") {
                         $offset = ($page - 1) * $items_per_page;  
                         update_option('bb_matching_case_data_for_ajax', $matching_case_data);
                         $matching_case_data_page = array_slice($matching_case_data, $offset, $items_per_page);
-    
+
+                        $bb_case_ids_procedure_title = "";
+                        if($matching_case_data) {
+                            $bb_case_ids_procedure_title = $matching_case_data[0]['procedure_title'];
+                        }
+                        foreach ($matching_case_data as $matched_case_data) {
+                            $bb_case_ids_list[] = $matched_case_data['id'];
+                        }
+                        update_option('bb_matching_case_count_data', $bb_case_ids_list);
+                        update_option('bb_matching_case_procedure_title', $bb_case_ids_procedure_title);
+
                         foreach($matching_case_data_page as $procedure_data) {
                             $convertedArray = convertKeys($procedure_data['procedureDetails']);
                             $formattedString = strtolower(formatArrayToString($convertedArray));
@@ -625,7 +639,7 @@ if ($bbrag_case_url == "/".$parts[0]."/consultation/") {
                                             $p_c_count = $procedure_data['procedure_case_count'] == NULL ? $patient_count : $procedure_data['procedure_case_count'];
                                             $category_match_id = empty($category_to_match) ? $procedure_data['procedure_id'] : $category_to_match; 
                                             $pro_title = empty($procedure_title) ? $procedure_data['procedure_title'] : $procedure_title; 
-                                            $bb_case_ids_list[] = $procedure_data['photoSets'][0]['caseId'];
+                                            // $bb_case_ids_list[] = $procedure_data['photoSets'][0]['caseId'];
                                             $converted_procedure_name = str_replace(' ', '-', $pro_title); 
                                             $bb_seo_detail = isset($procedure_data['caseDetails'][0]) ? $procedure_data['caseDetails'][0] : [];
 
@@ -728,7 +742,9 @@ if ($bbrag_case_url == "/".$parts[0]."/consultation/") {
                                 $patient_count++;
                             }
                         }
-                        $bb_encode_caseids_list = json_encode($bb_case_ids_list);
+                        $bb_matching_case_count_data = get_option('bb_matching_case_count_data');
+                        $bb_encode_caseids_list = json_encode($bb_matching_case_count_data);
+
                         update_option('bb_caseids_list_' . $page_id_via_slug, $bb_encode_caseids_list);
                         update_option('bb_ajax_path', $parts[0]);
                         ?>
@@ -1117,11 +1133,15 @@ if ($bbrag_case_url == "/".$parts[0]."/consultation/") {
                         
                         <div class="bb-patient-slides">
                             <?php 
+                            // $tet = get_option('bb_matching_case_procedure_title');
                             function update_url($new_case_id, $page_id_via_slug) {
                                 $url = strtok($_SERVER["REQUEST_URI"], '?');
                                 $path_parts = explode('/', $url);
                                 $procedure_id_bb = get_option($new_case_id . '_bb_procedure_id_' . $page_id_via_slug);
                                 $procedure_title = get_option($procedure_id_bb . '_title');
+                                if(empty($procedure_title)) {
+                                    $procedure_title = get_option('bb_matching_case_procedure_title');
+                                }
                                 $converted_procedure_name = str_replace(' ', '-', strtolower($procedure_title));
                                 $converted_procedure_name = removeAccents_brag($converted_procedure_name);
                                 $path_parts[count($path_parts) - 3] = $converted_procedure_name; 
@@ -1164,6 +1184,7 @@ if ($bbrag_case_url == "/".$parts[0]."/consultation/") {
                                     </script>
                                     <?php
                                     }
+
                                     echo '<li class="' . $activeClass . ' bb-single-case"><a href="' . update_url($case_id, $page_id_via_slug) . '">' . $page_count++ . '</a></li>';
                                 }
                                 if($page_count<=2) {
@@ -1366,9 +1387,10 @@ if ($bbrag_case_url == "/".$parts[0]."/consultation/") {
                 <a href="/<?php echo $parts[0]; ?>/consultation/" class="bb-sidebar-btn mobile-footer">REQUEST A CONSULTATION</a>
                 <div class="bb-bottom-bar">
                     <img src="<?php echo BB_PLUGIN_DIR_PATH?>assets/images/myfavs-logo.svg" alt="logo">
-                    <p><span>Use the MyFavorites tool</span> to help communicate your specific goals. If a result speaks to
-                        you, tap the heart.</p>
-                    <a class="button-bar-my-favs-btn" href="/favorites/">View My Favorites</a>
+                    <p>
+                        <span>Use the MyFavorites tool</span> to help communicate your specific goals. If a result speaks to
+                        you, tap the heart.
+                    </p>
                 </div>
             </div>
         </main>
