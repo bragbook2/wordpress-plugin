@@ -2020,7 +2020,6 @@ p.bb-fav-modal-close-button {
 @container (max-width: 991px) {
 
     .bb-filter-content {
-        /* padding: 15px 15px; */
         gap: 20px;
         right: 0;
         left: auto;
@@ -2090,9 +2089,6 @@ p.bb-fav-modal-close-button {
         width: 100%;
     }
 }
-/* .bb-bottom-bar>p {
-    margin: auto;
-} */
 
 @container (max-width: 767px) {
     .bb-sidebar-btn.mobile-footer {
@@ -2198,10 +2194,10 @@ p.bb-fav-modal-close-button {
     .bb-main .bb-sidebar.active {
         left: 0;
         top: 10px;
-	height: 100vh;
-	width: 100vw !important;
-	top: 0;
-	padding-top: 75px;
+        height: 100vh;
+        width: 100vw !important;
+        top: 0;
+        padding-top: 75px;
     }
 
     .bb-main>* {
@@ -2281,7 +2277,6 @@ p.bb-fav-modal-close-button {
         flex-direction: column;
         align-items: start;
         min-height: 213px;
-        /* padding-top: 40px; */
         gap: 25px;
         background-position: 70% 50%;
     }
@@ -2289,7 +2284,6 @@ p.bb-fav-modal-close-button {
     .bb-main .bb-bottom-bar>img {
         height: fit-content;
         width: 160px;
-        /* margin-bottom: 25px; */
     }
 
     .bb-main>.bb-bottom-bar {
@@ -2297,10 +2291,6 @@ p.bb-fav-modal-close-button {
     }
 
     .bb-main .bb-content-area .bb-bottom-bar {
-        /* display: none; */
-        /* width: calc(100% + 40px);
-        translate: -20px; */
-    	/* height: 260px; */
     	min-height: unset;
         flex-direction: column;
         align-items: center;
@@ -2317,7 +2307,7 @@ p.bb-fav-modal-close-button {
 
     .bb-sidebar .search-container {
         width: calc(100% - 40px);
-	margin-left: 40px;
+	    margin-left: 40px;
     }
 
     .bb-content-area .search-container {
@@ -2439,11 +2429,7 @@ p.bb-fav-modal-close-button {
     .bb-patient-slides {
         justify-content: center;
         margin-bottom: 20px;
-	padding-block: 40px;
-    }
-
-    .bb-content-boxes {
-        /* margin-bottom: 130px; */
+	    padding-block: 40px;
     }
 
     .bb-patient-features {
@@ -2452,10 +2438,10 @@ p.bb-fav-modal-close-button {
 
     .bb-bottom-bar:not(.bb-bottom-bar-sm) {
         display: block;
-	text-align:center;
+	    text-align:center;
     }
     .button-bar-my-favs-btn {
-	margin-top:24px;
+	    margin-top:24px;
      }
     .bb-fav-modal-inner {
         padding: 45px 20px 45px 20px;

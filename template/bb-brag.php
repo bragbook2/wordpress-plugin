@@ -744,7 +744,6 @@ if ($bbrag_case_url == "/".$parts[0]."/consultation/") {
                         }
                         $bb_matching_case_count_data = get_option('bb_matching_case_count_data');
                         $bb_encode_caseids_list = json_encode($bb_matching_case_count_data);
-// var_dump($bb_encode_caseids_list);
 
                         update_option('bb_caseids_list_' . $page_id_via_slug, $bb_encode_caseids_list);
                         update_option('bb_ajax_path', $parts[0]);
@@ -1386,12 +1385,6 @@ if ($bbrag_case_url == "/".$parts[0]."/consultation/") {
                     }
                 ?>
                 <a href="/<?php echo $parts[0]; ?>/consultation/" class="bb-sidebar-btn mobile-footer">REQUEST A CONSULTATION</a>
-                <!-- <div class="bb-bottom-bar">
-                    <img src="<?php //echo BB_PLUGIN_DIR_PATH?>assets/images/myfavs-logo.svg" alt="logo">
-                    <p><span>Use the MyFavorites tool</span> to help communicate your specific goals. If a result speaks to
-                        you, tap the heart.</p>
-                    <a class="button-bar-my-favs-btn" href="/favorites/">View My Favorites</a>
-                </div> -->
                 <div class="bb-bottom-bar">
                     <img src="<?php echo BB_PLUGIN_DIR_PATH?>assets/images/myfavs-logo.svg" alt="logo">
                     <p>

@@ -365,15 +365,6 @@ class Ajax_Handler {
             $bb_remove_pages_from_setting = get_option('bb_remove_pages_from_setting');
             $bb_remove_combine_gallery_from_setting = get_option('bb_remove_combine_gallery_from_setting');
             
-           // echo "<pre>";
-            // print_r(get_option('bb_remove_pages_from_setting'));
-
-            // echo "<br>current_title<br>";
-            // var_dump($current_title);
-            // echo "<br><br>new_title<br>";
-            // var_dump($new_title);
-           
-
             if ($new_title !== $current_title) {
                 $post_data = array(
                     'ID'         => $post_id,
@@ -390,11 +381,6 @@ class Ajax_Handler {
                     if($page_bb_combine == $post_id) {
                         update_option('combine_gallery_slug', $new_slug);
                     }
-                    // echo "<pre>";
-                    // var_dump($page_bb_combine);
-                    // var_dump('post_id = ' . $post_id);
-                    // var_dump('combine_page_data_bb = ' . $combine_page_data_bb);
-                    // echo "</pre>";
                 }
             }
         }
@@ -565,7 +551,6 @@ class Ajax_Handler {
             $response = curl_exec($ch);
             $responseData = json_decode($response, true);
             curl_close($ch);
-            // $websiteproperty_id[$api_token_first_index]
 
             if (isset($responseData['success']) && $responseData['success'] === true) {
                 $post_id = wp_insert_post(array(
@@ -579,7 +564,6 @@ class Ajax_Handler {
                     update_post_meta($post_id, 'bb_email', $email);
                     update_post_meta($post_id, 'bb_phone', $phone);
                      wp_send_json_success('Thank you!'); 
-                   // echo "Thank you!";
                 }else {
                     wp_send_json_error('Form submission failed.');
                 }
@@ -1303,8 +1287,6 @@ class Ajax_Handler {
             update_option('bragbook_websiteproperty_id', $bragbook_websiteproperty_id);
             update_option('bragbook_api_token', $bragbook_api_token);
             update_option('bb_gallery_stored_pages', $bb_id_list);
-
-            
         }
     }
 

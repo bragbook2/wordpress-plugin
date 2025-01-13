@@ -556,6 +556,110 @@ class Shortcode {
     }
     
     // add bragbook_home_menu shortcode
+    public static function render_category_group_home_menu($all_properties, $plugin_dir_path, $parts, $cat_website_property_id) {
+        if (!empty($all_properties) && is_array($all_properties)) {
+            $merged_categories = [];
+            foreach ($all_properties as $property_id => $categories) {
+                foreach ($categories as $category_id => $category_data) {
+                    $category_name = $category_data['category_name'];
+                    $procedures_data = $category_data['procedures_data'];
+                    if (!isset($merged_categories[$category_name])) {
+                        $merged_categories[$category_name] = [
+                            'category_name' => $category_name,
+                            'procedures' => [],
+                        ];
+                    }
+
+                    foreach ($procedures_data as $procedure) {
+                        $procedure_name = $procedure['name'];
+                        $case_count = $procedure['case_count'];
+                        if (isset($merged_categories[$category_name]['procedures'][$procedure_name])) {
+                            $merged_categories[$category_name]['procedures'][$procedure_name]['case_count'] += $case_count;
+                        } else {
+                            $merged_categories[$category_name]['procedures'][$procedure_name] = [
+                                'name' => $procedure_name,
+                                'case_count' => $case_count,
+                                'id' => $procedure['id']
+                            ];
+                        }
+                    }
+                }
+            }
+
+            foreach ($merged_categories as $category_name => $category_data) {
+                $totalCaseCount = 0;
+                foreach ($category_data['procedures'] as $procedure_name => $procedure_data) {
+                    $totalCaseCount += $procedure_data['case_count'];
+                }
+
+                if ($totalCaseCount != 0) {
+                    $bb_page_list_gallery = get_option('bb_gallery_stored_pages_ids', []);
+                    $bragbook_websiteproperty_id = get_option('bragbook_websiteproperty_id', []);
+
+                    if($cat_website_property_id !== '0') {
+                        $search_key = array_search($cat_website_property_id, $bragbook_websiteproperty_id);
+                        $bb_p_id = $bb_shortcode_page_id = $bb_page_list_gallery[$search_key];
+                        $page_slug = get_post_field('post_name', $bb_shortcode_page_id);
+
+                    } elseif ($cat_website_property_id == '0') {
+                        $bb_p_id = $combine_gallery_page_id = get_option('combine_gallery_page_id');
+                        $page_slug = get_post_field('post_name', $combine_gallery_page_id);
+                    }
+                    
+                    if($page_slug == '' || get_post_status($bb_p_id) === 'trash') {
+                        $firstValue = reset($bragbook_websiteproperty_id);
+                        $search_key = array_search($firstValue, $bragbook_websiteproperty_id);
+                        $bb_shortcode_page_id = $bb_page_list_gallery[$search_key];
+                        $page_slug = get_post_field('post_name', $bb_shortcode_page_id);
+                    }
+                    
+                    ?>
+                    <span class="bb-accordion" cat_title="<?= htmlspecialchars($category_name); ?>">
+                        <h3><?= $category_name; ?> <span>(<?= $totalCaseCount; ?>)</span></h3>
+                        <img src="<?= $plugin_dir_path ?>assets/images/plus-icon.svg" alt="plus icon">
+                    </span>
+                    <div class="bb-panel">
+                        <ul>
+                            <?php
+                            ksort($category_data['procedures']);
+                            foreach ($category_data['procedures'] as $procedure_name => $procedure_data) {
+                                if ($procedure_data['case_count'] != 0) {
+                                    $converted_procedure_name = str_replace(' ', '-', $procedure_data['name']);
+                                    $lower_procedure_name = strtolower($converted_procedure_name);
+
+                                    update_option($converted_procedure_name, $category_name);
+                                    update_option($lower_procedure_name, $category_name);
+                                    update_option($lower_procedure_name . '_id', $procedure_data['id']);
+                                    update_option($procedure_data['id'] . '_title', $procedure_data['name']);
+                                    ?>
+                                    <li>
+                                        <a id="<?= esc_attr($procedure['id']); ?>" href="<?= "/" . $page_slug . "/" . strtolower($converted_procedure_name) . "/"; ?>">
+                                            <?= esc_html($procedure_data['name']); ?> <span>(<?php echo $procedure_data['case_count']; ?>)</span>
+                                        </a>
+                                    </li>
+                                    <?php
+                                }
+                            }
+                            ?>
+                        </ul>
+                    </div>
+                    <?php
+                }
+            }
+        }
+        $bb_favorite_caseIds = get_option('favorite_caseIds_ajax');
+        $favorite_caseIds_count = count($bb_favorite_caseIds);
+        ?>
+        <ul>
+            <li>
+                <a class="bb-sidebar_favorites" href="/<?=$page_slug?>/favorites/">
+                    <h3> My Favorites <span>(<?php echo $favorite_caseIds_count ?>)</span></h3>
+                </a> 
+            </li> 
+        </ul>
+        <?php
+    }
+
     public static function mvp_bragbook_home_menu_shortcode($atts) {
         $atts = shortcode_atts(
             array(
@@ -745,111 +849,8 @@ class Shortcode {
                                 }
                             }
 
-                            function render_category_group_home_menu($all_properties, $plugin_dir_path, $parts, $cat_website_property_id) {
-                                if (!empty($all_properties) && is_array($all_properties)) {
-                                    $merged_categories = [];
-                                    foreach ($all_properties as $property_id => $categories) {
-                                        foreach ($categories as $category_id => $category_data) {
-                                            $category_name = $category_data['category_name'];
-                                            $procedures_data = $category_data['procedures_data'];
-                                            if (!isset($merged_categories[$category_name])) {
-                                                $merged_categories[$category_name] = [
-                                                    'category_name' => $category_name,
-                                                    'procedures' => [],
-                                                ];
-                                            }
-
-                                            foreach ($procedures_data as $procedure) {
-                                                $procedure_name = $procedure['name'];
-                                                $case_count = $procedure['case_count'];
-                                                if (isset($merged_categories[$category_name]['procedures'][$procedure_name])) {
-                                                    $merged_categories[$category_name]['procedures'][$procedure_name]['case_count'] += $case_count;
-                                                } else {
-                                                    $merged_categories[$category_name]['procedures'][$procedure_name] = [
-                                                        'name' => $procedure_name,
-                                                        'case_count' => $case_count,
-                                                        'id' => $procedure['id']
-                                                    ];
-                                                }
-                                            }
-                                        }
-                                    }
-
-                                    foreach ($merged_categories as $category_name => $category_data) {
-                                        $totalCaseCount = 0;
-                                        foreach ($category_data['procedures'] as $procedure_name => $procedure_data) {
-                                            $totalCaseCount += $procedure_data['case_count'];
-                                        }
-
-                                        if ($totalCaseCount != 0) {
-                                            $bb_page_list_gallery = get_option('bb_gallery_stored_pages_ids', []);
-                                            $bragbook_websiteproperty_id = get_option('bragbook_websiteproperty_id', []);
-
-                                            if($cat_website_property_id !== '0') {
-                                                $search_key = array_search($cat_website_property_id, $bragbook_websiteproperty_id);
-                                                $bb_p_id = $bb_shortcode_page_id = $bb_page_list_gallery[$search_key];
-                                                $page_slug = get_post_field('post_name', $bb_shortcode_page_id);
-
-                                            } elseif ($cat_website_property_id == '0') {
-                                                $bb_p_id = $combine_gallery_page_id = get_option('combine_gallery_page_id');
-                                                $page_slug = get_post_field('post_name', $combine_gallery_page_id);
-                                            }
-                                            
-                                            if($page_slug == '' || get_post_status($bb_p_id) === 'trash') {
-                                                $firstValue = reset($bragbook_websiteproperty_id);
-                                                $search_key = array_search($firstValue, $bragbook_websiteproperty_id);
-                                                $bb_shortcode_page_id = $bb_page_list_gallery[$search_key];
-                                                $page_slug = get_post_field('post_name', $bb_shortcode_page_id);
-                                            }
-                                            
-                                            ?>
-                                            <span class="bb-accordion" cat_title="<?= htmlspecialchars($category_name); ?>">
-                                                <h3><?= $category_name; ?> <span>(<?= $totalCaseCount; ?>)</span></h3>
-                                                <img src="<?= $plugin_dir_path ?>assets/images/plus-icon.svg" alt="plus icon">
-                                            </span>
-                                            <div class="bb-panel">
-                                                <ul>
-                                                    <?php
-                                                    ksort($category_data['procedures']);
-                                                    foreach ($category_data['procedures'] as $procedure_name => $procedure_data) {
-                                                        if ($procedure_data['case_count'] != 0) {
-                                                            $converted_procedure_name = str_replace(' ', '-', $procedure_data['name']);
-                                                            $lower_procedure_name = strtolower($converted_procedure_name);
-
-                                                            update_option($converted_procedure_name, $category_name);
-                                                            update_option($lower_procedure_name, $category_name);
-                                                            update_option($lower_procedure_name . '_id', $procedure_data['id']);
-                                                            update_option($procedure_data['id'] . '_title', $procedure_data['name']);
-                                                            ?>
-                                                            <li>
-                                                                <a id="<?= esc_attr($procedure['id']); ?>" href="<?= "/" . $page_slug . "/" . strtolower($converted_procedure_name) . "/"; ?>">
-                                                                    <?= esc_html($procedure_data['name']); ?> <span>(<?php echo $procedure_data['case_count']; ?>)</span>
-                                                                </a>
-                                                            </li>
-                                                            <?php
-                                                        }
-                                                    }
-                                                    ?>
-                                                </ul>
-                                            </div>
-                                            <?php
-                                        }
-                                    }
-                                }
-                                $bb_favorite_caseIds = get_option('favorite_caseIds_ajax');
-                                $favorite_caseIds_count = count($bb_favorite_caseIds);
-                                ?>
-                                <ul>
-                                    <li>
-                                        <a class="bb-sidebar_favorites" href="/<?=$page_slug?>/favorites/">
-                                            <h3> My Favorites <span>(<?php echo $favorite_caseIds_count ?>)</span></h3>
-                                        </a> 
-                                    </li> 
-                                </ul>
-                                <?php
-                            }
-
-                            render_category_group_home_menu($all_properties, BB_PLUGIN_DIR_PATH, $parts, $cat_website_property_id);
+                            
+                            self::render_category_group_home_menu($all_properties, BB_PLUGIN_DIR_PATH, $parts, $cat_website_property_id);
                             ?>
                         </div>  
                     </div>
