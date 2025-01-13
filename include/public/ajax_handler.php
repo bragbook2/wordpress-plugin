@@ -517,57 +517,77 @@ class Ajax_Handler {
         update_option('bb_gallery_stored_pages_ids', $bb_merge_ids);
     } 
 
+    public static function send_form_data_and_create_post($data, $url, $name, $description, $email, $phone) {
+        $jsonData = json_encode($data);
+        $ch = curl_init($url);
+        
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonData);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+            'Content-Length: ' . strlen($jsonData)
+        ]);
+
+        $response = curl_exec($ch);
+        $responseData = json_decode($response, true);
+        curl_close($ch);
+
+        if (isset($responseData['success']) && $responseData['success'] === true) {
+            $post_id = wp_insert_post(array(
+                'post_title' => $name,
+                'post_content' => $description,
+                'post_type' => 'form-entries', 
+                'post_status' => 'publish' 
+            ));
+            
+            if ($post_id) {
+                update_post_meta($post_id, 'bb_email', $email);
+                update_post_meta($post_id, 'bb_phone', $phone);
+                 wp_send_json_success('Thank you!'); 
+            }else {
+                wp_send_json_error('Form submission failed.');
+            }
+        }
+    }
+
     public function handle_form_submission() { 
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['name'])) {
             $name = sanitize_text_field($_POST['name']);
             $email = sanitize_email($_POST['email']);
             $phone = sanitize_text_field($_POST['phone']);
             $description = sanitize_textarea_field($_POST['description']);
-            $api_token = get_option('bragbook_api_token');
-            $websiteproperty_id = get_option('bragbook_websiteproperty_id');
+            $api_tokens = get_option('bragbook_api_token');
+            $websiteproperty_ids = get_option('bragbook_websiteproperty_id');
+            $bb_gallery_stored_pages = get_option('bb_gallery_stored_pages');
+            $combine_gallery_slug = get_option('combine_gallery_slug');
 
-            $api_token_first_index = key($api_token);
-            $api_token_first_value = reset($api_token);
+            $current_url = $_SERVER['HTTP_REFERER'];
+            $parsed_url = parse_url($current_url);
+            $parsed_url_parts = $parsed_url['path'];
+            $bbragbook_url_trim = trim($parsed_url_parts, '/');
+            $parts = explode('/', $bbragbook_url_trim);
+            $index = array_search($parts[0], $bb_gallery_stored_pages);
 
-            $url = "https://www.bragbookv2.com/api/plugin/consultations?apiToken=". $api_token_first_value ."&websitepropertyId=". $websiteproperty_id[$api_token_first_index];
             $data = [
                 'name' => $name,
                 'email' => $email,
                 'phone' => $phone,
                 'details' => $description
             ];
-            
-            $jsonData = json_encode($data);
-            $ch = curl_init($url);
 
-            curl_setopt($ch, CURLOPT_POST, true);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonData);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                'Content-Type: application/json',
-                'Content-Length: ' . strlen($jsonData)
-            ]);
+            if($parts[0] == $combine_gallery_slug) {
+                foreach ($api_tokens as $api_token_index => $api_token_value) {
+                    $websiteproperty_id = $websiteproperty_ids[$api_token_index];
 
-            $response = curl_exec($ch);
-            $responseData = json_decode($response, true);
-            curl_close($ch);
-
-            if (isset($responseData['success']) && $responseData['success'] === true) {
-                $post_id = wp_insert_post(array(
-                    'post_title' => $name,
-                    'post_content' => $description,
-                    'post_type' => 'form-entries', 
-                    'post_status' => 'publish' 
-                ));
-                
-                if ($post_id) {
-                    update_post_meta($post_id, 'bb_email', $email);
-                    update_post_meta($post_id, 'bb_phone', $phone);
-                     wp_send_json_success('Thank you!'); 
-                }else {
-                    wp_send_json_error('Form submission failed.');
+                    $url = "https://www.bragbookv2.com/api/plugin/consultations?apiToken=" . $api_token_value . "&websitepropertyId=" . $websiteproperty_id;
+                    self::send_form_data_and_create_post($data, $url, $name, $description, $email, $phone);
                 }
+            } else {
+                $url = "https://www.bragbookv2.com/api/plugin/consultations?apiToken=". $api_tokens[$index] ."&websitepropertyId=". $websiteproperty_ids[$index];
+                self::send_form_data_and_create_post($data, $url, $name, $description, $email, $phone);
             }
+
         } else {
             wp_send_json_error('Form submission failed.');
         }
@@ -1066,6 +1086,7 @@ class Ajax_Handler {
 
         $api_token = $bbApiTokens[0];
         $websiteproperty_id = $bbWebsiteIds[0];
+
         $response = wp_remote_post('https://www.bragbookv2.com/api/plugin/favorites?apiToken='. $api_token .'&websitepropertyId='. $websiteproperty_id, array(
             'method'    => 'POST',
             'body'      => json_encode(array(
