@@ -327,8 +327,12 @@ class Shortcode {
                 $bb_website_property_id_slugs_list = get_option('bb_website_property_id_slug', []);
                 $bb_page_list_gallery = get_option('bb_gallery_stored_pages_ids', []);
                 $bragbook_websiteproperty_id = get_option('bragbook_websiteproperty_id', []);
+                $bb_scase_ids_list = [];
+                $spro_title_bb = '';
                 foreach($matching_data as $procedure_data) {
+                    $bb_scase_ids_list[] = $procedure_data['id'];
                     $page_slug = isset($procedure_data['page_slug']) ? $procedure_data['page_slug'] : '';
+                    $spro_title_bb = strtolower(str_replace(' ', '-', $procedure_data['procedure_title']));
                     if (($parts[0] == $page_slug) || ($bb_page_exist == false && $cat_website_property_id == "0")) {
                         if (!empty($procedure_data['photoSets']) && $limit_count <= $cat_limit && $procedure_data['procedure_case_count'] >= $cat_start) { 
                             ?>
@@ -342,7 +346,7 @@ class Shortcode {
                                             : $procedure_data['photoSets'][0]['originalBeforeLocation']);
                                     
                                     ?>
-                                    <a href="<?php echo '/' . $page_slug . "/" . strtolower(str_replace(' ', '-', $procedure_data['procedure_title'])) . "/" . $procedure_data['id']; ?>">
+                                    <a href="<?php echo '/' . $page_slug . "/" . $spro_title_bb . "/" . $procedure_data['id']; ?>">
                                         <img class="bb-slide-thumnail" src="<?php echo $bb_new_image_procedure_data; ?>" 
                                         alt="<?php echo isset($procedure_data['photoSets'][0]['seoAltText']) ? $procedure_data['photoSets'][0]['seoAltText'] : ''; ?>">
                                     </a>
@@ -353,7 +357,7 @@ class Shortcode {
                                                 <p><?php echo self::bb_limitWords($procedure_data['details'], 50); ?></p>
                                             <?php } ?>
                                             <?php if ($cat_details == 1) { ?>
-                                                <button type="button"><a href="<?php echo '/' . $page_slug . "/" . strtolower(str_replace(' ', '-', $procedure_data['procedure_title'])) . "/" . $procedure_data['id']; ?>">View More</a></button>
+                                                <button type="button"><a href="<?php echo '/' . $page_slug . "/" . $spro_title_bb . "/" . $procedure_data['id']; ?>">View More</a></button>
                                             <?php } ?>
                                         </div>
                                     </div>
@@ -375,7 +379,7 @@ class Shortcode {
                                             : $procedure_data['photoSets'][0]['originalBeforeLocation']);
                                     
                                     ?>
-                                    <a href="<?php echo '/' . $bb_combine_gallery_slug . "/" . strtolower(str_replace(' ', '-', $procedure_data['procedure_title'])) . "/" . $procedure_data['id']; ?>">
+                                    <a href="<?php echo '/' . $bb_combine_gallery_slug . "/" . $spro_title_bb . "/" . $procedure_data['id']; ?>">
                                         <img class="bb-slide-thumnail" src="<?php echo $bb_new_image_procedure_data; ?>" 
                                         alt="<?php echo isset($procedure_data['photoSets'][0]['seoAltText']) ? $procedure_data['photoSets'][0]['seoAltText'] : ''; ?>">
                                     </a>
@@ -386,7 +390,7 @@ class Shortcode {
                                                 <p><?php echo self::bb_limitWords($procedure_data['details'], 50); ?></p>
                                             <?php } ?>
                                             <?php if ($cat_details == 1) { ?>
-                                                <button type="button"><a href="<?php echo '/' . $bb_combine_gallery_slug . "/" . strtolower(str_replace(' ', '-', $procedure_data['procedure_title'])) . "/" . $procedure_data['id']; ?>">View More</a></button>
+                                                <button type="button"><a href="<?php echo '/' . $bb_combine_gallery_slug . "/" . $spro_title_bb . "/" . $procedure_data['id']; ?>">View More</a></button>
                                             <?php } ?>
                                         </div>
                                     </div>
@@ -407,7 +411,7 @@ class Shortcode {
                                             ? $procedure_data['photoSets'][0]['postProcessedImageLocation'] 
                                             : $procedure_data['photoSets'][0]['originalBeforeLocation']);
                                     ?>
-                                    <a href="<?php echo '/' . $page_slug . "/" . strtolower(str_replace(' ', '-', $procedure_data['procedure_title'])) . "/" . $procedure_data['id']; ?>">
+                                    <a href="<?php echo '/' . $page_slug . "/" . $spro_title_bb . "/" . $procedure_data['id']; ?>">
                                         <img class="bb-slide-thumnail" src="<?php echo $bb_new_image_procedure_data; ?>" 
                                         alt="<?php echo isset($procedure_data['photoSets'][0]['seoAltText']) ? $procedure_data['photoSets'][0]['seoAltText'] : ''; ?>">
                                     </a>
@@ -418,7 +422,7 @@ class Shortcode {
                                                 <p><?php echo self::bb_limitWords($procedure_data['details'], 50); ?></p>
                                             <?php } ?>
                                             <?php if ($cat_details == 1) { ?>
-                                                <button type="button"><a href="<?php echo '/' . $page_slug . "/" . strtolower(str_replace(' ', '-', $procedure_data['procedure_title'])) . "/" . $procedure_data['id']; ?>">View More</a></button>
+                                                <button type="button"><a href="<?php echo '/' . $page_slug . "/" . $spro_title_bb . "/" . $procedure_data['id']; ?>">View More</a></button>
                                             <?php } ?>
                                         </div>
                                     </div>
@@ -428,7 +432,15 @@ class Shortcode {
                             $limit_count++;
                         }
                     }
+                    $formatted_heading = $procedure_data['photoSets'][0]['caseId'];
+                    update_option($procedure_data['photoSets'][0]['caseId'] . '_bb_procedure_id_s_' . $spro_title_bb, $procedure_data['procedure_id']);
+                    update_option($formatted_heading, $procedure_data['photoSets'][0]['caseId']);
+                    update_option($procedure_data['photoSets'][0]['caseId'], $formatted_heading);
                 }
+                
+                $bb_encode_scaseids_list = json_encode($bb_scase_ids_list);
+
+                update_option('bb_scaseids_list_' . $spro_title_bb, $bb_encode_scaseids_list);
                 ?>
             </div>
         </div>

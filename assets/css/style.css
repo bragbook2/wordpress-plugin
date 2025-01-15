@@ -2520,3 +2520,7 @@ p.bb-fav-modal-close-button {
 .submit-button-table p.submit {
     padding-bottom: 0;
 }
+
+.bb-content-area .bb-form.bb-consultation-form button[type="submit"]:hover {
+    color: #FFF !important;
+}
