@@ -600,20 +600,19 @@ if ($bbrag_case_url == "/".$parts[0]."/consultation/") {
                             if (!is_null($procedure_data['procedureDetails'])) {
                                 if (isset($procedure_data['procedureDetails'][$bb_procedure_id])) {
                                     $bb_procedureDetails = $procedure_data['procedureDetails'][$bb_procedure_id];
+                                    
                                     $advanced_filters_result_string = '';
                                     foreach ($bb_procedureDetails as $bb_procedureDetails_key => $bb_procedureDetails_value) {
-                                        $bb_procedureDetails_key = strtolower($bb_procedureDetails_key);
-                                        $bb_procedureDetails_key = str_replace(' ', '_', $bb_procedureDetails_key);
+                                        $bb_procedureDetails_key = strtolower(str_replace(' ', '_', $bb_procedureDetails_key));
+                                        
                                         if (is_array($bb_procedureDetails_value)) {
-                                            $bb_procedureDetails_value = implode(',', $bb_procedureDetails_value); 
-                                        }
-                                        if (is_string($bb_procedureDetails_value)) {
-                                            $bb_procedureDetails_value = strtolower($bb_procedureDetails_value);
-                                            $bb_procedureDetails_value = str_replace(' ', '_', $bb_procedureDetails_value);
+                                            foreach ($bb_procedureDetails_value as $bb_procedureDetails_item) {
+                                                $advanced_filters_result_string .= $bb_procedureDetails_key . strtolower($bb_procedureDetails_item) . ' ';
+                                            }
                                         } else {
-                                            $bb_procedureDetails_value = '';
+                                            $bb_procedureDetails_value = strtolower(str_replace(' ', '_', $bb_procedureDetails_value));
+                                            $advanced_filters_result_string .= $bb_procedureDetails_key . $bb_procedureDetails_value . ' ';
                                         }
-                                        $advanced_filters_result_string .= $bb_procedureDetails_key . $bb_procedureDetails_value . ' ';
                                     }
                                     $advanced_filters_result_string = trim($advanced_filters_result_string);
                                 }
@@ -640,7 +639,7 @@ if ($bbrag_case_url == "/".$parts[0]."/consultation/") {
                                             $category_match_id = empty($category_to_match) ? $procedure_data['procedure_id'] : $category_to_match; 
                                             $pro_title = empty($procedure_title) ? $procedure_data['procedure_title'] : $procedure_title; 
                                             // $bb_case_ids_list[] = $procedure_data['photoSets'][0]['caseId'];
-                                            $converted_procedure_name = str_replace(' ', '-', $pro_title); 
+                                            $converted_procedure_name = preg_replace('/[^a-zA-Z0-9]+/', '-', $pro_title); 
                                             $bb_seo_detail = isset($procedure_data['caseDetails'][0]) ? $procedure_data['caseDetails'][0] : [];
 
                                             if (isset($bb_seo_detail['seoSuffixUrl']) && !empty($bb_seo_detail['seoSuffixUrl'])) {
@@ -1146,7 +1145,7 @@ if ($bbrag_case_url == "/".$parts[0]."/consultation/") {
                                 if(empty($procedure_title)) {
                                     $procedure_title = get_option('bb_matching_case_procedure_title');
                                 }
-                                $converted_procedure_name = str_replace(' ', '-', strtolower($procedure_title));
+                                $converted_procedure_name = preg_replace('/[^a-zA-Z0-9]+/', '-', strtolower($procedure_title));
                                 $converted_procedure_name = removeAccents_brag($converted_procedure_name);
 
                                 $path_parts[count($path_parts) - 3] = $converted_procedure_name; 
@@ -1306,7 +1305,7 @@ if ($bbrag_case_url == "/".$parts[0]."/consultation/") {
                 if (preg_match($pattern, $input_string, $matches)) {
                     $carousel_category = $matches[1];
                 }
-                $bbrag_procedure_title = str_replace(' ', '-', $carousel_category);
+                $bbrag_procedure_title = preg_replace('/[^a-zA-Z0-9]+/', '-', $carousel_category);
                 $bbrag_procedure_title = strtolower($bbrag_procedure_title);
                 $category_title_ = get_option($bbrag_procedure_title);
                 
