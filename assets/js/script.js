@@ -121,9 +121,15 @@ jQuery(document).ready(function ($) {
         if (response.success) {
           $('.update-api').text('');
           $('.update-api-status').text('API Updated Successfully!');
+          setTimeout(function() {
+            $('.update-api-status').text('');
+          }, 10000);
         } else {
           $('.update-api').text('');
           $('.update-api-status').text('API Update Failed!');
+          setTimeout(function() {
+            $('.update-api-status').text('');
+          }, 10000);
         } 
       },
       error: function() {
@@ -526,9 +532,15 @@ jQuery(document).ready(function ($) {
         if (response.success) {
           $('.bb-save-api-status').text('');
           $('.bb-save-api-settings-status').text('Settings saved successfully.');
+          setTimeout(function() {
+            $('.bb-save-api-settings-status').text('');
+          }, 10000);
         } else {
           $('.bb-save-api-status').text('');
           $('.bb-save-api-settings-status').text('There was an error saving the settings.');
+          setTimeout(function() {
+            $('.bb-save-api-settings-status').text('');
+          }, 10000);
         } 
       },
       error: function () {

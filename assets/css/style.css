@@ -491,7 +491,6 @@ button.bb-sidebar-toggle.bb-sidebar-head-toggle img {
 
 .bb-slider .bb-slide {
     margin-inline: 15px;
-    min-height: 250px;
 }
 
 .bb-slider .bb-slide img {
@@ -2250,7 +2249,7 @@ p.bb-fav-modal-close-button {
     }
 
     .bb-main .bb-slider .bb-slide {
-        margin-inline: 0px;
+/*        margin-inline: 0px; */
     }
 
     .bb-main .bb-slider .bb-arrow.bb-right-arrow {
@@ -2519,4 +2518,8 @@ p.bb-fav-modal-close-button {
 }
 .submit-button-table p.submit {
     padding-bottom: 0;
+}
+
+.bb-content-area .bb-form.bb-consultation-form button[type="submit"]:hover {
+    color: #FFF !important;
 }

@@ -96,19 +96,16 @@ class Ajax_Handler {
                     $advanced_filters_result_string = '';
 
                     foreach ($bb_procedureDetails as $bb_procedureDetails_key => $bb_procedureDetails_value) {
-                        $bb_procedureDetails_key = strtolower($bb_procedureDetails_key);
-                        $bb_procedureDetails_key = str_replace(' ', '_', $bb_procedureDetails_key);
+                        $bb_procedureDetails_key = strtolower(str_replace(' ', '_', $bb_procedureDetails_key));
+                        
                         if (is_array($bb_procedureDetails_value)) {
-                            $bb_procedureDetails_value = implode(',', $bb_procedureDetails_value); 
-                        }
-            
-                        if (is_string($bb_procedureDetails_value)) {
-                            $bb_procedureDetails_value = strtolower($bb_procedureDetails_value);
-                            $bb_procedureDetails_value = str_replace(' ', '_', $bb_procedureDetails_value);
+                            foreach ($bb_procedureDetails_value as $bb_procedureDetails_item) {
+                                $advanced_filters_result_string .= $bb_procedureDetails_key . strtolower($bb_procedureDetails_item) . ' ';
+                            }
                         } else {
-                            $bb_procedureDetails_value = '';
+                            $bb_procedureDetails_value = strtolower(str_replace(' ', '_', $bb_procedureDetails_value));
+                            $advanced_filters_result_string .= $bb_procedureDetails_key . $bb_procedureDetails_value . ' ';
                         }
-                        $advanced_filters_result_string .= $bb_procedureDetails_key . $bb_procedureDetails_value . ' ';
                     }
                     $advanced_filters_result_string = trim($advanced_filters_result_string);
                 }

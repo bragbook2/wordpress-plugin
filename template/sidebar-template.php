@@ -302,9 +302,10 @@ update_option('favorite_caseIds_ajax', $favorite_caseIds);
                                     ksort($category_data['procedures']);
                                     foreach ($category_data['procedures'] as $procedure_name => $procedure_data) {
                                         if ($procedure_data['case_count'] != 0) {
-                                            $converted_procedure_name = str_replace(' ', '-', $procedure_data['name']);
-                                            $lower_procedure_name = strtolower($converted_procedure_name);
 
+                                            $converted_procedure_name = preg_replace('/[^a-zA-Z0-9]+/', '-', $procedure_data['name']);
+                                            $lower_procedure_name = strtolower($converted_procedure_name);
+                                            
                                             $lower_procedure_name = urldecode($lower_procedure_name);
                                             $lower_procedure_name = removeAccents($lower_procedure_name);
 
