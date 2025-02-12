@@ -127,7 +127,10 @@ body {
 .bb-display-none {
     display: none !important;
 }
-
+#bb_f_gif_sidebar {
+    width: 30px;
+    position: absolute;
+}
 .bb-main * {
 
     font-family: var(--font-main);

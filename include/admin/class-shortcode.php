@@ -9,9 +9,10 @@ class Shortcode {
         add_shortcode('brag_book_gallery', [ __CLASS__, 'mvp_brag_shortcode' ]);
         add_shortcode('bragbook_carousel_shortcode', [ __CLASS__, 'mvp_carousel_shortcode' ]); 
         add_shortcode('bb_bragbook_category', [ __CLASS__, 'bb_mvp_category_shortcode' ]); 
+        add_shortcode('bb_bragbook_procedure', [ __CLASS__, 'bb_mvp_category_shortcode' ]); 
         add_shortcode('bb_bragbook_set', [ __CLASS__, 'mvp_bragbook_set_shortcode' ]); 
-        add_shortcode('bb_bragbook_home_menu', [ __CLASS__, 'mvp_bragbook_home_menu_shortcode' ]); 
-        
+        add_shortcode('bb_bragbook_home_menu', [ __CLASS__, 'mvp_bragbook_home_menu_shortcode' ]);
+ 
     }
     
     public static function bb_limitWords($text, $wordLimit) {
@@ -181,6 +182,7 @@ class Shortcode {
         $atts = shortcode_atts(
             array(
                 'category' => '',
+                'procedure' => '',
                 'limit' => 10,
                 'title' => '0',
                 'details' => '0',
@@ -190,7 +192,7 @@ class Shortcode {
             $atts
         );
         
-        $cat_name = $atts['category'];
+        $cat_name = empty($atts['category']) ? $atts['procedure'] : $atts['category'];
         $cat_limit = $atts['limit'];
         $cat_title = $atts['title'];
         $cat_details = $atts['details'];
@@ -285,7 +287,8 @@ class Shortcode {
                     $procedures_data = $category_data['procedures_data'];
                     if (is_array($procedures_data) && is_array($item)) {
                         foreach ($procedures_data as $complete_category) {
-                            if (in_array($complete_category['id'], $item['procedureIds']) && $cat_name == $complete_category['name']) {
+                            $b_converted_procedure_name = preg_replace('/[^a-zA-Z0-9]+/', '-', strtolower($complete_category['name']));
+                            if (in_array($complete_category['id'], $item['procedureIds']) && ($cat_name == $complete_category['name'] || $cat_name == $b_converted_procedure_name)) {
                                 if (!empty($item['photoSets'])) { 
                                     if (!isset($procedure_counts[$complete_category['id']])) {
                                         $procedure_counts[$complete_category['id']] = 0;
@@ -673,16 +676,18 @@ class Shortcode {
         $bb_favorite_caseIds = get_option('favorite_caseIds_ajax');
         $favorite_caseIds_count = count($bb_favorite_caseIds);
         ?>
-        <ul>
+        <!-- <ul>
             <li>
-                <a class="bb-sidebar_favorites" href="/<?=$page_slug?>/favorites/">
-                    <h3> My Favorites <span>(<?php echo $favorite_caseIds_count ?>)</span></h3>
+                <a class="bb-sidebar_favorites" href="/ //$page_slug /favorites/">
+                    <h3> My Favorites <span>(<?php // echo $favorite_caseIds_count ?>)</span></h3>
                 </a> 
             </li> 
-        </ul>
+        </ul> -->
+        <p>Befor and after gallery powered by <span style="color:red">BRAG book™</span></p>
+ 
         <?php
     }
-
+   
     public static function mvp_bragbook_home_menu_shortcode($atts) {
         $atts = shortcode_atts(
             array(
@@ -1001,11 +1006,12 @@ class Shortcode {
         <?php
         return ob_get_clean();
     }
-
+    
     public static function bb_mvp_category_shortcode($atts) {
         $atts = shortcode_atts(
             array(
                 'category' => '',
+                'procedure' => '',
                 'limit' => 10,
                 'title' => '0',
                 'details' => '0',
@@ -1015,7 +1021,7 @@ class Shortcode {
             $atts
         );
         
-        $cat_name = $atts['category'];
+        $cat_name = empty($atts['category']) ? $atts['procedure'] : $atts['category'];
         $cat_limit = $atts['limit'];
         $cat_title = $atts['title'];
         $cat_details = $atts['details'];
@@ -1108,8 +1114,8 @@ class Shortcode {
                 
                     if(is_array($procedures_data)) {
                         foreach($procedures_data as $complete_category) {
-                            
-                            if (in_array($complete_category['id'], $item['procedureIds']) && $cat_name == $complete_category['name']) {
+                            $b_converted_procedure_name = preg_replace('/[^a-zA-Z0-9]+/', '-', strtolower($complete_category['name']));
+                            if (in_array($complete_category['id'], $item['procedureIds']) && ($cat_name == $complete_category['name'] || $cat_name == $b_converted_procedure_name)) {
                                 if(!empty($item['photoSets'])) { 
                                     if (!isset($procedure_counts[$complete_category['id']])) {
                                         $procedure_counts[$complete_category['id']] = 0;

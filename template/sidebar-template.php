@@ -8,9 +8,9 @@ $bbragbook_case_url_bb = trim($bbrag_case_url_bb, '/');
 $parts_page_name = explode('/', $bbragbook_case_url_bb);
 $combine_gallery_page_id = get_option('combine_gallery_page_id');
 $combine_gallery_page = get_post($combine_gallery_page_id);
-// $combine_gallery_page_slug = $combine_gallery_page->post_name;
 $combine_gallery_page_slug = get_option('combine_gallery_slug');
-
+$page_bb_data = get_page_by_path($parts_page_name[0]);
+$page_id_via_slug = $page_bb_data->ID;
 
 function bb_get_grabbook_category_feed($url) {
     $cats_json = bb_get_grabbook_api($url);
@@ -87,7 +87,7 @@ function bb_mvp_brag_shortcode($parts_page_name, $combine_gallery_page_slug) {
     update_option("bb_api_data", $bragbook_api_information);
     update_option("bb_combine_api_data", $bragbook_combine_api_information);
 
-    ob_clean();
+    ob_clean(); 
 }
 bb_mvp_brag_shortcode($parts_page_name, $combine_gallery_page_slug);
 
@@ -95,70 +95,71 @@ $data = get_option('bb_api_data');
 $favorite_email_id = get_option('bragbook_favorite_email');
 $favorite_caseIds_count = 0;
 $favorite_caseIds = [];
-
-if(isset($_COOKIE['wordpress_favorite_email'])) {  
-    $cookieValue = $_COOKIE['wordpress_favorite_email'];
-    $decodedValue = urldecode($cookieValue);
-    $favorite_email_id = htmlspecialchars($decodedValue);
-    update_option('bragbook_favorite_email', $favorite_email_id);
-    
-    $api_tokens = get_option('bragbook_api_token', []);
-    $websiteproperty_ids = get_option('bragbook_websiteproperty_id', []);
-    $gallery_slugs = get_option('bb_gallery_page_slug', []);
-    $favorite_data_bb = [];
-    
-    foreach ($api_tokens as $index => $api_token) {
-        $websiteproperty_id = $websiteproperty_ids[$index] ?? '';
-        $page_slug_bb = $gallery_slugs[$index] ?? '';
-        if(($page_slug_bb == $parts_page_name[0]) || ($combine_gallery_page_slug == $parts_page_name[0])) {
-            if (empty($api_token) || empty($websiteproperty_id)) {
-                continue;
-            }
-            $url = 'https://www.bragbookv2.com/api/plugin/favorites?apiToken='.$api_token.'&websitepropertyId='.$websiteproperty_id.'&email='.$favorite_email_id;
-            $ch = curl_init();
-            curl_setopt($ch,CURLOPT_URL,$url);
-            curl_setopt($ch,CURLOPT_RETURNTRANSFER,1);
-            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-
-            $favorite_data_brag = curl_exec($ch);
-            curl_close($ch);
-
-            $favorite_data_bb[] = json_decode($favorite_data_brag, true);
-        }
-    }
-    $favorite_caseIds = [];
-    $favorite_procedure_ids = [];
-    if(!empty($favorite_data_bb) && is_array($favorite_data_bb)) {
-        foreach($favorite_data_bb as $favorite_data) {
-            if(!empty($favorite_data) && is_array($favorite_data)) {
-                foreach ($favorite_data as $favorite) {
-                    foreach($favorite as $nested_favorite)  {
-                        if (isset($nested_favorite['cases']) && is_array($nested_favorite['cases'])) {
-                            foreach ($nested_favorite['cases'] as $case) {
-                                if (isset($case['id'])) {
-                                    $favorite_caseIds[] = $case['id'];
-                                    foreach($case['procedureIds'] as $bb_pro_id) {
-                                        $favorite_procedure_ids[] = $bb_pro_id; 
-                                    }
-                                }
-                            }
-                        }
-                    } 
-                }
-            }
-        }
-        $favorite_caseIds = array_unique($favorite_caseIds);
-        $expireTime = time() + (365 * 24 * 60 * 60); // 1 year
-        $caseIdsString = implode(',', $favorite_caseIds);
-        setcookie('wordpress_favorite_case_id', $caseIdsString, $expireTime, '/');
-        $favorite_caseIds_count = count($favorite_caseIds);
-        $favorite_procedure_ids = array_unique($favorite_procedure_ids);
-    }
+if($combine_gallery_page_slug == $parts_page_name[0]) {
+    $data = get_option("bb_combine_api_data");
+    $bb_f_ajax_page = 'combine';
+} else {
+    $data = get_option('bb_api_data'); 
+    $bb_f_ajax_page = 'single';
 
 }
-update_option('favorite_caseIds_ajax', $favorite_caseIds);
 
 ?> 
+<script>
+    jQuery(document).ready(function($) {
+        function fetchFavoriteData() {
+            var bb_a_page = "<?php echo $bb_f_ajax_page; ?>";
+            var page_name = "<?php echo $parts_page_name[0]; ?>";
+            var page_id = "<?php echo $page_id_via_slug; ?>";
+            var bb_image_link = "<?php echo BB_PLUGIN_DIR_PATH; ?>assets/images/red-heart-outline.svg";
+            $.ajax({
+                type: 'POST',
+                url: bb_plugin_data.ajaxurl,
+                data: {
+                    action: 'bb_fetch_favorite_data',
+                    value: bb_a_page,
+                    page_name: page_name,
+                    page_id: page_id,
+                },
+                beforeSend: function() {
+                    
+                    $('#bb_favorite_caseIds_count').html('<img id="bb_f_gif_sidebar" src="<?php echo BB_PLUGIN_DIR_PATH; ?>assets/images/running-heart.gif" alt="Loading...">');
+                    $('#bb-content-boxes-ajax').html('<img id="bb_f_gif_content" src="<?php echo BB_PLUGIN_DIR_PATH; ?>assets/images/running-heart.gif" alt="Loading...">');
+                },
+                success: function(response) {
+                    if(response.success) {
+                        $('#bb_favorite_caseIds_count').text('(' + response.data.favorite_case_count + ')');
+                        $('#bb-content-boxes-ajax').html(response.data.html);
+                        var favoriteCaseIds = Object.values(response.data.favorite_case_ids);
+                        $('img[data-case-id]').each(function() {
+                            var caseId = $(this).data('case-id');
+                            
+                            if (favoriteCaseIds.includes(caseId)) {
+                                $(this).attr('src', bb_image_link);
+                            }
+                        });
+                    } else { 
+                        $('#bb_favorite_caseIds_count').text('(' + 0 + ')');
+                        console.log('Error: ' + response.data.message);
+                    }
+                },
+                complete: function() {
+                    
+                    $('#bb_f_gif_sidebar').remove();  
+                    $('#bb_f_gif_content').remove();  
+                },
+                error: function(error) {
+                    console.log('AJAX error234:', error);
+                    
+                    $('#bb_f_gif_sidebar').remove();  
+                    $('#bb_f_gif_content').remove(); 
+                }
+            });
+        }
+        fetchFavoriteData();  
+    });
+
+</script>
 <div class="bb-sidebar">
     <div class="bb-sidebar-wrapper">
         <button type="button" class="bb-sidebar-toggle bb-sidebar-head-toggle">
@@ -172,11 +173,7 @@ update_option('favorite_caseIds_ajax', $favorite_caseIds);
 
         <div class="bb-nav-accordion">
             <?php 
-            if($combine_gallery_page_slug == $parts_page_name[0]) {
-                $data = get_option("bb_combine_api_data");
-            } else {
-                $data = get_option('bb_api_data');
-            }
+           
             $properties_data_all = json_decode($data, true);
             $properties_data = $properties_data_all;
 
@@ -302,13 +299,13 @@ update_option('favorite_caseIds_ajax', $favorite_caseIds);
                                     ksort($category_data['procedures']);
                                     foreach ($category_data['procedures'] as $procedure_name => $procedure_data) {
                                         if ($procedure_data['case_count'] != 0) {
-
+                                            
                                             $converted_procedure_name = preg_replace('/[^a-zA-Z0-9]+/', '-', $procedure_data['name']);
                                             $lower_procedure_name = strtolower($converted_procedure_name);
                                             
                                             $lower_procedure_name = urldecode($lower_procedure_name);
                                             $lower_procedure_name = removeAccents($lower_procedure_name);
-
+                                            
                                             $converted_procedure_name = urldecode($converted_procedure_name);
                                             $converted_procedure_name = removeAccents($converted_procedure_name);
                                             update_option($converted_procedure_name, $category_name);
@@ -339,7 +336,7 @@ update_option('favorite_caseIds_ajax', $favorite_caseIds);
             <ul>
                 <li>
                     <a class="bb-sidebar_favorites" href="/<?=$parts_page_name[0]?>/favorites/">
-                        <h3> My Favorites <span>(<?php echo $favorite_caseIds_count ?>)</span></h3>
+                        <h3> My Favorites <span id="bb_favorite_caseIds_count">(<?php echo get_option('bb_favorite_caseIds_count'); ?>)</span></h3>
                     </a> 
                 </li> 
             </ul>  
@@ -348,6 +345,8 @@ update_option('favorite_caseIds_ajax', $favorite_caseIds);
     
     <a href="/<?=$parts_page_name[0]?>/consultation/" class="bb-sidebar-btn">REQUEST A CONSULTATION</a>
     <p class="request-promo">Ready for the next step?<br>Contact us to request your consultation.</p>
+    <p>Befor and after gallery powered by <span style="color:red">BRAG book™</span></p>
+    
 </div>
 
 <script>

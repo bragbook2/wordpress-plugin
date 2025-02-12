@@ -575,6 +575,7 @@ function getCookie(name) {
 
 // Function to open the modal
 function openModal(caseId, bbApiToken, bbWebsiteId) {
+  console.log(caseId);
   // Set the caseId value in the form   
   if (caseIdInput) {
     caseIdInput.value = caseId;
@@ -689,7 +690,7 @@ if (modalToggle) {
           // Select the <span> element and get its current text value
           var $span = jQuery('a.bb-sidebar_favorites span');
           var text = $span.text();
-
+          console.log(text);
           // Extract the number between parentheses
           var match = text.match(/\((\d+)\)/);
           if (match) {

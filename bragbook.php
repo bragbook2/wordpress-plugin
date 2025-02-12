@@ -56,6 +56,7 @@ class mvpbrag {
         $page_slug = $post->post_name;
         update_option('bragbook_page_slug', $page_slug);
     }
+    
 }
 
 // Initialize the plugin

@@ -29,9 +29,332 @@ class Ajax_Handler {
         add_action( 'delete_post', [$this, 'bb_permanent_delete_empty_trash'] );
         add_action('wp_ajax_load_more_procedures', [$this, 'load_more_procedures']); 
         add_action('wp_ajax_nopriv_load_more_procedures', [$this, 'load_more_procedures']); 
-
+        add_action('wp_ajax_bb_fetch_favorite_data', [$this, 'bb_fetch_favorite_data']);
+        add_action('wp_ajax_nopriv_bb_fetch_favorite_data', [$this, 'bb_fetch_favorite_data']); 
+        add_action('wp_ajax_bb_generate_pagination', [$this, 'bb_generate_pagination']);
+        add_action('wp_ajax_nopriv_bb_generate_pagination', [$this, 'bb_generate_pagination']); 
     } 
+    public static function update_url($new_case_id, $page_id_via_slug, $url_bb) {
+        $path_parts = explode('/', $url_bb);
+        $procedure_id_bb = get_option($new_case_id . '_bb_procedure_id_f_' . $page_id_via_slug);
+        $procedure_title = get_option($procedure_id_bb . '_title');
+       
+        $converted_procedure_name = preg_replace('/[^a-zA-Z0-9]+/', '-', strtolower($procedure_title));
+        $converted_procedure_name = self::removeAccents_brag_favorite($converted_procedure_name);
+        $path_parts[count($path_parts) - 3] = $converted_procedure_name; 
+        $path_parts[count($path_parts) - 2] = get_option($new_case_id); 
         
+        return implode('/', $path_parts);
+    }
+
+    public static function generate_pagination($current_case_id, $case_id_list, $page_id_via_slug, $url_bb) {
+        $currentIndex = array_search($current_case_id, $case_id_list);
+        $prevIndex = max($currentIndex - 1, 0);
+        $nextIndex = min($currentIndex + 1, count($case_id_list) - 1);
+        $start = max($currentIndex - 1, 0);
+        $end = min($start + 3, count($case_id_list) - 1);
+
+        $end = min($end, $start + 3);
+
+        echo '<ul>';
+
+        if ($currentIndex == 0) {
+            echo '<li style="display:none;"><a href="#">Previous</a></li>';
+        } else {
+            echo '<li><a href="' . self::update_url($case_id_list[$prevIndex], $page_id_via_slug, $url_bb) . '"> &lt; <span>Previous</span></a></li>';
+        }
+        $page_count = $start + 1;
+        for ($i = $start; $i <= $end; $i++) {
+            $case_id = $case_id_list[$i];
+            $activeClass = ($case_id == $current_case_id) ? 'active' : ''; 
+            if (!empty($activeClass)) {
+                update_option('bb_current_case_page_count_f', $page_count);
+            ?>
+            <script> 
+                var page_c_title = "<?php echo $page_count; ?>";
+                var elements = document.querySelectorAll('.bb-patient-row h2 span');
+                elements.forEach(function(element) {
+                    element.textContent = page_c_title;
+                });
+            </script>
+            <?php
+            }
+            echo '<li class="' . $activeClass . ' bb-single-case"><a href="' . self::update_url($case_id, $page_id_via_slug, $url_bb) . '">' . $page_count++ . '</a></li>';
+        }
+        if($page_count<=2) {
+        ?>
+            <script>
+                var elements = document.querySelectorAll('.bb-single-case');
+                elements.forEach(function(element) {
+                    element.style.display = 'none';
+                });
+            </script>
+        <?php
+        }
+
+        if ($currentIndex == count($case_id_list) - 1) {
+            echo '<li style="display:none;"><a href="#">Next</a></li>';
+        } else {
+            if ($nextIndex > -1) {
+                echo '<li><a href="' . self::update_url($case_id_list[$nextIndex], $page_id_via_slug, $url_bb) . '"><span>Next</span> &gt;</a></li>';
+            }
+        }
+
+        echo '</ul>';
+    }
+   
+    public static function bb_generate_pagination() {
+        
+        $page_id_via_slug = sanitize_text_field($_POST['page_id_via_slug']);
+        $url_bb = sanitize_text_field($_POST['page_url']);
+        // Call your existing pagination function
+        ob_start();
+        $path_parts = explode('/', $url_bb);
+        $case_id_list = json_decode(get_option('bb_caseids_list_f'));
+        $current_case_id = $path_parts[4];
+
+        if (is_numeric($current_case_id)) {
+        $current_case_id = (int)$current_case_id; 
+        } else {
+        $current_case_id = get_option($current_case_id);
+        }  
+        self::generate_pagination($current_case_id, $case_id_list, $page_id_via_slug, $url_bb);
+        $output = ob_get_clean();
+        
+        // Return the result to be used in the AJAX callback
+        echo $output;
+        wp_die(); 
+    }
+    
+    // AJAX handler to fetch favorite data
+    public static function bb_limitWords($text, $wordLimit) {
+        $words = explode(' ', $text);
+        $words = array_slice($words, 0, $wordLimit);
+        $limitedText = implode(' ', $words);
+        return $limitedText;
+    }
+
+    public static function convertKeys($array) {
+        $result = array();
+        
+        if (!is_array($array) && !is_object($array)) {
+            $array = [];
+        }
+       
+        if(!empty($array)) {
+            foreach ($array as $key => $value) {
+                if (is_array($value) || is_object($value)) {
+                    $result[$key] = self::convertKeys($value);
+                } else {
+                    $newKey = str_replace(' ', '_', $key);
+                    $result[$newKey] = $value;
+                }
+            }
+        }
+        return $result;
+    }
+    public static function formatArrayToString($array) {
+        $result = array();
+        foreach ($array as $key => $value) {
+            if (is_array($value) || is_object($value)) {
+                $result[] = self::formatArrayToString($value);
+            } else {
+                $result[] = "{$key}-{$value}";
+            }
+        }
+        return implode(' ', $result);
+    }
+    public static function bb_fetch_favorite_data() {
+
+        $favorite_email_id = get_option('bragbook_favorite_email');
+        $favorite_caseIds_count = 0;
+        $favorite_caseIds = [];
+        $page_name = $_POST['page_name'];
+        $combine_gallery_page_slug = get_option('combine_gallery_slug');
+
+        if(isset($_COOKIE['wordpress_favorite_email'])) {
+            $cookieValue = $_COOKIE['wordpress_favorite_email'];
+            $decodedValue = urldecode($cookieValue);
+            $favorite_email_id = htmlspecialchars($decodedValue);
+
+            update_option('bragbook_favorite_email', $favorite_email_id);
+            $api_tokens = get_option('bragbook_api_token', []);
+            $websiteproperty_ids = get_option('bragbook_websiteproperty_id', []);
+            $gallery_slugs = get_option('bb_gallery_page_slug', []);
+            $favorite_data_bb = [];
+            foreach ($api_tokens as $index => $api_token) {
+                $websiteproperty_id = $websiteproperty_ids[$index] ?? '';
+                $page_slug_bb = $gallery_slugs[$index] ?? '';
+                if(($page_slug_bb == $page_name) || ($combine_gallery_page_slug == $page_name)) {
+                    if (empty($api_token) || empty($websiteproperty_id)) {
+                        continue;
+                    }
+                
+                    $url = 'https://www.bragbookv2.com/api/plugin/favorites?apiToken='.$api_token.'&websitepropertyId='.$websiteproperty_id.'&email='.$favorite_email_id;
+                    $ch = curl_init();
+                    curl_setopt($ch, CURLOPT_URL, $url);
+                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+                    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+
+                    $favorite_data_brag = curl_exec($ch);
+                    curl_close($ch);
+
+                    $favorite_data_bb[] = json_decode($favorite_data_brag, true);
+                }
+            }
+            $favorite_procedure_ids = [];
+            
+            if(!empty($favorite_data_bb) && is_array($favorite_data_bb)) {
+                foreach($favorite_data_bb as $favorite_data) {
+                    if(!empty($favorite_data) && is_array($favorite_data)) {
+                        foreach ($favorite_data as $favorite) {
+                            foreach($favorite as $nested_favorite) {
+                                if (isset($nested_favorite['cases']) && is_array($nested_favorite['cases'])) {
+                                    foreach ($nested_favorite['cases'] as $case) {
+                                        if (isset($case['id'])) {
+                                            $favorite_caseIds[] = $case['id'];
+                                            foreach($case['procedureIds'] as $bb_pro_id) {
+                                                $favorite_procedure_ids[] = $bb_pro_id; 
+                                            }
+                                        }
+                                    }
+                                }
+                            } 
+                        }
+                    }
+                }
+
+                $favorite_caseIds = array_unique($favorite_caseIds);
+                $expireTime = time() + (365 * 24 * 60 * 60); // 1 year
+                $caseIdsString = implode(',', $favorite_caseIds);
+                setcookie('wordpress_favorite_case_id', $caseIdsString, $expireTime, '/');
+                $favorite_caseIds_count = count($favorite_caseIds);
+                update_option('bb_favorite_caseIds_count', $favorite_caseIds_count);
+                $favorite_procedure_ids = array_unique($favorite_procedure_ids);
+                update_option('bb_favorite_procedure_ids', $favorite_procedure_ids); 
+                update_option('favorite_caseIds_ajax', $favorite_caseIds);
+                
+                $matching_data_all = [];
+                $procedure_counts = [];
+                $bb_case_ids_list_a = [];
+                $patient_count = 1;
+
+                $favorite_procedure_ids = get_option('bb_favorite_procedure_ids');
+                $favorite_caseIds = get_option('favorite_caseIds_ajax');
+                if($_POST['value'] == 'combine') {
+                    $properties_data = get_option("bb_combine_api_data");
+                } else {
+                    $properties_data = get_option('bb_api_data');
+                }
+                $properties_data_ajax_bb = json_decode($properties_data);
+            
+                if(!empty($properties_data_ajax_bb) && (is_array($properties_data_ajax_bb) || is_object($properties_data_ajax_bb))) {
+                    
+                    foreach ($properties_data_ajax_bb as $token_key_bb => $token_bb) {
+                        foreach ($token_bb as $bb_website_id => $website_id_bb) { 
+                            foreach($website_id_bb as $api_item) {
+                            
+                                foreach($api_item->api_data as $item){
+                                    if(isset($favorite_procedure_ids) && !empty($favorite_procedure_ids)) {
+                                        foreach($favorite_procedure_ids as $bb_favorite_procedure_id) {
+                                            if (in_array($bb_favorite_procedure_id, $item->procedureIds)) {
+                                                if(in_array($item->id, $favorite_caseIds)) {
+                                                
+                                                    $item->procedure_id = $bb_favorite_procedure_id;
+                                                    $item_id = $item->id;
+                                                    $matching_data_all[$item_id] = $item;
+                                                }
+                                                
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+        
+            $matching_data_all  =  array_values($matching_data_all); 
+            $patient_count = 1;
+            
+                
+                $page_id_via_slug = $_POST['page_id'];
+                foreach($matching_data_all as $procedure_data) {
+                    
+                    $convertedArray = self::convertKeys($procedure_data->procedureDetails);
+                    $formattedString = self::formatArrayToString($convertedArray);
+                    
+                    if(!empty($procedure_data->photoSets)) { 
+                        $p_c_count = $patient_count;
+                        if(isset($procedure_data->procedure_case_count) && $procedure_data->procedure_case_count == NULL) {
+                        $p_c_count = $patient_count;
+                        }elseif(isset($procedure_data->procedure_case_count)) {
+                        $p_c_count = $procedure_data->procedure_case_count;
+                        }
+                        $pro_title = get_option($procedure_data->procedure_id . '_title');
+                        $bb_page_name = '/' .$page_name. '/favorites/';
+                        $bb_new_image_case = isset($procedure_data->photoSets[0]->highResPostProcessedImageLocation) && !is_null($procedure_data->photoSets[0]->highResPostProcessedImageLocation)
+                                                ? $procedure_data->photoSets[0]->highResPostProcessedImageLocation 
+                                                    : (isset($procedure_data->photoSets[0]->postProcessedImageLocation) && !is_null($procedure_data->photoSets[0]->postProcessedImageLocation) 
+                                                        ? $procedure_data->photoSets[0]->postProcessedImageLocation 
+                                                        : $procedure_data->photoSets[0]->originalBeforeLocation);
+                        $converted_procedure_name = preg_replace('/[^a-zA-Z0-9]+/', '-', $pro_title);
+                        $converted_procedure_name = strtolower($converted_procedure_name);
+                        $html_content .= '<div class="bb-content-box ' . $formattedString . '"><div 
+                        class="bb-content-thumbnail"><a 
+                        href="' . $bb_page_name . self::removeAccents_brag_favorite($converted_procedure_name) . '/' . $procedure_data->photoSets[0]->caseId . '/"><img 
+                        src="' . $bb_new_image_case . '" alt="' . (isset($procedure_data->photoSets[0]->seoAltText) ? $procedure_data->photoSets[0]->seoAltText : '') . '"></a><img
+                        class="bb-heart-icon" data-case-id="' . $procedure_data->photoSets[0]->caseId . '" 
+                        src="' . BB_PLUGIN_DIR_PATH . 'assets/images/red-heart.svg" alt="heart"></div><div class="bb-content-box-inner"><div 
+                        class="bb-content-box-inner-left"><h5>' . $pro_title . ' : Patient ' . $p_c_count . '</h5><p>' . (!empty($procedure_data->details) ? self::bb_limitWords($procedure_data->details, 50) : "") . '</p><button 
+                        type="button"><a href="' . $bb_page_name . self::removeAccents_brag_favorite($converted_procedure_name) . '/' . $procedure_data->photoSets[0]->caseId . '/">View More</a></button></div><div 
+                        class="bb-content-box-inner-right"><img class="" data-case-id="' . $procedure_data->photoSets[0]->caseId . '" src="' . BB_PLUGIN_DIR_PATH . 'assets/images/red-heart-outline.svg" alt="heart"></div></div></div>';
+                        $bb_case_ids_list_a[] = $procedure_data->photoSets[0]->caseId;
+                        update_option($procedure_data->photoSets[0]->caseId . '_bb_procedure_id_f_' . $page_id_via_slug, $procedure_data->procedure_id);
+
+                        $patient_count++;
+                    }
+                }
+            
+                $bb_encode_caseids_list = json_encode($bb_case_ids_list_a); 
+                update_option('bb_caseids_list_f', $bb_encode_caseids_list);
+            }
+            
+            // Return the data to the frontend
+            wp_send_json_success(array(
+                'html' => $html_content,
+                'favorite_case_ids' => $favorite_caseIds,
+                'favorite_procedure_ids' => $favorite_procedure_ids,
+                'favorite_case_count' => $favorite_caseIds_count
+            ));
+        } else {
+            update_option('bb_favorite_caseIds_count', '');
+                
+            update_option('bb_favorite_procedure_ids', []); 
+            update_option('favorite_caseIds_ajax', []);
+            wp_send_json_error(array('message' => 'No favorite email found.'));
+        }
+    }
+    public static function removeAccents_brag_favorite($string) {
+        $accents = [
+            'à' => 'a', 'á' => 'a', 'â' => 'a', 'ã' => 'a', 'ä' => 'a', 'å' => 'a', 'æ' => 'a',
+            'è' => 'e', 'é' => 'e', 'ê' => 'e', 'ë' => 'e', 'ē' => 'e', 'ė' => 'e', 'ě' => 'e',
+            'ì' => 'i', 'í' => 'i', 'î' => 'i', 'ï' => 'i', 'ī' => 'i', 'į' => 'i', 'ì' => 'i',
+            'ò' => 'o', 'ó' => 'o', 'ô' => 'o', 'õ' => 'o', 'ö' => 'o', 'ø' => 'o', 'ō' => 'o',
+            'ù' => 'u', 'ú' => 'u', 'û' => 'u', 'ü' => 'u', 'ū' => 'u', 'ų' => 'u', 'ű' => 'u',
+            'ý' => 'y', 'ÿ' => 'y',
+            'ç' => 'c', 'ć' => 'c', 'č' => 'c', 'ĉ' => 'c', 'ċ' => 'c',
+            'ñ' => 'n', 'ń' => 'n', 'ņ' => 'n', 'ň' => 'n',
+            'ś' => 's', 'š' => 's', 'ş' => 's',
+            'ž' => 'z', 'ź' => 'z', 'ż' => 'z',
+        ];
+    
+        foreach ($accents as $accented => $unaccented) {
+            $string = str_replace($accented, $unaccented, $string);
+        }
+        return $string;
+    }
+  
     public function bb_update_api() {
         $bb_set_transient_urls = get_option( 'bb_set_transient_url', [] );
         
@@ -85,7 +408,12 @@ class Ajax_Handler {
         $patient_count = 1;
         $bb_isNude = ""; 
         $favorite_caseIds = get_option('favorite_caseIds_ajax');
-
+        
+        $bbrag_case_url_bb = strtok($_SERVER["REQUEST_URI"], '?');
+        $bbragbook_case_url_bb = trim($bbrag_case_url_bb, '/');
+        $parts_page_name = explode('/', $bbragbook_case_url_bb);
+        $page_bb_data = get_page_by_path($parts_page_name[0]);
+        $page_id_via_slug = $page_bb_data->ID;
         ob_start();
         foreach ($paged_data as $procedure_data) {
             $formattedString = '';
@@ -1019,7 +1347,6 @@ class Ajax_Handler {
         <?php
     }
    
-
     // Display form entries
     function display_form_entries() {
         ?>
