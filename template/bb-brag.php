@@ -8,7 +8,7 @@ $bbrag_case_url = strtok($_SERVER["REQUEST_URI"], '?');
 $bbragbook_case_url = trim($bbrag_case_url, '/');
 $parts = explode('/', $bbragbook_case_url);
 $page = get_page_by_path($parts[0]);
-
+$favorite_caseIds = get_option('favorite_caseIds_ajax');
 $page_id_via_slug = "";
 if($page) {
     $page_id_via_slug = $page->ID;
@@ -341,7 +341,8 @@ if ($bbrag_case_url == "/".$parts[0]."/consultation/") {
                                                         <label class="bb-checkbox-container" for="m-gender-male">Male
                                                             <input type="checkbox" id="m-gender-male" data-filter="gender" data-value="male" onchange="handleDynamicCheckboxChange(this)">
                                                             <span class="checkmark"></span>
-                                                        </label>     
+                                                        </label> 
+                                                           
                                                     </div>
                                                 </div>
                                             </div>
@@ -453,13 +454,13 @@ if ($bbrag_case_url == "/".$parts[0]."/consultation/") {
                                                             <div class="panel">
                                                                 <div class="bb-filter-select-wrapper">
                                                                     <div class="bb-input-box">
-                                                                        <?php 
+                                                                        <?php  
                                                                             $bb_advance_key = strtolower(str_replace(' ', '_', $bb_key));
                                                                             foreach($bb_value['Options'] as $value) {
                                                                                 $bb_advance_value = strtolower(str_replace(' ', '_', $value));
                                                                                 ?>
-                                                                                <label class="bb-checkbox-container" for="<?php echo $bb_advance_key.$bb_advance_value; ?>"><?php echo $value; ?> 
-                                                                                    <input type="checkbox" id="<?php echo $bb_advance_key.$bb_advance_value; ?>" data-filter="<?php echo $bb_advance_key; ?>" data-value="<?php echo $bb_advance_key.$bb_advance_value; ?>" onchange="handleDynamicCheckboxChange(this)">
+                                                                                <label class="bb-checkbox-container" for="<?php echo $bb_advance_key . '-' . $bb_advance_value; ?>"><?php echo $value; ?> 
+                                                                                    <input type="checkbox" id="<?php echo $bb_advance_key . '-' . $bb_advance_value; ?>" data-filter="<?php echo $bb_advance_key; ?>" data-value="<?php echo $bb_advance_key . '-' . $bb_advance_value; ?>" onchange="handleDynamicCheckboxChange(this)">
                                                                                     <span class="checkmark"></span>
                                                                                 </label>
                                                                             <?php
@@ -598,6 +599,7 @@ if ($bbrag_case_url == "/".$parts[0]."/consultation/") {
                             $bb_procedure_id = $procedure_data['procedureIds'][0];
 
                             if (!is_null($procedure_data['procedureDetails'])) {
+                                $advanced_filters_result_string = "";
                                 if (isset($procedure_data['procedureDetails'][$bb_procedure_id])) {
                                     $bb_procedureDetails = $procedure_data['procedureDetails'][$bb_procedure_id];
                                     
@@ -607,11 +609,11 @@ if ($bbrag_case_url == "/".$parts[0]."/consultation/") {
                                         
                                         if (is_array($bb_procedureDetails_value)) {
                                             foreach ($bb_procedureDetails_value as $bb_procedureDetails_item) {
-                                                $advanced_filters_result_string .= $bb_procedureDetails_key . strtolower($bb_procedureDetails_item) . ' ';
+                                                $advanced_filters_result_string .= $bb_procedureDetails_key . '-' . $bb_procedureDetails_key . '-' . strtolower($bb_procedureDetails_item) . ' ';
                                             }
-                                        } else {
+                                        } else { 
                                             $bb_procedureDetails_value = strtolower(str_replace(' ', '_', $bb_procedureDetails_value));
-                                            $advanced_filters_result_string .= $bb_procedureDetails_key . $bb_procedureDetails_value . ' ';
+                                            $advanced_filters_result_string .= $bb_procedureDetails_key . '-' . $bb_procedureDetails_key . '-' . $bb_procedureDetails_value . ' ';
                                         }
                                     }
                                     $advanced_filters_result_string = trim($advanced_filters_result_string);
@@ -631,14 +633,14 @@ if ($bbrag_case_url == "/".$parts[0]."/consultation/") {
                             ];
 
                             $classString = implode(' ', $classes);
-                            if(!empty($procedure_data['photoSets'])) { ?>
+                            if(!empty($procedure_data['photoSets']) && $procedure_data['isForWebsite'] == true) { ?>
                                 <div class="<?php echo $classString; ?> <?php echo $formattedString;?>">
                                     <div class="bb-content-thumbnail">
                                         <?php 
                                             $p_c_count = $procedure_data['procedure_case_count'] == NULL ? $patient_count : $procedure_data['procedure_case_count'];
                                             $category_match_id = empty($category_to_match) ? $procedure_data['procedure_id'] : $category_to_match; 
                                             $pro_title = empty($procedure_title) ? $procedure_data['procedure_title'] : $procedure_title; 
-                                            // $bb_case_ids_list[] = $procedure_data['photoSets'][0]['caseId'];
+                                            
                                             $converted_procedure_name = preg_replace('/[^a-zA-Z0-9]+/', '-', $pro_title); 
                                             $bb_seo_detail = isset($procedure_data['caseDetails'][0]) ? $procedure_data['caseDetails'][0] : [];
 
@@ -665,6 +667,7 @@ if ($bbrag_case_url == "/".$parts[0]."/consultation/") {
                                             alt="<?php echo isset($procedure_data['photoSets'][0]['seoAltText']) ? $procedure_data['photoSets'][0]['seoAltText'] : ''; ?>">
                                         </a>
                                         <?php 
+                                         
                                         if (in_array($procedure_data['photoSets'][0]['caseId'], $favorite_caseIds)) {
                                         ?>
                                             <img class="bb-heart-icon bb-open-fav-modal"
@@ -749,17 +752,23 @@ if ($bbrag_case_url == "/".$parts[0]."/consultation/") {
                         update_option('bb_scaseids_list_' . $parts[1], $bb_encode_caseids_list);
                         
                         update_option('bb_ajax_path', $parts[0]);
+                        if($patient_count >= 11){
                         ?>
                     <div class="ajax-load-more">
                         <button class="ajax-load-more-btn" data-offset="10">Load More</button>
                     </div>
-
+                        <?php   
+                        }
+                        ?>
                     <script>
                         var bb_isNude = "<?php echo $bb_isNude; ?>";
-                        if(bb_isNude !== '') {
+                        if(bb_isNude == true) {
+                            jQuery('.bb-content-box').css('opacity', '0');
                             const userResponse = confirm("Are you 18 years old?");
                             if (userResponse) {
+                                jQuery('.bb-content-box').css('opacity', '1');
                             } else {
+                                jQuery('.bb-content-box').css('opacity', '1');
                                 window.location.href = '/'; 
                             }
                         }
@@ -843,12 +852,13 @@ if ($bbrag_case_url == "/".$parts[0]."/consultation/") {
                         } 
                         return false;
                     })();
-
-                    const stringMatch = stringValue !== '' && (stringValue === 'all' || classes.includes(`${currentFilter}-${stringValue}`) || classes.includes(`${stringValue}`));
+                   const stringMatch = stringValue !== '' && (stringValue === 'all' || classes.includes(`${currentFilter}-${stringValue}`));
+                   
                     if (!attributeMatch && !stringMatch) {
                         showBox = false; 
                     }
                 });
+               
                 box.style.display = showBox ? 'block' : 'none';
             });
         }
@@ -1138,7 +1148,6 @@ if ($bbrag_case_url == "/".$parts[0]."/consultation/") {
                             function update_url($new_case_id, $page_id_via_slug) {
                                 $url = strtok($_SERVER["REQUEST_URI"], '?');
                                 $path_parts = explode('/', $url);
-                               // $procedure_id_bb = get_option($new_case_id . '_bb_procedure_id_' . $page_id_via_slug);
                                 $procedure_id_bb = get_option($new_case_id . '_bb_procedure_id_s_' . $path_parts[2]);
                                 $procedure_title = get_option($procedure_id_bb . '_title');
                                 

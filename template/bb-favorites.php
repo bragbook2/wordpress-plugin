@@ -4,7 +4,6 @@ Template Name: favorites Page Template
 */
 
 get_header();
-
 $bbrag_case_url = strtok($_SERVER["REQUEST_URI"], '?');
 $bbragbook_case_url = trim($bbrag_case_url, '/');
 $parts = explode('/', $bbragbook_case_url);
@@ -25,37 +24,11 @@ if (count($parts) >= 4) {
     <main class="bb-main ">
         <?php include plugin_dir_path(__FILE__) . 'sidebar-template.php'; 
         
-        $matching_data = [];
-        $procedure_counts = [];
-        if(!empty($properties_data) && is_array($properties_data)) {
-            foreach ($properties_data as $token_key_bb => $token_bb) {
-                foreach ($token_bb as $bb_website_id => $website_id_bb) { 
-                    foreach($website_id_bb as $api_item) {
-                        foreach($api_item['api_data'] as $item){
-                            if(isset($favorite_procedure_ids) && !empty($favorite_procedure_ids)) {
-                                foreach($favorite_procedure_ids as $bb_favorite_procedure_id) {
-                                    if (in_array($bb_favorite_procedure_id, $item['procedureIds'])) {
-                                        if(in_array($item['id'], $favorite_caseIds)) {
-                                            $item['procedure_id'] = $bb_favorite_procedure_id;
-                                            $item_id = $item['id'];
-                                            $matching_data[$item_id] = $item;
-                                        }
-                                        
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        $matching_data  =  array_values($matching_data); 
         if (isset($bbrag_procedure_title) &&     
             isset($bbrag_case_id) && 
             $bbrag_case_url == "/".$parts[0]."/favorites/".$bbrag_procedure_title."/". $bbrag_case_id . "/" && 
             get_option($bbrag_case_id . "_bb_procedure_id_f_" . $page_id_via_slug) !== ''
-            ) {  
+            ) { 
             $bbrag_procedure_id = get_option($bbrag_case_id . "_bb_procedure_id_f_" . $page_id_via_slug);
             $bbrag_case_id = get_option($bbrag_case_id);  
             $bbrag_procedure_title = get_option($bbrag_procedure_id . '_title'); 
@@ -66,6 +39,7 @@ if (count($parts) >= 4) {
             $procedure_id = $bbrag_procedure_id;
             $patient_id =  $bbrag_patient;
             ?>
+            
             <div class="bb-content-area">
                 <?php 
                 $matching_data = []; 
@@ -257,90 +231,29 @@ if (count($parts) >= 4) {
                         </ul>
                         <?=$patient_detail?>
                         <a href="/<?php echo $parts[0]; ?>/consultation/" class="bb-sidebar-btn">REQUEST A CONSULTATION</a>
-                        <div class="bb-patient-slides">
-                            <?php 
-                            function update_url($new_case_id, $page_id_via_slug) {
-                                $url = strtok($_SERVER["REQUEST_URI"], '?');
-                                $path_parts = explode('/', $url);
-                                $procedure_id_bb = get_option($new_case_id . '_bb_procedure_id_f_' . $page_id_via_slug);
-                                $procedure_title = get_option($procedure_id_bb . '_title');
-                                
-                                $converted_procedure_name = str_replace(' ', '-', strtolower($procedure_title));
-                                $path_parts[count($path_parts) - 3] = $converted_procedure_name; 
-                                $path_parts[count($path_parts) - 2] = get_option($new_case_id); 
-                                
-                                return implode('/', $path_parts);
-                            }
-    
-                            function generate_pagination($current_case_id, $case_id_list, $page_id_via_slug) {
-                                $currentIndex = array_search($current_case_id, $case_id_list);
-                                $prevIndex = max($currentIndex - 1, 0);
-                                $nextIndex = min($currentIndex + 1, count($case_id_list) - 1);
-                                $start = max($currentIndex - 1, 0);
-                                $end = min($start + 3, count($case_id_list) - 1);
-    
-                                $end = min($end, $start + 3);
-    
-                                echo '<ul>';
-        
-                                if ($currentIndex == 0) {
-                                    echo '<li style="display:none;"><a href="#">Previous</a></li>';
-                                } else {
-                                    echo '<li><a href="' . update_url($case_id_list[$prevIndex], $page_id_via_slug) . '"> &lt; <span>Previous</span></a></li>';
-                                }
-                                $page_count = $start + 1;
-                                for ($i = $start; $i <= $end; $i++) {
-                                    $case_id = $case_id_list[$i];
-                                    $activeClass = ($case_id == $current_case_id) ? 'active' : ''; 
-                                    if (!empty($activeClass)) {
-                                        update_option('bb_current_case_page_count_f', $page_count);
-                                    ?>
-                                    <script> 
-                                        var page_c_title = "<?php echo $page_count; ?>";
-                                        var elements = document.querySelectorAll('.bb-patient-row h2 span');
-                                        elements.forEach(function(element) {
-                                            element.textContent = page_c_title;
-                                        });
-                                    </script>
-                                    <?php
+                        <script>
+                            jQuery(document).ready(function($) {
+                                var page_id_via_slug = "<?php echo $page_id_via_slug; ?>";
+                                var url = "<?php echo admin_url( 'admin-ajax.php' ); ?>";
+                                var page_url = "<?php echo strtok($_SERVER['REQUEST_URI'], '?'); ?>";
+                                $.ajax({
+                                    type: 'POST',
+                                    url: url,
+                                    data: {
+                                        action: 'bb_generate_pagination',
+                                        page_id_via_slug: page_id_via_slug,
+                                        page_url: page_url
+                                    },
+                                    success: function(response) {
+                                        jQuery('.bb-patient-slides').html(response);
+                                    },
+                                    error: function(error) {
+                                        console.log(error);
                                     }
-                                    echo '<li class="' . $activeClass . ' bb-single-case"><a href="' . update_url($case_id, $page_id_via_slug) . '">' . $page_count++ . '</a></li>';
-                                }
-                                if($page_count<=2) {
-                                ?>
-                                    <script>
-                                        var elements = document.querySelectorAll('.bb-single-case');
-                                        elements.forEach(function(element) {
-                                            element.style.display = 'none';
-                                        });
-                                    </script>
-                                <?php
-                                }
-
-                                if ($currentIndex == count($case_id_list) - 1) {
-                                    echo '<li style="display:none;"><a href="#">Next</a></li>';
-                                } else {
-                                    if ($nextIndex > -1) {
-                                        echo '<li><a href="' . update_url($case_id_list[$nextIndex], $page_id_via_slug) . '"><span>Next</span> &gt;</a></li>';
-                                    }
-                                }
-
-                                echo '</ul>';
-                            }
-            
-                            $url = strtok($_SERVER["REQUEST_URI"], '?');
-                            $path_parts = explode('/', $url);
-                            $case_id_list = json_decode(get_option('bb_caseids_list_f'));
-                            $current_case_id = $path_parts[4];
-
-                            if (is_numeric($current_case_id)) {
-                            $current_case_id = (int)$current_case_id; 
-                            } else {
-                            $current_case_id = get_option($current_case_id);
-                            }  
-                            generate_pagination($current_case_id, $case_id_list, $page_id_via_slug);
-                            ?>
-                        </div>
+                                });
+                            });
+                        </script>
+                        <div class="bb-patient-slides"></div>
                     </div>
                 </div>
                 <?php
@@ -408,111 +321,8 @@ if (count($parts) >= 4) {
                 <h2><span>My Favorites</span></h2>
             </div>
             <div class="bb-content-boxes bb-content-boxes-sm">
-                <div class="bb-content-boxes">
-                    <?php 
-                    function bb_limitWords($text, $wordLimit) {
-                        $words = explode(' ', $text);
-                        $words = array_slice($words, 0, $wordLimit);
-                        $limitedText = implode(' ', $words);
-                    
-                        return $limitedText;
-                    }
-
-                    $patient_count = 1;
-                    function convertKeys($array) {
-                        $result = array();
-                        if (!is_array($array)) {
-                            $array = [];
-                        }
-                        
-                        if(!empty($array)) {
-                            foreach ($array as $key => $value) {
-                                if (is_array($value)) {
-                                    $result[$key] = convertKeys($value);
-                                } else {
-                                    $newKey = str_replace(' ', '_', $key);
-                                    $result[$newKey] = $value;
-                                }
-                            }
-                        }
-                        return $result;
-                    }
-                    function formatArrayToString($array) {
-                        $result = array();
-                        foreach ($array as $key => $value) {
-                            if (is_array($value)) {
-                                $result[] = formatArrayToString($value);
-                            } else {
-                                $result[] = "{$key}-{$value}";
-                            }
-                        }
-                        return implode(' ', $result);
-                    }
-                    $bb_case_ids_list = [];
-                    $patient_count = 1;
-                    foreach($matching_data as $procedure_data) {
-                        $convertedArray = convertKeys($procedure_data['procedureDetails']);
-                        $formattedString = formatArrayToString($convertedArray);
-                        if(!empty($procedure_data['photoSets'])) { ?>
-                            <?php 
-                                $p_c_count = $patient_count;
-                                if(isset($procedure_data['procedure_case_count']) && $procedure_data['procedure_case_count'] == NULL) {
-                                $p_c_count = $patient_count;
-                                }elseif(isset($procedure_data['procedure_case_count'])) {
-                                $p_c_count = $procedure_data['procedure_case_count'];
-                                }
-                                $pro_title = get_option($procedure_data['procedure_id'] . '_title');
-                            ?>
-                            <div class="bb-content-box <?php echo $formattedString;?>">
-                                <div class="bb-content-thumbnail">
-                                    <?php  
-                                        $converted_procedure_name = str_replace(' ', '-', $pro_title);
-                                    
-                                        $bb_page_name = isset($page->post_name) ? '/' .$page->post_name. '/favorites/': '';
-                                    ?>
-                                    <a href="<?php echo $bb_page_name . strtolower($converted_procedure_name) . '/' . $procedure_data['photoSets'][0]['caseId']; ?>/">
-                                        <?php
-                                            $bb_new_image_case = isset($procedure_data['photoSets'][0]['highResPostProcessedImageLocation']) && !is_null($procedure_data['photoSets'][0]['highResPostProcessedImageLocation'])
-                                            ? $procedure_data['photoSets'][0]['highResPostProcessedImageLocation'] 
-                                                : (isset($procedure_data['photoSets'][0]['postProcessedImageLocation']) && !is_null($procedure_data['photoSets'][0]['postProcessedImageLocation']) 
-                                                    ? $procedure_data['photoSets'][0]['postProcessedImageLocation'] 
-                                                    : $procedure_data['photoSets'][0]['originalBeforeLocation']);
-                                        ?>
-                                        <img src="<?php echo $bb_new_image_case ?>" 
-                                        alt="<?php echo isset($procedure_data['photoSets'][0]['seoAltText']) ? $procedure_data['photoSets'][0]['seoAltText'] : ''; ?>">
-                                    </a> 
-                                    <img class="bb-heart-icon" data-case-id="<?php echo $procedure_data['photoSets'][0]['caseId'] ?>" src="<?php echo BB_PLUGIN_DIR_PATH; ?>assets/images/red-heart.svg" alt="heart">
-                                </div>
-                                <div class="bb-content-box-inner">
-                                    <div class="bb-content-box-inner-left">
-                                        <h5><?php echo $pro_title; ?> : Patient <?php  echo $p_c_count ?></h5>
-                                        <p>
-                                        <?php
-                                            echo !empty($procedure_data['details']) ? bb_limitWords($procedure_data['details'], 50) : ""; 
-                                            $bb_case_ids_list[] = $procedure_data['photoSets'][0]['caseId'];
-                                        ?>
-                                        </p>
-                                        <?php  
-                                            update_option($procedure_data['photoSets'][0]['caseId'] . '_bb_procedure_id_f_' . $page_id_via_slug, $procedure_data['procedure_id']);
-                                            $converted_procedure_name = str_replace(' ', '-', $pro_title);
-                                        
-                                            $bb_page_name = isset($page->post_name) ? '/' .$page->post_name. '/favorites/': '';
-                                        ?>
-                                        <button type="button"><a href="<?php echo $bb_page_name . strtolower($converted_procedure_name) . '/' . $procedure_data['photoSets'][0]['caseId']; ?>/">View More</a></button>
-                                    </div>
-                                    <div class="bb-content-box-inner-right">
-                                        <img class="" data-case-id="<?php echo $procedure_data['photoSets'][0]['caseId'] ?>" src="<?php echo BB_PLUGIN_DIR_PATH; ?>assets/images/red-heart-outline.svg" alt="heart">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <?php
-                        $patient_count++;
-                        }
-                    }
-                    $bb_encode_caseids_list = json_encode($bb_case_ids_list);
-                    update_option('bb_caseids_list_f', $bb_encode_caseids_list);
-                    ?>     
+                <div class="bb-content-boxes" id="bb-content-boxes-ajax">
+                         
                 </div>
                 
             </div>
@@ -523,6 +333,6 @@ if (count($parts) >= 4) {
     </main>
 </div>
 
-
 <?php
 get_footer();
+
