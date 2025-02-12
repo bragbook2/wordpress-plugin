@@ -454,7 +454,6 @@ jQuery(document).ready(function ($) {
         $(".bb-is-required-success").text('Submitting form...');
       },
       success: function (response) {
-        console.log(response);
         var successMessage = response.data;
         $(".bb-is-required-success").text(successMessage);
         // $(".bb-consultation-form").addClass("bb-display-none");
@@ -575,7 +574,6 @@ function getCookie(name) {
 
 // Function to open the modal
 function openModal(caseId, bbApiToken, bbWebsiteId) {
-  console.log(caseId);
   // Set the caseId value in the form   
   if (caseIdInput) {
     caseIdInput.value = caseId;
@@ -661,8 +659,6 @@ if (modalToggle) {
   function bb_favorites_submission(data) {
     // Submit form with caseId
     var caseId = data.caseIds;
-    console.log(data);
-    
     jQuery.ajax({
       url: bb_plugin_data.ajaxurl,
       type: 'POST',
@@ -677,7 +673,6 @@ if (modalToggle) {
 
       },
       success: function (response) {
-        console.log(response);
         if (response.success) {
           var imgElement = jQuery(`img[data-case-id="${caseId}"]`);
           if (imgElement.length) {
@@ -690,7 +685,6 @@ if (modalToggle) {
           // Select the <span> element and get its current text value
           var $span = jQuery('a.bb-sidebar_favorites span');
           var text = $span.text();
-          console.log(text);
           // Extract the number between parentheses
           var match = text.match(/\((\d+)\)/);
           if (match) {
