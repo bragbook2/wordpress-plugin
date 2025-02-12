@@ -7,6 +7,9 @@ class Activator {
         // Enqueue CSS file
         // Get the current timestamp
         $version = time();
+        if (!wp_script_is('jquery', 'enqueued')) {
+            wp_enqueue_script('jquery');
+        }
         wp_enqueue_style(
             'bragbook-style',
             BB_PLUGIN_DIR_PATH . 'assets/css/style.css',
