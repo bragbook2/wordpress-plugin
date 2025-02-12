@@ -574,6 +574,7 @@ function getCookie(name) {
 
 // Function to open the modal
 function openModal(caseId, bbApiToken, bbWebsiteId) {
+  console.log(caseId);
   // Set the caseId value in the form   
   if (caseIdInput) {
     caseIdInput.value = caseId;
