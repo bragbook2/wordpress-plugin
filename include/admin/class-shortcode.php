@@ -683,7 +683,7 @@ class Shortcode {
                 </a> 
             </li> 
         </ul> -->
-        <p>Befor and after gallery powered by <span style="color:red">BRAG book™</span></p>
+        <!-- <p>Befor and after gallery powered by <span style="color:red">BRAG book™</span></p> -->
  
         <?php
     }

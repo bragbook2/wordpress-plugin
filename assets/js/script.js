@@ -102,7 +102,51 @@ for (let i = 0; i < bb_acc.length; i++) {
 }
 
 jQuery(document).ready(function ($) {
-  
+  // SLIDER
+	if ($.fn.slick) {
+ 	  const bb_slider = $('body .bb-slider').slick({
+// 	   $('body .bb-slider').slick({
+		infinite: true,
+		slidesToShow: 3,
+		slidesToScroll: 1,
+		prevArrow: `<img class="bb-arrow bb-left-arrow" src="${bb_plugin_data.leftArrow}">`,
+		nextArrow: `<img class="bb-arrow bb-right-arrow" src="${bb_plugin_data.rightArrow}">`,
+		responsive: [{
+			breakpoint: 1200,
+			settings: {
+			  slidesToShow: 2,
+			}
+		  },
+		  {
+			breakpoint: 992,
+			settings: {
+			  slidesToShow: 1,
+			}
+		  },
+		  {
+			breakpoint: 768,
+			settings: {
+			  slidesToShow: 1,
+			  prevArrow: `<img class="bb-arrow bb-left-arrow" src="${bb_plugin_data.leftArrowUrl}">`,
+			  nextArrow: `<img class="bb-arrow bb-right-arrow" src="${bb_plugin_data.rightArrowUrl}">`,
+			}
+		  }
+		]
+	  });
+	} else {
+        console.error("Slick Carousel is not loaded.");
+    }
+  const pageContainer = document.querySelector('body');
+
+  const pageContainerWidth = pageContainer.offsetWidth;
+
+  if (pageContainerWidth <= 1200 && pageContainerWidth >= 768) {
+    bb_slider.slick('slickSetOption', 'slidesToShow', 2, true);
+  } else if (pageContainerWidth <= 768) {
+    bb_slider.slick('slickSetOption', 'slidesToShow', 1, true);
+    bb_slider.slick('slickSetOption', 'prevArrow', `<img class="bb-arrow bb-left-arrow" src="${bb_plugin_data.leftArrowUrl}">`, true);
+    bb_slider.slick('slickSetOption', 'nextArrow', `<img class="bb-arrow bb-right-arrow" src="${bb_plugin_data.rightArrowUrl}">`, true);
+  }
   $(document).on('click', '#bb_update_api', function(e) {
     e.preventDefault();
     $('.update-api-status').text('');
@@ -392,50 +436,7 @@ jQuery(document).ready(function ($) {
       }
     });
   });
-  // SLIDER
-
-  const bb_slider = jQuery('body .bb-slider').slick({
-    infinite: true,
-    slidesToShow: 3,
-    slidesToScroll: 1,
-    prevArrow: `<img class="bb-arrow bb-left-arrow" src="${bb_plugin_data.leftArrow}">`,
-    nextArrow: `<img class="bb-arrow bb-right-arrow" src="${bb_plugin_data.rightArrow}">`,
-    responsive: [{
-        breakpoint: 1200,
-        settings: {
-          slidesToShow: 2,
-        }
-      },
-      {
-        breakpoint: 992,
-        settings: {
-          slidesToShow: 1,
-        }
-      },
-      {
-        breakpoint: 768,
-        settings: {
-          slidesToShow: 1,
-          prevArrow: `<img class="bb-arrow bb-left-arrow" src="${bb_plugin_data.leftArrowUrl}">`,
-          nextArrow: `<img class="bb-arrow bb-right-arrow" src="${bb_plugin_data.rightArrowUrl}">`,
-        }
-      }
-    ]
-  });
-
-  const pageContainer = document.querySelector('body');
-
-  const pageContainerWidth = pageContainer.offsetWidth;
-
-  if (pageContainerWidth <= 1200 && pageContainerWidth >= 768) {
-    bb_slider.slick('slickSetOption', 'slidesToShow', 2, true);
-  } else if (pageContainerWidth <= 768) {
-    bb_slider.slick('slickSetOption', 'slidesToShow', 1, true);
-    bb_slider.slick('slickSetOption', 'prevArrow', `<img class="bb-arrow bb-left-arrow" src="${bb_plugin_data.leftArrowUrl}">`, true);
-    bb_slider.slick('slickSetOption', 'nextArrow', `<img class="bb-arrow bb-right-arrow" src="${bb_plugin_data.rightArrowUrl}">`, true);
-  }
-
-
+  
   // ajax request for button
 
   $('.bb-form').submit(function (event) {

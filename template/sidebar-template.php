@@ -345,7 +345,7 @@ if($combine_gallery_page_slug == $parts_page_name[0]) {
     
     <a href="/<?=$parts_page_name[0]?>/consultation/" class="bb-sidebar-btn">REQUEST A CONSULTATION</a>
     <p class="request-promo">Ready for the next step?<br>Contact us to request your consultation.</p>
-    <p>Befor and after gallery powered by <span style="color:red">BRAG book™</span></p>
+    <!-- <p>Before and after gallery powered by <span style="color:red">BRAG book™</span></p> -->
     
 </div>
 
