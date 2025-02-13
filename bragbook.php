@@ -26,6 +26,7 @@ $header_path = get_stylesheet_directory() . '/header.php';
 class mvpbrag {
 
     public function __construct() {
+		add_action('init', [$this, 'bragbook_enqueue_jquery']);
         add_action('admin_enqueue_scripts', [ $this, 'bragbook_enqueue_scripts' ]);
         add_action('wp_enqueue_scripts', [ $this, 'bragbook_enqueue_scripts' ]);
         
@@ -36,6 +37,9 @@ class mvpbrag {
 
     public function bragbook_enqueue_scripts() {
         \mvpbrag\Activator::bb_enqueue_scripts();
+    }
+	public function bragbook_enqueue_jquery() {
+        \mvpbrag\Activator::bb_enqueue_jquery();
     }
 
     public function init() {
