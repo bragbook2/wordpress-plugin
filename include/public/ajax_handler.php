@@ -33,7 +33,95 @@ class Ajax_Handler {
         add_action('wp_ajax_nopriv_bb_fetch_favorite_data', [$this, 'bb_fetch_favorite_data']); 
         add_action('wp_ajax_bb_generate_pagination', [$this, 'bb_generate_pagination']);
         add_action('wp_ajax_nopriv_bb_generate_pagination', [$this, 'bb_generate_pagination']); 
+        // Hook to handle the AJAX request
+        add_action('wp_ajax_bb_case_api', [$this, 'handle_bb_case_api']); 
+        add_action('wp_ajax_nopriv_bb_case_api', [$this, 'handle_bb_case_api']);
+
     } 
+
+    function handle_bb_case_api() {
+        // Check if the necessary data is set
+        if (isset($_POST['count'], $_POST['pageSlug'], $_POST['procedureId'], $_POST['apiToken'], $_POST['websitePropertyId'])) {
+            
+            get_option('combine_gallery_page_id');
+            // Retrieve data sent from the JavaScript
+            $count = sanitize_text_field($_POST['count']);
+            $apiToken = sanitize_text_field($_POST['apiToken']);
+            $websitePropertyId = sanitize_text_field($_POST['websitePropertyId']);
+            $procedureId = sanitize_text_field($_POST['procedureId']);
+            $caseId = sanitize_text_field($_POST['caseId']);
+           // $bb_set_transient_urls = get_option( 'bb_set_transient_url_sidebar', [] );
+            $page_slug = sanitize_text_field($_POST['pageSlug']);
+           
+            // if ( ! is_array( $bb_set_transient_urls ) ) {
+            //     $bb_set_transient_urls = [];
+            // } 
+            $filter_api = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/filters?apiToken={$apiToken}&procedureId={$procedureId}&websitePropertyId={$websitePropertyId}";
+            if (get_transient($filter_api) == false) {
+                $filter_get = self::case_and_filter_api($filter_api);
+            }else {
+                $filter_get = get_transient($filter_api);
+            }
+            if($caseId !== "") {
+                
+                $url = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/cases?websitePropertyId={$websitePropertyId}&apiToken={$apiToken}&caseId={$caseId}&procedureId={$procedureId}";
+               
+                // if (get_transient($url) !== false) {
+                //     $response = [
+                //         'status' => 'success',
+                //         'message' => 'Data received successfully.',
+                //         'data' => [
+                //             'case_set' => get_transient($url),
+                //         ]
+                //     ];
+                //     return wp_send_json($response);
+                // }
+                
+            }else {
+                $url = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/cases/paginate?websitePropertyId={$websitePropertyId}&count={$count}&apiToken={$apiToken}&procedureId={$procedureId}";
+
+                // if (get_transient($url) !== false) {
+                //     $response = [
+                //         'status' => 'success',
+                //         'message' => 'Data received successfully.',
+                //         'data' => [ 
+                //             'case_set' => get_transient($url),
+                //         ]
+                //     ];
+                //     return wp_send_json($response);;
+                // }
+            }
+
+            $data = self::case_and_filter_api($url);
+            
+            $response = [
+                'status' => 'success',
+                'message' => 'Data received successfully.',
+                'data' => [
+                    'case_set' => $data,
+                    'filter_data' => $filter_get
+                ] 
+            ]; 
+
+            // Return the response as JSON
+            wp_send_json($response);
+        } else {
+            // If any required parameter is missing, return an error response
+            wp_send_json_error(['message' => 'Missing required parameters.']);
+        }
+    }
+    public static function case_and_filter_api($url) {
+        $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+
+            $data = curl_exec($ch);
+            curl_close($ch);
+            
+            set_transient($url, $data, 1800);
+            return $data;
+    }
     public static function update_url($new_case_id, $page_id_via_slug, $url_bb) {
         $path_parts = explode('/', $url_bb);
         $procedure_id_bb = get_option($new_case_id . '_bb_procedure_id_f_' . $page_id_via_slug);
@@ -189,8 +277,8 @@ class Ajax_Handler {
                     if (empty($api_token) || empty($websiteproperty_id)) {
                         continue;
                     }
-                
-                    $url = 'https://www.bragbookv2.com/api/plugin/favorites?apiToken='.$api_token.'&websitepropertyId='.$websiteproperty_id.'&email='.$favorite_email_id;
+                    
+                    $url = 'https://nextjs-bragbook-app-dev.vercel.app/api/plugin/favorites?apiToken='.$api_token.'&websitepropertyId='.$websiteproperty_id.'&email='.$favorite_email_id;
                     $ch = curl_init();
                     curl_setopt($ch, CURLOPT_URL, $url);
                     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
@@ -1411,7 +1499,7 @@ class Ajax_Handler {
         $api_token = $bbApiTokens[0];
         $websiteproperty_id = $bbWebsiteIds[0];
 
-        $response = wp_remote_post('https://www.bragbookv2.com/api/plugin/favorites?apiToken='. $api_token .'&websitepropertyId='. $websiteproperty_id, array(
+        $response = wp_remote_post('https://nextjs-bragbook-app-dev.vercel.app/api/plugin/favorites?apiToken='. $api_token .'&websitepropertyId='. $websiteproperty_id, array(
             'method'    => 'POST',
             'body'      => json_encode(array(
                 'email'    => $email,

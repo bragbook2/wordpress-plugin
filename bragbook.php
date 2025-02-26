@@ -1,6 +1,6 @@
 <?php
 /*
-Plugin Name: BRAG book
+Plugin Name: BRAG book new api
 Plugin URI: https://github.com/bragbook/BRAGbook/releases/latest
 Description: Installs necessary components to display your BRAG book before and after gallery.
 Version: 2.0

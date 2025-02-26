@@ -28,6 +28,7 @@ class Shortcode {
 
     // Define the custom rewrite rule function
     public static function custom_rewrite_rules() {
+        
        $page_id = ''; 
        $stored_pages = get_option('bb_gallery_stored_pages', []);
        foreach($stored_pages as $bb_page_key => $bb_page_value) {
@@ -51,7 +52,7 @@ class Shortcode {
                     'index.php?pagename=' . $page_slug . '&procedure_title=$matches[1]',
                     'top'
                 );
-
+                
                 add_rewrite_rule(
                     "^$page_slug/favorites/([^/]+)/([^/]+)/?$",
                     'index.php?pagename=' . $page_slug . '&favorites_section=$matches[1]&procedure_title=$matches[2]&case_id=$matches[3]',
@@ -66,9 +67,9 @@ class Shortcode {
             }
         }
 
-        $combine_gallery_page_id = get_option('combine_gallery_page_id');
+        $combine_gallery_page_id =  get_option('combine_gallery_page_id');
         $combine_gallery_page = get_post($combine_gallery_page_id);
-        
+       
         $combine_gallery_page_slug = "";
         if($combine_gallery_page !== "" && is_a($combine_gallery_page, 'WP_Post')) {
             $combine_gallery_page_slug = $combine_gallery_page->post_name;
@@ -87,7 +88,6 @@ class Shortcode {
                     'index.php?pagename=' . $combine_gallery_page_slug . '&procedure_title=$matches[1]',
                     'top'
                 );
-
                 add_rewrite_rule(
                     "^$combine_gallery_page_slug/favorites/([^/]+)/([^/]+)/?$",
                     'index.php?pagename=' . $combine_gallery_page_slug . '&favorites_section=$matches[1]&procedure_title=$matches[2]&case_id=$matches[3]',
@@ -191,6 +191,8 @@ class Shortcode {
             ), 
             $atts
         );
+        $url = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/cases/paginate?websitePropertyId=2&count=1&apiToken=0a910fcd-371e-454f-9615-749807690c92&procedureId=138";
+        $short_data = get_transient($url);
         
         $cat_name = empty($atts['category']) ? $atts['procedure'] : $atts['category'];
         $cat_limit = $atts['limit'];
@@ -199,114 +201,115 @@ class Shortcode {
         $cat_start = $atts['start'];
         $cat_website_property_id = $atts['website_property_id'];
         
-        self::mvp_brag_shortcode($atts);
-        $data = get_option('bb_api_data_short');
-        $result = json_decode($data, true);
+       // self::mvp_brag_shortcode($atts);
+       // $data = get_option('bb_api_data_short');
+       // $result = json_decode($data, true);
+        $result = json_decode($short_data, true);
         $api_data = [];
         $categories = [];
         $bb_slug_count = 1;
         
-        foreach ($result as $key => $value) {
-            if(!empty($value['api_data']) && is_array($value['api_data'])) {
-                foreach ($value['api_data'] as $index => $api_item) {
-                    $new_data = ["page_slug" => $key];
-                    $id_position = array_search('id', array_keys($api_item));
-                    $result[$key]['api_data'][$index] = array_merge(
-                        array_slice($api_item, 0, $id_position + 1),
-                        $new_data,
-                        array_slice($api_item, $id_position + 1)
-                    );
-                }
-            }
-        }
+        // foreach ($result as $key => $value) {
+        //    // if(!empty($value['api_data']) && is_array($value['api_data'])) {
+        //         foreach ($value['api_data'] as $index => $api_item) {
+        //             $new_data = ["page_slug" => $key];
+        //             $id_position = array_search('id', array_keys($api_item));
+        //             $result[$key]['api_data'][$index] = array_merge(
+        //                 array_slice($api_item, 0, $id_position + 1),
+        //                 $new_data,
+        //                 array_slice($api_item, $id_position + 1)
+        //             );
+        //         }
+        //    // }
+        // }
 
-        foreach ($result as $page_slug => $item) {
-            if (isset($item['api_data'])) {
-                $api_data = array_merge($api_data, $item['api_data']);
-            }
-            if (isset($item['categories'])) {
-                $categories = array_merge($categories, $item['categories']);
-            }
-        }
+        // foreach ($result as $page_slug => $item) {
+        //     if (isset($item['api_data'])) {
+        //         $api_data = array_merge($api_data, $item['api_data']);
+        //     }
+        //     if (isset($item['categories'])) {
+        //         $categories = array_merge($categories, $item['categories']);
+        //     }
+        // }
         
-        $categorized_procedures = [];
-        $bb_categorized_procedures_count = 1;
-        if (!empty($categories) && is_array($categories)) {
-            foreach ($categories as $category_key => $category) {
-                $case_counts = [];
-                foreach ($category['procedures'] as $procedure_key => $procedure) {
-                    $p_case_count = 0; 
-                    if (!empty($api_data) && is_array($api_data)) {
-                        foreach ($api_data as $key => $item) {
-                            if (in_array($procedure['id'], $item['procedureIds'])) {
-                                if (!empty($item['photoSets'])) {
-                                    $p_case_count++;
-                                }
-                                $bb_categorized_procedures_count++;
-                            }
-                        }
-                    }
-                    $case_counts[$procedure_key] = $p_case_count;
-                }
+        // $categorized_procedures = [];
+        // $bb_categorized_procedures_count = 1;
+        // if (!empty($categories) && is_array($categories)) {
+        //     foreach ($categories as $category_key => $category) {
+        //         $case_counts = [];
+        //         foreach ($category['procedures'] as $procedure_key => $procedure) {
+        //             $p_case_count = 0; 
+        //             if (!empty($api_data) && is_array($api_data)) {
+        //                 foreach ($api_data as $key => $item) {
+        //                     if (in_array($procedure['id'], $item['procedureIds'])) {
+        //                         if (!empty($item['photoSets'])) {
+        //                             $p_case_count++;
+        //                         }
+        //                         $bb_categorized_procedures_count++;
+        //                     }
+        //                 }
+        //             }
+        //             $case_counts[$procedure_key] = $p_case_count;
+        //         }
 
-                foreach ($category['procedures'] as $procedure_key => $procedure) {
-                    $categories[$category_key]['procedures'][$procedure_key]['case_count'] = $case_counts[$procedure_key];
-                }
-            }
-        }
+        //         foreach ($category['procedures'] as $procedure_key => $procedure) {
+        //             $categories[$category_key]['procedures'][$procedure_key]['case_count'] = $case_counts[$procedure_key];
+        //         }
+        //     }
+        // }
 
-        if (!empty($categories) && is_array($categories)) {
-            foreach ($categories as $category) {
-                $procedures_cat_data = [];
-                $bb_procedures_cat_data_count = 1;
-                if (!empty($api_data) && is_array($api_data)) {
-                    foreach ($api_data as $key => $item) {
-                        foreach ($category['procedures'] as $procedure) {
-                            if (in_array($procedure['id'], $item['procedureIds'])) {
-                                if (!empty($item['photoSets'])) { 
-                                    $procedures_cat_data[] = $procedure['id']; 
-                                }
-                                $bb_procedures_cat_data_count++;
-                            }
-                        }
-                    }
-                }
-                $categorized_procedures[$category['id']] = [
-                    'category_name' => $category['name'],
-                    'procedures_count' => count($procedures_cat_data),
-                    'procedures_data' => $category['procedures'],
-                ];
-            }
-        }
+        // if (!empty($categories) && is_array($categories)) {
+        //     foreach ($categories as $category) {
+        //         $procedures_cat_data = [];
+        //         $bb_procedures_cat_data_count = 1;
+        //         if (!empty($api_data) && is_array($api_data)) {
+        //             foreach ($api_data as $key => $item) {
+        //                 foreach ($category['procedures'] as $procedure) {
+        //                     if (in_array($procedure['id'], $item['procedureIds'])) {
+        //                         if (!empty($item['photoSets'])) { 
+        //                             $procedures_cat_data[] = $procedure['id']; 
+        //                         }
+        //                         $bb_procedures_cat_data_count++;
+        //                     }
+        //                 }
+        //             }
+        //         }
+        //         $categorized_procedures[$category['id']] = [
+        //             'category_name' => $category['name'],
+        //             'procedures_count' => count($procedures_cat_data),
+        //             'procedures_data' => $category['procedures'],
+        //         ];
+        //     }
+        // }
 
-        $matching_data = [];
-        $bb_matching_data_count = 1;
-        if (!empty($api_data) && is_array($api_data)) {
-            foreach ($api_data as $key => $item) {
-                foreach ($categorized_procedures as $category_id => $category_data) {
-                    $procedures_data = $category_data['procedures_data'];
-                    if (is_array($procedures_data) && is_array($item)) {
-                        foreach ($procedures_data as $complete_category) {
-                            $b_converted_procedure_name = preg_replace('/[^a-zA-Z0-9]+/', '-', strtolower($complete_category['name']));
-                            if (in_array($complete_category['id'], $item['procedureIds']) && ($cat_name == $complete_category['name'] || $cat_name == $b_converted_procedure_name)) {
-                                if (!empty($item['photoSets'])) { 
-                                    if (!isset($procedure_counts[$complete_category['id']])) {
-                                        $procedure_counts[$complete_category['id']] = 0;
-                                    }
-                                    $procedure_counts[$complete_category['id']]++;
-                                    $item['procedure_title'] = $complete_category['name'];
-                                    $item['procedure_case_count'] = $procedure_counts[$complete_category['id']];
-                                    $item['procedure_id'] = $complete_category['id'];
-                                    $item['description'] = $complete_category['description'];
-                                    $matching_data[] = $item;
-                                }
-                            }
-                        }
-                    }
-                }
-                $bb_matching_data_count++;
-            }
-        }
+        // $matching_data = [];
+        // $bb_matching_data_count = 1;
+        // if (!empty($api_data) && is_array($api_data)) {
+        //     foreach ($api_data as $key => $item) {
+        //         foreach ($categorized_procedures as $category_id => $category_data) {
+        //             $procedures_data = $category_data['procedures_data'];
+        //             if (is_array($procedures_data) && is_array($item)) {
+        //                 foreach ($procedures_data as $complete_category) {
+        //                     $b_converted_procedure_name = preg_replace('/[^a-zA-Z0-9]+/', '-', strtolower($complete_category['name']));
+        //                     if (in_array($complete_category['id'], $item['procedureIds']) && ($cat_name == $complete_category['name'] || $cat_name == $b_converted_procedure_name)) {
+        //                         if (!empty($item['photoSets'])) { 
+        //                             if (!isset($procedure_counts[$complete_category['id']])) {
+        //                                 $procedure_counts[$complete_category['id']] = 0;
+        //                             }
+        //                             $procedure_counts[$complete_category['id']]++;
+        //                             $item['procedure_title'] = $complete_category['name'];
+        //                             $item['procedure_case_count'] = $procedure_counts[$complete_category['id']];
+        //                             $item['procedure_id'] = $complete_category['id'];
+        //                             $item['description'] = $complete_category['description'];
+        //                             $matching_data[] = $item;
+        //                         }
+        //                     }
+        //                 }
+        //             }
+        //         }
+        //         $bb_matching_data_count++;
+        //     }
+        // }
         
         $bb_all_gallery_slugs = get_option('bb_gallery_page_slug', []);
         $bb_combine_gallery_slug = get_option('combine_gallery_slug');
@@ -327,17 +330,19 @@ class Shortcode {
             <div class="bb-slider">
                 <?php
                 $limit_count = 1;
-                $bb_website_property_id_slugs_list = get_option('bb_website_property_id_slug', []);
-                $bb_page_list_gallery = get_option('bb_gallery_stored_pages_ids', []);
-                $bragbook_websiteproperty_id = get_option('bragbook_websiteproperty_id', []);
+                // $bb_website_property_id_slugs_list = get_option('bb_website_property_id_slug', []);
+                // $bb_page_list_gallery = get_option('bb_gallery_stored_pages_ids', []);
+                // $bragbook_websiteproperty_id = get_option('bragbook_websiteproperty_id', []);
                 $bb_scase_ids_list = [];
                 $spro_title_bb = '';
-                foreach($matching_data as $procedure_data) {
+                
+                foreach($result['data'] as $procedure_data) {
                     $bb_scase_ids_list[] = $procedure_data['id'];
-                    $page_slug = isset($procedure_data['page_slug']) ? $procedure_data['page_slug'] : '';
-                    $spro_title_bb = strtolower(preg_replace('/[^a-zA-Z0-9]+/', '-', $procedure_data['procedure_title']));
-                    if (($parts[0] == $page_slug) || ($bb_page_exist == false && $cat_website_property_id == "0")) {
-                        if (!empty($procedure_data['photoSets']) && $limit_count <= $cat_limit && $procedure_data['procedure_case_count'] >= $cat_start) { 
+                   // $page_slug = isset($procedure_data['page_slug']) ? $procedure_data['page_slug'] : '';
+                    $spro_title_bb = 'blepharoplasty'; //strtolower(preg_replace('/[^a-zA-Z0-9]+/', '-', $procedure_data['procedure_title']));
+                   // if (($parts[0] == $page_slug) || ($bb_page_exist == false && $cat_website_property_id == "0")) {
+                       // if (!empty($procedure_data['photoSets']) && $limit_count <= $cat_limit && $procedure_data['procedure_case_count'] >= $cat_start) { 
+                        if (!empty($procedure_data['photoSets']) && $limit_count <= $cat_limit) { 
                             ?>
                             <div class="bb-slick-slide">
                                 <div class="bb-slide">
@@ -349,7 +354,7 @@ class Shortcode {
                                             : $procedure_data['photoSets'][0]['originalBeforeLocation']);
                                     
                                     ?>
-                                    <a href="<?php echo '/' . $page_slug . "/" . $spro_title_bb . "/" . $procedure_data['id']; ?>">
+                                    <a href="<?php echo '/combine/' . $spro_title_bb . "/" . $procedure_data['id']; ?>">
                                         <img class="bb-slide-thumnail" src="<?php echo $bb_new_image_procedure_data; ?>" 
                                         alt="<?php echo isset($procedure_data['photoSets'][0]['seoAltText']) ? $procedure_data['photoSets'][0]['seoAltText'] : ''; ?>">
                                     </a>
@@ -357,80 +362,11 @@ class Shortcode {
                                         <div class="bb-content-box-inner">
                                             <div class="bb-content-box-inner-left">
                                                 <?php if ($cat_title == 1) { ?>
-                                                    <h5><?php echo isset($procedure_data['seoHeadline']) ? $procedure_data['seoHeadline'] : $procedure_data['procedure_title']; ?> : Patient <?php echo $procedure_data['procedure_case_count']; ?></h5>
+                                                    <h5><?php echo isset($procedure_data['seoHeadline']) ? $procedure_data['seoHeadline'] : 'blepharoplasty' ?> : Patient</h5>
                                                     <p><?php echo self::bb_limitWords($procedure_data['details'], 50); ?></p>
                                                 <?php } ?>
                                                 <?php if ($cat_details == 1) { ?>
-                                                    <button type="button"><a href="<?php echo '/' . $page_slug . "/" . $spro_title_bb . "/" . $procedure_data['id']; ?>">View More</a></button>
-                                                <?php } ?>
-                                            </div>
-                                        </div>
-                                    <?php } ?>
-                                </div>
-                            </div>
-                            <?php
-                            $limit_count++;
-                        }
-                    } elseif (($parts[0] == $bb_combine_gallery_slug || $cat_website_property_id == '0') && ($bb_page_exist !== false)) {
-                        if (!empty($procedure_data['photoSets']) && $limit_count <= $cat_limit && $procedure_data['procedure_case_count'] >= $cat_start) { 
-                            ?>
-                            <div class="bb-slick-slide">
-                                <div class="bb-slide">
-                                    <?php
-                                    $bb_new_image_procedure_data = isset($procedure_data['photoSets'][0]['highResPostProcessedImageLocation']) && !is_null($procedure_data['photoSets'][0]['highResPostProcessedImageLocation'])
-                                        ? $procedure_data['photoSets'][0]['highResPostProcessedImageLocation'] 
-                                        : (isset($procedure_data['photoSets'][0]['postProcessedImageLocation']) && !is_null($procedure_data['photoSets'][0]['postProcessedImageLocation']) 
-                                            ? $procedure_data['photoSets'][0]['postProcessedImageLocation'] 
-                                            : $procedure_data['photoSets'][0]['originalBeforeLocation']);
-                                    
-                                    ?>
-                                    <a href="<?php echo '/' . $bb_combine_gallery_slug . "/" . $spro_title_bb . "/" . $procedure_data['id']; ?>">
-                                        <img class="bb-slide-thumnail" src="<?php echo $bb_new_image_procedure_data; ?>" 
-                                        alt="<?php echo isset($procedure_data['photoSets'][0]['seoAltText']) ? $procedure_data['photoSets'][0]['seoAltText'] : ''; ?>">
-                                    </a>
-                                    <?php if ($cat_title == 1 || $cat_details == 1) { ?>
-                                        <div class="bb-content-box-inner">
-                                            <div class="bb-content-box-inner-left">
-                                                <?php if ($cat_title == 1) { ?>
-                                                    <h5><?php echo isset($procedure_data['seoHeadline']) ? $procedure_data['seoHeadline'] : $procedure_data['procedure_title']; ?> : Patient <?php echo $procedure_data['procedure_case_count']; ?></h5>
-                                                    <p><?php echo self::bb_limitWords($procedure_data['details'], 50); ?></p>
-                                                <?php } ?>
-                                                <?php if ($cat_details == 1) { ?>
-                                                    <button type="button"><a href="<?php echo '/' . $bb_combine_gallery_slug . "/" . $spro_title_bb . "/" . $procedure_data['id']; ?>">View More</a></button>
-                                                <?php } ?>
-                                            </div>
-                                        </div>
-                                    <?php } ?>
-                                </div>
-                            </div>
-                            <?php
-                            $limit_count++;
-                        }
-                    } elseif ($cat_website_property_id == $bb_website_property_id_slugs_list[$page_slug]) {
-                        if (!empty($procedure_data['photoSets']) && $limit_count <= $cat_limit && $procedure_data['procedure_case_count'] >= $cat_start) { 
-                            ?>
-                            <div class="bb-slick-slide">
-                                <div class="bb-slide">
-                                    <?php
-                                    $bb_new_image_procedure_data = isset($procedure_data['photoSets'][0]['highResPostProcessedImageLocation']) && !is_null($procedure_data['photoSets'][0]['highResPostProcessedImageLocation'])
-                                        ? $procedure_data['photoSets'][0]['highResPostProcessedImageLocation'] 
-                                        : (isset($procedure_data['photoSets'][0]['postProcessedImageLocation']) && !is_null($procedure_data['photoSets'][0]['postProcessedImageLocation']) 
-                                            ? $procedure_data['photoSets'][0]['postProcessedImageLocation'] 
-                                            : $procedure_data['photoSets'][0]['originalBeforeLocation']);
-                                    ?>
-                                    <a href="<?php echo '/' . $page_slug . "/" . $spro_title_bb . "/" . $procedure_data['id']; ?>">
-                                        <img class="bb-slide-thumnail" src="<?php echo $bb_new_image_procedure_data; ?>" 
-                                        alt="<?php echo isset($procedure_data['photoSets'][0]['seoAltText']) ? $procedure_data['photoSets'][0]['seoAltText'] : ''; ?>">
-                                    </a>
-                                    <?php if ($cat_title == 1 || $cat_details == 1) { ?>
-                                        <div class="bb-content-box-inner">
-                                            <div class="bb-content-box-inner-left">
-                                                <?php if ($cat_title == 1) { ?>
-                                                    <h5><?php echo isset($procedure_data['seoHeadline']) ? $procedure_data['seoHeadline'] : $procedure_data['procedure_title']; ?> : Patient <?php echo $procedure_data['procedure_case_count']; ?></h5>
-                                                    <p><?php echo self::bb_limitWords($procedure_data['details'], 50); ?></p>
-                                                <?php } ?>
-                                                <?php if ($cat_details == 1) { ?>
-                                                    <button type="button"><a href="<?php echo '/' . $page_slug . "/" . $spro_title_bb . "/" . $procedure_data['id']; ?>">View More</a></button>
+                                                    <button type="button"><a href="<?php echo '/combine/' . $spro_title_bb . "/" . $procedure_data['id']; ?>">View More</a></button>
                                                 <?php } ?>
                                             </div>
                                         </div>
@@ -441,15 +377,6 @@ class Shortcode {
                             $limit_count++;
                         }
                     }
-                    $formatted_heading = $procedure_data['photoSets'][0]['caseId'];
-                    update_option($procedure_data['photoSets'][0]['caseId'] . '_bb_procedure_id_s_' . $spro_title_bb, $procedure_data['procedure_id']);
-                    update_option($formatted_heading, $procedure_data['photoSets'][0]['caseId']);
-                    update_option($procedure_data['photoSets'][0]['caseId'], $formatted_heading);
-                }
-                
-                $bb_encode_scaseids_list = json_encode($bb_scase_ids_list);
-
-                update_option('bb_scaseids_list_' . $spro_title_bb, $bb_encode_scaseids_list);
                 ?>
             </div>
         </div>
@@ -466,47 +393,61 @@ class Shortcode {
             $atts
         );
 
-        $caseid = $atts['caseid'];
-        $cat_website_property_id = $atts['website_property_id'];        
-
-        self::mvp_brag_shortcode($atts);
-        $data = get_option('bb_api_data_short');
-        $result = json_decode($data, true);
-        $api_data = [];
-        $categories = [];
-        $bb_slug_count = 1;
+        $caseid = 4141; //$atts['caseid'];
         
-        foreach ($result as $key => $value) {
-            $bb_api_data = $value['api_data'];
-            if(!empty($bb_api_data) && is_array($bb_api_data)) {
-                foreach ($bb_api_data as $index => $api_item) {
-                    $new_data = ["page_slug" => $key];
-                    $id_position = array_search('id', array_keys($api_item));
-                    $result[$key]['api_data'][$index] = array_merge(
-                        array_slice($api_item, 0, $id_position + 1), 
-                        $new_data,
-                        array_slice($api_item, $id_position + 1)
-                    );
-                }
-            }
-        }
+        $url = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/cases/?websitePropertyId=2&apiToken=0a910fcd-371e-454f-9615-749807690c92&caseId=4141&procedureId=138";
+        $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
 
-        foreach ($result as $page_slug => $item) {
-            if (isset($item['api_data'])) {
-                $api_data = array_merge($api_data, $item['api_data']);
-            }
-        }
+            $short_data_set = curl_exec($ch);
+            curl_close($ch);
+       // $short_data_set = get_transient($url);
+       
+        // $cat_website_property_id = $atts['website_property_id'];        
+
+        // self::mvp_brag_shortcode($atts);
+        // $data = get_option('bb_api_data_short');
+         $result_set = json_decode($short_data_set, true);
+        // $api_data = [];
+        // $categories = [];
+        // $bb_slug_count = 1;
         
-        ob_start();
+        // foreach ($result as $key => $value) {
+        //     $bb_api_data = $value['api_data'];
+        //     if(!empty($bb_api_data) && is_array($bb_api_data)) {
+        //         foreach ($bb_api_data as $index => $api_item) {
+        //             $new_data = ["page_slug" => $key];
+        //             $id_position = array_search('id', array_keys($api_item));
+        //             $result[$key]['api_data'][$index] = array_merge(
+        //                 array_slice($api_item, 0, $id_position + 1), 
+        //                 $new_data,
+        //                 array_slice($api_item, $id_position + 1)
+        //             );
+        //         }
+        //     }
+        // }
+
+        // foreach ($result as $page_slug => $item) {
+        //     if (isset($item['api_data'])) {
+        //         $api_data = array_merge($api_data, $item['api_data']);
+        //     }
+        // }
+        
+         ob_start();
         ?>
 
         <div class="bb-main">
             <div class="bb-content-boxes">
                 <?php
-                if(!empty($api_data) && is_array($api_data)) {
-                    foreach ($api_data as $entry) {
+                
+                if(!empty($result_set) && is_array($result_set)) {
+                    
+                    foreach ($result_set['data'] as $entry) {
                         if (isset($entry['photoSets']) && is_array($entry['photoSets'])) {
                             foreach ($entry['photoSets'] as $photoSet) {
+                                
                                 if ($caseid == $photoSet['caseId'] ) {
                                     ?>
                                     <div class="bb-content-box">
@@ -521,6 +462,7 @@ class Shortcode {
                                         <img src="<?php echo $bb_new_image_photoSet ?>" alt="<?php echo isset($photoSet['seoAltText']) ? $photoSet['seoAltText'] : ''; ?>">
                                     </div>
                                 <?php
+                                break;
                                 }
                             }
                         }
@@ -710,49 +652,23 @@ class Shortcode {
         $bbrag_case_url = strtok($_SERVER["REQUEST_URI"], '?');
         $bbragbook_case_url = trim($bbrag_case_url, '/');
         $parts = explode('/', $bbragbook_case_url);
-
-        self::bb_mvp_brag_shortcode($parts, $combine_gallery_page_slug);
+        $bb_sidebar_url = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin?apiToken=0a910fcd-371e-454f-9615-749807690c92";
+       // self::bb_mvp_brag_shortcode($parts, $combine_gallery_page_slug);
         ?>
 
         <div class="bb-container-main">
             <main class="bb-main">
                 <?php
-                $data = get_option('bbrag_api_data_short');
-                if($combine_gallery_page_slug == $parts[0]) {
-                    $data = get_option("bbrag_combine_api_data_short");
-                } else {
-                    $data = get_option('bbrag_api_data_short');
-                }
-                $properties_data_all = json_decode($data, true);
-                $properties_data = $properties_data_all;
-                $api_data = [];
-                $categories = [];
-                
-                if(is_array($properties_data) && !empty($properties_data)) {
-                    foreach ($properties_data as $key => $value) {
-                        foreach ($value as $key1 => $value1) {
-                            foreach($value1 as $key2 => $value2) {
-                                foreach ($value2['api_data'] as $index => $api_item) {
-                                    $new_data = ["page_slug" => $key2];
-                                    $id_position = array_search('id', array_keys($api_item));
-                                    $properties_data[$key2]['api_data'][$index] = array_merge(
-                                        array_slice($api_item, 0, $id_position + 1),
-                                        $new_data,
-                                        array_slice($api_item, $id_position + 1)
-                                    );
-                                }
-                            }
-                        }
-                    }
-                }
-
-
-                $api_token = get_option('bragbook_api_token');
-                $websiteproperty_id = get_option('bragbook_websiteproperty_id');
-                $favorite_email_id = get_option('bragbook_favorite_email');
-                $favorite_caseIds_count = 0;
+                // $data = get_option('bbrag_api_data_short');
+                // if($combine_gallery_page_slug == $parts[0]) {
+                //     $data = get_option("bbrag_combine_api_data_short");
+                // } else {
+                //     $data = get_option('bbrag_api_data_short');
+                // }
+                $data = get_transient($bb_sidebar_url);
+               // $properties_data_all = json_decode($data, true);
+               // $properties_data = $properties_data_all;
                 ?>
-
                 <div class="bb-sidebar">
                     <div class="bb-sidebar-wrapper">
                         <button type="button" class="bb-sidebar-toggle bb-sidebar-head-toggle">
@@ -764,128 +680,80 @@ class Shortcode {
                             <ul id="search-suggestions" class="search-suggestions"></ul>
                         </form>
 
-                        <div class="bb-nav-accordion">
+                        <div class="bb-nav-accordion"> 
                             <?php 
+                            
+                            $properties_data_all = json_decode($data, true);
+                            $properties_data = $properties_data_all;
+
                             /* 
                             Show data for singal page
                             */
                             $categorized_procedures = [];
                             $all_properties = [];
+                       
                             if (!empty($properties_data) && is_array($properties_data)) {
-                                foreach ($properties_data as $token_bb) {
-                                    foreach ($token_bb as $website_id_bb_key => $website_id_bb) {
-                                        foreach ($website_id_bb as $websiteproperty_id => $property_data) {
-                                            if($website_id_bb_key == $cat_website_property_id) {
-                                                if(isset($property_data['categories']) && isset($property_data['api_data'])) {
-                                                    $categories = $property_data['categories'];
-                                                    $api_data = $property_data['api_data'];
-                                                    if (!empty($categories) && is_array($categories)) {
-                                                        foreach ($categories as $category_key => $category) {
-                                                            $case_counts = [];
-                                                            foreach ($category['procedures'] as $procedure_key => $procedure) {
-                                                                $p_case_count = 0; 
-                                                                foreach ($api_data as $item) {
-                                                                    if (in_array($procedure['id'], $item['procedureIds'])) {
-                                                                        if (!empty($item['photoSets'])) {
-                                                                            $p_case_count++;
-                                                                        }
-                                                                    }
-                                                                }
-                                                                $case_counts[$procedure_key] = $p_case_count;
+                               // foreach ($properties_data as $api_token_key => $token_bb) {
+                                    //foreach ($token_bb as $websiteproperty_id_key => $website_id_bb) {
+                                       // foreach ($website_id_bb as $websiteproperty_id => $property_data) {
+                                           // if(($parts_page_name[0] == $websiteproperty_id) || ($combine_gallery_page_slug == $parts_page_name[0])) {
+                                            
+                                                foreach ($properties_data['data'] as $procedure_name => $procedure_data) {
+                                                    ?>
+                                                    <span class="bb-accordion" cat_title="<?= htmlspecialchars($procedure_data['name']); ?>">
+                                                        <h3><?= $procedure_data['name']; ?> <span>(<?= $procedure_data['totalCase']; ?>)</span></h3>
+                                                        <img src="<?= BB_PLUGIN_DIR_PATH ?>assets/images/plus-icon.svg" alt="plus icon">
+                                                    </span>
+                                                    <div class="bb-panel">
+                                                        <ul>
+                                                        <?php
+                                                            foreach($procedure_data['procedures'] as $procedure ) {
+                                                                ?>
+                                                                <li>
+                                                                <a id="<?= esc_attr($procedure['id']); ?>"
+                                                                    href="<?= "/combine/" . $procedure['slugName'] . "/"; ?>"
+                                                                    data-count="1"
+                                                                    data-api-token="<?= esc_attr($api_token_key); ?>"
+                                                                    data-website-property-id="<?= esc_attr($websiteproperty_id_key); ?>">
+                                                                        <?= esc_html($procedure['name']); ?> 
+                                                                        <span>(<?php echo $procedure['totalCase']; ?>)</span>
+                                                                </a>
+                                                                
+                                                                </li>
+                                                                <?php
                                                             }
-
-                                                            foreach ($category['procedures'] as $procedure_key => $procedure) {
-                                                                $categories[$category_key]['procedures'][$procedure_key]['case_count'] = $case_counts[$procedure_key];
-                                                            }
-                                                        }
-                                                    }
-
-                                                    if (!empty($categories) && is_array($categories)) {
-                                                        foreach ($categories as $category) {
-                                                            $procedures_cat_data = [];
-                                                            foreach ($api_data as $item) {
-                                                                foreach ($category['procedures'] as $procedure) {
-                                                                    if (in_array($procedure['id'], $item['procedureIds'])) {
-                                                                        if (!empty($item['photoSets'])) { 
-                                                                            $procedures_cat_data[] = $procedure['id']; 
-                                                                        }
-                                                                    }
-                                                                }
-                                                            }
-
-                                                            $categorized_procedures[$websiteproperty_id][$category['id']] = [
-                                                                'category_name' => $category['name'],
-                                                                'procedures_count' => count($procedures_cat_data),
-                                                                'procedures_data' => $category['procedures'],
-                                                            ];
-                                                        }
-                                                    }
-
-                                                    if (isset($categorized_procedures[$websiteproperty_id])) {
-                                                        $all_properties[$websiteproperty_id] = $categorized_procedures[$websiteproperty_id];
-                                                    }
+                                                            ?>
+                                                        </ul>
+                                                    </div>
+                                                <?php
                                                 }
-                                            } elseif($cat_website_property_id == 0) {
-                                                if(isset($property_data['categories']) && isset($property_data['api_data'])) {
-                                                    $categories = $property_data['categories'];
-                                                    $api_data = $property_data['api_data'];
-                                                    if (!empty($categories) && is_array($categories)) {
-                                                        foreach ($categories as $category_key => $category) {
-                                                            $case_counts = [];
-                                                            foreach ($category['procedures'] as $procedure_key => $procedure) {
-                                                                $p_case_count = 0; 
-                                                                foreach ($api_data as $item) {
-                                                                    if (in_array($procedure['id'], $item['procedureIds'])) {
-                                                                        if (!empty($item['photoSets'])) {
-                                                                            $p_case_count++;
-                                                                        }
-                                                                    }
-                                                                }
-                                                                $case_counts[$procedure_key] = $p_case_count;
-                                                            }
-
-                                                            foreach ($category['procedures'] as $procedure_key => $procedure) {
-                                                                $categories[$category_key]['procedures'][$procedure_key]['case_count'] = $case_counts[$procedure_key];
-                                                            }
-                                                        }
-                                                    }
-
-                                                    if (!empty($categories) && is_array($categories)) {
-                                                        foreach ($categories as $category) {
-                                                            $procedures_cat_data = [];
-                                                            foreach ($api_data as $item) {
-                                                                foreach ($category['procedures'] as $procedure) {
-                                                                    if (in_array($procedure['id'], $item['procedureIds'])) {
-                                                                        if (!empty($item['photoSets'])) { 
-                                                                            $procedures_cat_data[] = $procedure['id']; 
-                                                                        }
-                                                                    }
-                                                                }
-                                                            }
-
-                                                            $categorized_procedures[$websiteproperty_id][$category['id']] = [
-                                                                'category_name' => $category['name'],
-                                                                'procedures_count' => count($procedures_cat_data),
-                                                                'procedures_data' => $category['procedures'],
-                                                            ];
-                                                        }
-                                                    }
-
-                                                    if (isset($categorized_procedures[$websiteproperty_id])) {
-                                                        $all_properties[$websiteproperty_id] = $categorized_procedures[$websiteproperty_id];
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
+                                                
+                                            //}
+                                     //   }
+                                  //  }
+                                
+                               // }
                             }
+                        
 
-                            
-                            self::render_category_group_home_menu($all_properties, BB_PLUGIN_DIR_PATH, $parts, $cat_website_property_id);
-                            ?>
-                        </div>  
-                    </div>
+                                    
+                                            ?>
+                                        
+                                        
+                            <ul>
+                                <li>
+                                    <a class="bb-sidebar_favorites" href="/combine/favorites/">
+                                        <h3> My Favorites <span id="bb_favorite_caseIds_count">(<?php echo get_option('bb_favorite_caseIds_count'); ?>)</span></h3>
+                                    </a> 
+                                </li> 
+                            </ul>  
+                        </div>
+                    </div> 
+                    
+                    <a href="/<?=$parts_page_name[0]?>/consultation/" class="bb-sidebar-btn">REQUEST A CONSULTATION</a>
+                    <p class="request-promo">Ready for the next step?<br>Contact us to request your consultation.</p>
+                    <!-- <p>Before and after gallery powered by <span style="color:red">BRAG book™</span></p> -->
+                    
                 </div>
                 <!-- Sidebar end here -->
 
@@ -1028,291 +896,189 @@ class Shortcode {
         $cat_start = $atts['start'];
         $cat_website_property_id = $atts['website_property_id'];
 
-        self::mvp_brag_shortcode($atts);
-        $data = get_option('bb_api_data_short');
-        $result = json_decode($data, true);
+       // self::mvp_brag_shortcode($atts);
+       $url = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/cases/paginate?websitePropertyId=2&count=1&apiToken=0a910fcd-371e-454f-9615-749807690c92&procedureId=138";
+       $short_data = get_transient($url);
+        
+        $result_pro = json_decode($short_data, true);
         $api_data = [];
         $categories = [];
         
-        foreach ($result as $key => $value) {
-            $bb_api_data = $value['api_data']; 
-            if(is_array($bb_api_data)) {
-                foreach ($bb_api_data as $index => $api_item) {
-                    $new_data = ["page_slug" => $key];
-                    $id_position = array_search('id', array_keys($api_item));
-                    $result[$key]['api_data'][$index] = array_merge(
-                        array_slice($api_item, 0, $id_position + 1),
-                        $new_data,
-                        array_slice($api_item, $id_position + 1)
-                    );
-                }
-            }
-        }
+        // foreach ($result as $key => $value) {
+        //     $bb_api_data = $value['api_data']; 
+        //     if(is_array($bb_api_data)) {
+        //         foreach ($bb_api_data as $index => $api_item) {
+        //             $new_data = ["page_slug" => $key];
+        //             $id_position = array_search('id', array_keys($api_item));
+        //             $result[$key]['api_data'][$index] = array_merge(
+        //                 array_slice($api_item, 0, $id_position + 1),
+        //                 $new_data,
+        //                 array_slice($api_item, $id_position + 1)
+        //             );
+        //         }
+        //     }
+        // }
 
-        foreach ($result as $page_slug => $item) {
-            if (isset($item['api_data'])) {
-                $api_data = array_merge($api_data, $item['api_data']);
-            }
-            if (isset($item['categories'])) {
-                $categories = array_merge($categories, $item['categories']);
-            }
-        }
-        $categorized_procedures = [];
-        if(!empty($categories) && is_array($categories)) {
-            foreach ($categories as $category_key => $category) {
-                $case_counts = [];
-                if(!empty($category) && is_array($category)) {
-                    foreach ($category['procedures'] as $procedure_key => $procedure) {
-                        $p_case_count = 0; 
-                        if(!empty($api_data) && is_array($api_data)) {
-                            foreach ($api_data as $item) {
-                                if (in_array($procedure['id'], $item['procedureIds'])) {
-                                    if (!empty($item['photoSets'])) {
-                                        $p_case_count++;
-                                    }
-                                }
-                            }
-                        }
-                        $case_counts[$procedure_key] = $p_case_count;
-                    }
-                }
+        // foreach ($result as $page_slug => $item) {
+        //     if (isset($item['api_data'])) {
+        //         $api_data = array_merge($api_data, $item['api_data']);
+        //     }
+        //     if (isset($item['categories'])) {
+        //         $categories = array_merge($categories, $item['categories']);
+        //     }
+        // }
+        // $categorized_procedures = [];
+        // if(!empty($categories) && is_array($categories)) {
+        //     foreach ($categories as $category_key => $category) {
+        //         $case_counts = [];
+        //         if(!empty($category) && is_array($category)) {
+        //             foreach ($category['procedures'] as $procedure_key => $procedure) {
+        //                 $p_case_count = 0; 
+        //                 if(!empty($api_data) && is_array($api_data)) {
+        //                     foreach ($api_data as $item) {
+        //                         if (in_array($procedure['id'], $item['procedureIds'])) {
+        //                             if (!empty($item['photoSets'])) {
+        //                                 $p_case_count++;
+        //                             }
+        //                         }
+        //                     }
+        //                 }
+        //                 $case_counts[$procedure_key] = $p_case_count;
+        //             }
+        //         }
 
-                foreach ($category['procedures'] as $procedure_key => $procedure) {
-                    $categories[$category_key]['procedures'][$procedure_key]['case_count'] = $case_counts[$procedure_key];
-                }
-            }
-        }
+        //         foreach ($category['procedures'] as $procedure_key => $procedure) {
+        //             $categories[$category_key]['procedures'][$procedure_key]['case_count'] = $case_counts[$procedure_key];
+        //         }
+        //     }
+        // }
 
-        if(!empty($categories) && is_array($categories)) {
-            foreach ($categories as $category) {
-                $procedures_cat_data = [];
-                if(!empty($api_data) && is_array($api_data)) {
-                    foreach ($api_data as $item) {
-                        foreach ($category['procedures'] as $procedure) {
-                            if (in_array($procedure['id'], $item['procedureIds'])) {
-                                if(!empty($item['photoSets'])) { 
-                                    $procedures_cat_data[] = $procedure['id']; 
-                                }
-                            }
-                        }
-                    }
-                }
+        // if(!empty($categories) && is_array($categories)) {
+        //     foreach ($categories as $category) {
+        //         $procedures_cat_data = [];
+        //         if(!empty($api_data) && is_array($api_data)) {
+        //             foreach ($api_data as $item) {
+        //                 foreach ($category['procedures'] as $procedure) {
+        //                     if (in_array($procedure['id'], $item['procedureIds'])) {
+        //                         if(!empty($item['photoSets'])) { 
+        //                             $procedures_cat_data[] = $procedure['id']; 
+        //                         }
+        //                     }
+        //                 }
+        //             }
+        //         }
 
-                $categorized_procedures[$category['id']] = [
-                    'category_name' => $category['name'],
-                    'procedures_count' => count($procedures_cat_data),
-                    'procedures_data' => $category['procedures'],
-                ];
-            }
-        }
+        //         $categorized_procedures[$category['id']] = [
+        //             'category_name' => $category['name'],
+        //             'procedures_count' => count($procedures_cat_data),
+        //             'procedures_data' => $category['procedures'],
+        //         ];
+        //     }
+        // }
        
-        $matching_data = [];
-        if(!empty($api_data) && is_array($api_data)) {
-            foreach ($api_data as $item) {
-                foreach($categorized_procedures as $category_id => $category_data) {
-                    $procedures_data = $category_data['procedures_data'];
+        // $matching_data = [];
+        // if(!empty($api_data) && is_array($api_data)) {
+        //     foreach ($api_data as $item) {
+        //         foreach($categorized_procedures as $category_id => $category_data) {
+        //             $procedures_data = $category_data['procedures_data'];
                 
-                    if(is_array($procedures_data)) {
-                        foreach($procedures_data as $complete_category) {
-                            $b_converted_procedure_name = preg_replace('/[^a-zA-Z0-9]+/', '-', strtolower($complete_category['name']));
-                            if (in_array($complete_category['id'], $item['procedureIds']) && ($cat_name == $complete_category['name'] || $cat_name == $b_converted_procedure_name)) {
-                                if(!empty($item['photoSets'])) { 
-                                    if (!isset($procedure_counts[$complete_category['id']])) {
-                                        $procedure_counts[$complete_category['id']] = 0;
-                                    }
+        //             if(is_array($procedures_data)) {
+        //                 foreach($procedures_data as $complete_category) {
+        //                     $b_converted_procedure_name = preg_replace('/[^a-zA-Z0-9]+/', '-', strtolower($complete_category['name']));
+        //                     if (in_array($complete_category['id'], $item['procedureIds']) && ($cat_name == $complete_category['name'] || $cat_name == $b_converted_procedure_name)) {
+        //                         if(!empty($item['photoSets'])) { 
+        //                             if (!isset($procedure_counts[$complete_category['id']])) {
+        //                                 $procedure_counts[$complete_category['id']] = 0;
+        //                             }
 
-                                    $procedure_counts[$complete_category['id']]++;
-                                    $item['procedure_title'] = $complete_category['name'];
-                                    $item['procedure_case_count']  = $procedure_counts[$complete_category['id']];
-                                    $item['procedure_id'] = $complete_category['id'];
-                                    $item['description'] = $complete_category['description'];
+        //                             $procedure_counts[$complete_category['id']]++;
+        //                             $item['procedure_title'] = $complete_category['name'];
+        //                             $item['procedure_case_count']  = $procedure_counts[$complete_category['id']];
+        //                             $item['procedure_id'] = $complete_category['id'];
+        //                             $item['description'] = $complete_category['description'];
 
-                                    $matching_data[] = $item;
-                                }
+        //                             $matching_data[] = $item;
+        //                         }
                                 
-                            }
-                        }
-                    }
+        //                     }
+        //                 }
+        //             }
                     
-                }
-            }
-        }
+        //         }
+        //     }
+        // }
 
-        $bb_all_gallery_slugs = get_option('bb_gallery_page_slug', []);
-        $bb_combine_gallery_slug = get_option('combine_gallery_slug');
+        // $bb_all_gallery_slugs = get_option('bb_gallery_page_slug', []);
+        // $bb_combine_gallery_slug = get_option('combine_gallery_slug');
 
-        $bbrag_case_url = strtok($_SERVER["REQUEST_URI"], '?');
-        $bbragbook_case_url = trim($bbrag_case_url, '/');
-        $parts = explode('/', $bbragbook_case_url);
+        // $bbrag_case_url = strtok($_SERVER["REQUEST_URI"], '?');
+        // $bbragbook_case_url = trim($bbrag_case_url, '/');
+        // $parts = explode('/', $bbragbook_case_url);
 
-        $page_url_combine = get_page_by_path($bb_combine_gallery_slug);
-        $limit_count = 1;
+        // $page_url_combine = get_page_by_path($bb_combine_gallery_slug);
+        // $limit_count = 1;
 
-        if ($page_url_combine) {
-            $bb_page_exist = true;
-        } else {
-            $bb_page_exist = false;
-        } 
+        // if ($page_url_combine) {
+        //     $bb_page_exist = true;
+        // } else {
+        //     $bb_page_exist = false;
+        // } 
 
         ob_start();
         ?>
         <div class="bb-main bb-category-shortcode-main">
             <div class="bb-content-boxes">
-                <?php 
-                $patient_count = 1;
-                $bb_website_property_id_slugs_list = get_option('bb_website_property_id_slug', []);
-                $bb_page_list_gallery = get_option('bb_gallery_stored_pages_ids', []);
-                $bragbook_websiteproperty_id = get_option('bragbook_websiteproperty_id', []);
-                    
-                foreach($matching_data as $procedure_data) {
-                    $page_slug = isset($procedure_data['page_slug']) ? $procedure_data['page_slug'] : '';
-                    
-                    if (($parts[0] == $bb_combine_gallery_slug || $cat_website_property_id == '0') && ($bb_page_exist !== false)) {
-                        if (!empty($procedure_data['photoSets']) && $limit_count <= $cat_limit && $procedure_data['procedure_case_count'] >= $cat_start) { 
-                            ?>
-                            <div class="bb-content-box <?php echo 'height-' . $procedure_data['height']; ?> <?php echo 'weight-' . $procedure_data['weight']; ?> <?php echo 'gender-' . $procedure_data['gender']; ?> <?php echo 'race-' . $procedure_data['ethnicity']; ?> <?php echo 'age-' . $procedure_data['age']; ?>">
-                                <div class="bb-content-thumbnail">
-                                    <?php 
-                                        $pro_title = empty($procedure_title) ? $procedure_data['procedure_title'] : $procedure_title; 
-                                        $converted_procedure_name = preg_replace('/[^a-zA-Z0-9]+/', '-', $pro_title); 
-                                        $bb_seo_detail = isset($procedure_data['caseDetails'][0]) ? $procedure_data['caseDetails'][0] : [];
-                                        if (isset($bb_seo_detail['seoSuffixUrl']) && !empty($bb_seo_detail['seoSuffixUrl'])) {
-                                            $formatted_heading = $bb_seo_detail['seoSuffixUrl'];
-                                        } else {
-                                            update_option($procedure_data['photoSets'][0]['id'], $procedure_data['photoSets'][0]['caseId']);
-                                            $formatted_heading = $procedure_data['photoSets'][0]['caseId'];
-                                        }
-                                    ?>
-                                    <a href="<?php echo '/' . $bb_combine_gallery_slug . '/' . strtolower($converted_procedure_name) . "/" . $formatted_heading . "/"; ?>">
-                                        <?php
-                                        $bb_new_image_procedure_data = isset($procedure_data['photoSets'][0]['highResPostProcessedImageLocation']) && !is_null($procedure_data['photoSets'][0]['highResPostProcessedImageLocation'])
-                                            ? $procedure_data['photoSets'][0]['highResPostProcessedImageLocation'] 
-                                                : (isset($procedure_data['photoSets'][0]['postProcessedImageLocation']) && !is_null($procedure_data['photoSets'][0]['postProcessedImageLocation']) 
-                                                    ? $procedure_data['photoSets'][0]['postProcessedImageLocation'] 
-                                                    : $procedure_data['photoSets'][0]['originalBeforeLocation']);
-                                        ?>
-                                        <img src="<?php echo $bb_new_image_procedure_data; ?>" alt="<?php echo isset($procedure_data['photoSets'][0]['seoAltText']) ? $procedure_data['photoSets'][0]['seoAltText'] : ''; ?>">
-                                    </a>
-                                    <img class="bb-heart-icon bb-open-fav-modal" src="<?php echo BB_PLUGIN_DIR_PATH; ?>assets/images/red-heart.svg" alt="heart">
-                                </div>
-                                <div class="bb-content-box-inner">
-                                    <div class="bb-content-box-inner-left">
-                                        <?php 
-                                        $p_c_count = $procedure_data['procedure_case_count'] == NULL ? $patient_count : $procedure_data['procedure_case_count'];
-                                        $bbrag_procedure_id = $category_match_id = empty($category_to_match) ? $procedure_data['procedure_id'] : $category_to_match; 
-                                        $pro_title = empty($procedure_title) ? $procedure_data['procedure_title'] : $procedure_title; 
-                                        $converted_procedure_name = preg_replace('/[^a-zA-Z0-9]+/', '-', $pro_title);
-                                        if($cat_title == 1) {
-                                        ?>
-                                        <?php 
-                                        if(isset($bb_seo_detail['seoHeadline']) && !empty($bb_seo_detail['seoHeadline'])) {
-                                        ?>
-                                        <h3><?php echo $bb_seo_detail['seoHeadline']; ?></h5>
-                                        
-                                        <?php
-                                        }else {
-                                        ?>
-                                        <h3><?php echo $pro_title; ?> : Patient <?php  echo $p_c_count ?></h5>
-                                        <?php
-                                        }
-                                        ?>
-                                        <div class="case-details"> <?php
-                                            $bb_details_description = self::bb_limitWords($procedure_data['details'], 50);
-                                            echo $bb_details_description;
-                                        ?></div>
-                                        <?php
-                                        } 
+                <?
+                $bb_case_count = 0;
+                $secondPart = 'combine';
+                $thirdPart = 'blepharoplasty';
+                
 
-                                        if($cat_details == 1) {
-                                            update_option($procedure_data['photoSets'][0]['caseId'] . '_bb_procedure_id', $bbrag_procedure_id);
-                                            update_option($formatted_heading, $procedure_data['photoSets'][0]['caseId']);
-                                            update_option($procedure_data['photoSets'][0]['caseId'], $formatted_heading);
-                                        ?>
+                // Start generating content
+                $contentBox = ''; // This will hold the HTML content
+
+                foreach ($result_pro['data'] as $caseItem) {
+                    if (isset($caseItem['photoSets']) && count($caseItem['photoSets']) > 0) {
+                        $photoSet = $caseItem['photoSets'][0]; // Get the first photo set
+                        $imgSrc = $photoSet['highResPostProcessedImageLocation'] ?? $photoSet['postProcessedImageLocation'] ?? $photoSet['originalBeforeLocation'];
+                        $imgAlt = $photoSet['seoAltText'] ?? 'Procedure Image';
+                        $caseId = $caseItem['id'];
+                        $caseDetails = $caseItem['details'] ?? '';
+                        $patientCount = ++$bb_case_count;
+                        $procedureUrl = "/$secondPart/$thirdPart/$caseId/";
+
+                        $newContent = "
+                            <div class='bb-content-box'>
+                                <div class='bb-content-thumbnail'>
+                                    <a href='$procedureUrl'>
+                                        <img src='$imgSrc' alt='$imgAlt'>
+                                    </a>
+                                    
+                                </div>
+                                <div class='bb-content-box-inner'>
+                                    <div class='bb-content-box-inner-left'>
+                                        <h5>$thirdPart : Patient $patientCount</h5>
+                                        <p>$caseDetails</p> 
+                                    </div>
+                                    <div class='bb-content-box-inner-right'>
                                         
-                                        <button type="button"><a href="<?php echo '/' . $bb_combine_gallery_slug . '/' . strtolower($converted_procedure_name) . "/" . $formatted_heading . "/"; ?>">View More</a></button>
-                                        <?php
-                                        }
-                                        ?>
                                     </div>
                                 </div>
-                            </div>
-
-                            <?php 
-                            $limit_count++;
-                        }
-                    } elseif ($cat_website_property_id == $bb_website_property_id_slugs_list[$page_slug]) {
-                        if (!empty($procedure_data['photoSets']) && $limit_count <= $cat_limit && $procedure_data['procedure_case_count'] >= $cat_start) { 
-                            ?>
-                            <div class="bb-content-box <?php echo 'height-' . $procedure_data['height']; ?> <?php echo 'weight-' . $procedure_data['weight']; ?> <?php echo 'gender-' . $procedure_data['gender']; ?> <?php echo 'race-' . $procedure_data['ethnicity']; ?> <?php echo 'age-' . $procedure_data['age']; ?>">
-                                <div class="bb-content-thumbnail">
-                                    <?php 
-                                        $pro_title = empty($procedure_title) ? $procedure_data['procedure_title'] : $procedure_title; 
-                                        $converted_procedure_name = preg_replace('/[^a-zA-Z0-9]+/', '-', $pro_title); 
-                                        $bb_seo_detail = isset($procedure_data['caseDetails'][0]) ? $procedure_data['caseDetails'][0] : [];
-
-                                        if (isset($bb_seo_detail['seoSuffixUrl']) && !empty($bb_seo_detail['seoSuffixUrl'])) {
-                                            $formatted_heading = $bb_seo_detail['seoSuffixUrl'];
-                                        } else {
-                                            update_option($procedure_data['photoSets'][0]['id'], $procedure_data['photoSets'][0]['caseId']);
-                                            $formatted_heading = $procedure_data['photoSets'][0]['caseId'];
-                                        }
-                                    ?>
-                                    <a href="<?php echo '/' . $page_slug . '/' . strtolower($converted_procedure_name) . "/" . $formatted_heading . "/"; ?>">
-                                        <?php
-                                        $bb_new_image_procedure_data = isset($procedure_data['photoSets'][0]['highResPostProcessedImageLocation']) && !is_null($procedure_data['photoSets'][0]['highResPostProcessedImageLocation'])
-                                            ? $procedure_data['photoSets'][0]['highResPostProcessedImageLocation'] 
-                                                : (isset($procedure_data['photoSets'][0]['postProcessedImageLocation']) && !is_null($procedure_data['photoSets'][0]['postProcessedImageLocation']) 
-                                                    ? $procedure_data['photoSets'][0]['postProcessedImageLocation'] 
-                                                    : $procedure_data['photoSets'][0]['originalBeforeLocation']);
-                                        ?>
-                                        <img src="<?php echo $bb_new_image_procedure_data; ?>" alt="<?php echo isset($procedure_data['photoSets'][0]['seoAltText']) ? $procedure_data['photoSets'][0]['seoAltText'] : ''; ?>">
+                                <div class='bb-content-box-cta'>
+                                    <a class='view-more-btn' href='$procedureUrl'>
+                                        View More
                                     </a>
-                                    <img class="bb-heart-icon bb-open-fav-modal" src="<?php echo BB_PLUGIN_DIR_PATH; ?>assets/images/red-heart.svg" alt="heart">
-                                </div>
-                                <div class="bb-content-box-inner">
-                                    <div class="bb-content-box-inner-left">
-                                        <?php 
-                                        $p_c_count = $procedure_data['procedure_case_count'] == NULL ? $patient_count : $procedure_data['procedure_case_count'];
-                                        $bbrag_procedure_id = $category_match_id = empty($category_to_match) ? $procedure_data['procedure_id'] : $category_to_match; 
-                                        $pro_title = empty($procedure_title) ? $procedure_data['procedure_title'] : $procedure_title; 
-                                        $converted_procedure_name = preg_replace('/[^a-zA-Z0-9]+/', '-', $pro_title);
-                                        if($cat_title == 1) {
-                                            if(isset($bb_seo_detail['seoHeadline']) && !empty($bb_seo_detail['seoHeadline'])) {
-                                            ?>
-                                                <h3><?php echo $bb_seo_detail['seoHeadline']; ?></h5>
-                                            <?php
-                                            }else {
-                                            ?>
-                                                <h3><?php echo $pro_title; ?> : Patient <?php  echo $p_c_count ?></h5>
-                                            <?php
-                                            }
-                                            ?>
-                                            <div class="case-details"> <?php
-                                                $bb_details_description = self::bb_limitWords($procedure_data['details'], 50);
-                                                echo $bb_details_description;
-                                            ?>
-                                            </div>
-                                            <?php
-                                        } 
-                                        if($cat_details == 1) {
-                                            update_option($procedure_data['photoSets'][0]['caseId'] . '_bb_procedure_id', $bbrag_procedure_id);
-                                            update_option($formatted_heading, $procedure_data['photoSets'][0]['caseId']);
-                                            update_option($procedure_data['photoSets'][0]['caseId'], $formatted_heading);
-                                            ?>
-                                            <button type="button"><a href="<?php echo '/' . $page_slug . '/' . strtolower($converted_procedure_name) . "/" . $formatted_heading . "/"; ?>">View More</a></button>
-                                            <?php
-                                        }
-                                        ?>
-                                    </div>
                                 </div>
                             </div>
+                        ";
 
-                            <?php 
-                            $limit_count++;
-                        }
+                        $contentBox .= $newContent; // Append content
                     }
                 }
-                ?>
+
+                // Output the generated content
+                echo $contentBox;
+        ?>
             </div>
         </div>
         <?php

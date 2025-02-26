@@ -2507,17 +2507,15 @@ p.bb-fav-modal-close-button {
     justify-content: center;
     width: 100%;
 }
-.ajax-load-more .ajax-load-more-btn {
+.ajax-load-more .bb_ajax-load-more-btn {
+    padding: 7px 15px;
+    border: 1px solid #0000004f;
+    color: #000000;
+    border-radius: 50px;
+    font-weight: 400;
     text-transform: uppercase;
-    padding: 10px 20px;
-    font-size: 20px;
-    line-height: 1;
-    font-family: "Manrope", sans-serif;
-    font-weight: 500;
-    border: 0.5px solid #404040 !important;
-    color: #ffffff !important;
-    background-color: #404040;
-    border-radius: 3px;
+    font-size: 14px;
+    font-weight: 700;
 }
 .submit-button-table p.submit {
     padding-bottom: 0;

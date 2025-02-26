@@ -12,6 +12,176 @@ $combine_gallery_page_slug = get_option('combine_gallery_slug');
 $page_bb_data = get_page_by_path($parts_page_name[0]);
 $page_id_via_slug = $page_bb_data->ID;
 
+/*********************************************************************************************************** */
+function bb_get_sidebar_data($parts_page_name, $combine_gallery_page_slug) {
+    ob_start();
+    update_option("bb_sidebar_data", []);
+  //  update_option("bb_combine_api_data", []);
+    
+    $api_tokens = get_option('bragbook_api_token', []); 
+    $websiteproperty_ids = get_option('bragbook_websiteproperty_id', []);
+    $gallery_slugs = get_option('bb_gallery_page_slug', []); 
+    
+    $single_results_sidebar = [];
+    $combine_results_sidebar = [];
+    
+    foreach ($api_tokens as $index => $api_token) {
+        $websiteproperty_id = $websiteproperty_ids[$index] ?? '';
+        $page_slug_bb = $gallery_slugs[$index] ?? '';
+        if(($page_slug_bb == $parts_page_name[0]) || ($combine_gallery_page_slug == $parts_page_name[0])) {
+            if (empty($api_token) || empty($websiteproperty_id)) {
+                continue;
+            }
+
+            $bb_sidebar_url = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin?apiToken={$api_token}";
+           
+            $sidebar_list = get_api_sidebar_bb($bb_sidebar_url); 
+            $sidebar_set = json_decode($sidebar_list, true) ?? []; 
+            $result = [
+                'sidebar_set' => $sidebar_set
+            ];
+            if($combine_gallery_page_slug == $parts_page_name[0]) {
+                $combine_results_sidebar[$api_token][$websiteproperty_id][$page_slug_bb] = $result; 
+            } else {
+                $single_results_sidebar[$api_token][$websiteproperty_id][$page_slug_bb] = $result;
+            }
+        }
+    }
+
+    $bragbook_api_sidebar = json_encode($single_results_sidebar);
+    $bragbook_combine_api_sidebar = json_encode($combine_results_sidebar);
+
+    update_option("bb_single_sidebar_data", $bragbook_api_sidebar);
+    update_option("bb_combine_sidebar_data", $bragbook_combine_api_sidebar);
+
+    ob_clean(); 
+}
+
+bb_get_sidebar_data($parts_page_name, $combine_gallery_page_slug);
+
+function get_api_sidebar_bb($url) {
+   
+    $bb_set_transient_urls = get_option( 'bb_set_transient_url_sidebar', [] );
+    if ( ! is_array( $bb_set_transient_urls ) ) {
+        $bb_set_transient_urls = [];
+    }
+
+    if (get_transient($url) !== false) {
+        return get_transient($url);
+    }
+
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+
+    $data = curl_exec($ch);
+    curl_close($ch);
+
+    $bb_set_transient_urls[$url] = $data;
+    update_option( 'bb_set_transient_url_sidebar', $bb_set_transient_urls );
+    
+    set_transient($url, $data, 1800);
+    return $data;
+   
+}
+if($combine_gallery_page_slug == $parts_page_name[0]) {
+    $data_sidebar = get_option("bb_combine_sidebar_data");
+    $bb_f_ajax_page = 'combine';
+} else {
+    $data_sidebar = get_option('bb_single_sidebar_data'); 
+    $bb_f_ajax_page = 'single';
+
+}
+?>
+<div class="bb-sidebar">
+    <div class="bb-sidebar-wrapper">
+        <button type="button" class="bb-sidebar-toggle bb-sidebar-head-toggle">
+            <img src="<?php echo BB_PLUGIN_DIR_PATH; ?>assets/images/caret-right-sm.svg" alt="toggle sidebar">
+        </button>
+        <form class="search-container">
+            <input type="text" id="search-bar">
+            <img src="<?php echo BB_PLUGIN_DIR_PATH?>assets/images/search-svgrepo-com.svg" class="bb-search-icon" alt="search">
+            <ul id="search-suggestions" class="search-suggestions"></ul>
+        </form>
+
+        <div class="bb-nav-accordion">
+            <?php 
+            
+            $properties_data_all = json_decode($data_sidebar, true);
+            $properties_data = $properties_data_all;
+
+            /* 
+            Show data for singal page
+            */
+            $categorized_procedures = [];
+            $all_properties = [];
+           
+            if (!empty($properties_data) && is_array($properties_data)) {
+                foreach ($properties_data as $api_token_key => $token_bb) {
+                    foreach ($token_bb as $websiteproperty_id_key => $website_id_bb) {
+                        foreach ($website_id_bb as $websiteproperty_id => $property_data) {
+                            if(($parts_page_name[0] == $websiteproperty_id) || ($combine_gallery_page_slug == $parts_page_name[0])) {
+                               
+                                foreach ($property_data['sidebar_set']['data'] as $procedure_name => $procedure_data) {
+                                    ?>
+                                    <span class="bb-accordion" cat_title="<?= htmlspecialchars($procedure_data['name']); ?>">
+                                        <h3><?= $procedure_data['name']; ?> <span>(<?= $procedure_data['totalCase']; ?>)</span></h3>
+                                        <img src="<?= BB_PLUGIN_DIR_PATH ?>assets/images/plus-icon.svg" alt="plus icon">
+                                    </span>
+                                    <div class="bb-panel">
+                                        <ul>
+                                        <?php
+                                            foreach($procedure_data['procedures'] as $procedure ) {
+                                                ?>
+                                                <li>
+                                                <a id="<?= esc_attr($procedure['id']); ?>"
+                                                    href="<?= "/" . $parts_page_name[0] . "/" . $procedure['slugName'] . "/"; ?>"
+                                                    data-count="1"
+                                                    data-api-token="<?= esc_attr($api_token_key); ?>"
+                                                    data-website-property-id="<?= esc_attr($websiteproperty_id_key); ?>">
+                                                        <?= esc_html($procedure['name']); ?> 
+                                                        <span>(<?php echo $procedure['totalCase']; ?>)</span>
+                                                </a>
+                                                   
+                                                </li>
+                                                <?php
+                                            }
+                                            ?>
+                                        </ul>
+                                    </div>
+                                <?php
+                                }
+                                   
+                            }
+                        }
+                    }
+                   
+                }
+            }
+           
+
+                    
+                            ?>
+                           
+                           
+            <ul>
+                <li>
+                    <a class="bb-sidebar_favorites" href="/<?=$parts_page_name[0]?>/favorites/">
+                        <h3> My Favorites <span id="bb_favorite_caseIds_count">(<?php echo get_option('bb_favorite_caseIds_count'); ?>)</span></h3>
+                    </a> 
+                </li> 
+            </ul>  
+        </div>
+    </div> 
+    
+    <a href="/<?=$parts_page_name[0]?>/consultation/" class="bb-sidebar-btn">REQUEST A CONSULTATION</a>
+    <p class="request-promo">Ready for the next step?<br>Contact us to request your consultation.</p>
+    <!-- <p>Before and after gallery powered by <span style="color:red">BRAG book™</span></p> -->
+    
+</div>
+<?
+/*********************************************************************************************************** */
 function bb_get_grabbook_category_feed($url) {
     $cats_json = bb_get_grabbook_api($url);
     return $cats_json;
@@ -156,198 +326,11 @@ if($combine_gallery_page_slug == $parts_page_name[0]) {
                 }
             });
         }
-        fetchFavoriteData();  
+      //  fetchFavoriteData();  
     });
 
 </script>
-<div class="bb-sidebar">
-    <div class="bb-sidebar-wrapper">
-        <button type="button" class="bb-sidebar-toggle bb-sidebar-head-toggle">
-            <img src="<?php echo BB_PLUGIN_DIR_PATH; ?>assets/images/caret-right-sm.svg" alt="toggle sidebar">
-        </button>
-        <form class="search-container">
-            <input type="text" id="search-bar">
-            <img src="<?php echo BB_PLUGIN_DIR_PATH?>assets/images/search-svgrepo-com.svg" class="bb-search-icon" alt="search">
-            <ul id="search-suggestions" class="search-suggestions"></ul>
-        </form>
 
-        <div class="bb-nav-accordion">
-            <?php 
-           
-            $properties_data_all = json_decode($data, true);
-            $properties_data = $properties_data_all;
-
-            /* 
-            Show data for singal page
-            */
-            $categorized_procedures = [];
-            $all_properties = [];
-            if (!empty($properties_data) && is_array($properties_data)) {
-                foreach ($properties_data as $token_bb) {
-                    foreach ($token_bb as $website_id_bb) {
-                        foreach ($website_id_bb as $websiteproperty_id => $property_data) {
-                            if(($parts_page_name[0] == $websiteproperty_id) || ($combine_gallery_page_slug == $parts_page_name[0])) {
-                                $categories = $property_data['categories'];
-                                $api_data = $property_data['api_data'];
-                                if (!empty($categories) && is_array($categories)) {
-                                    foreach ($categories as $category_key => $category) {
-                                        $case_counts = [];
-                                        foreach ($category['procedures'] as $procedure_key => $procedure) {
-                                            $p_case_count = 0; 
-                                            foreach ($api_data as $item) {
-                                                if (in_array($procedure['id'], $item['procedureIds'])) {
-                                                    if (!empty($item['photoSets'])) {
-                                                        $p_case_count++;
-                                                    }
-                                                }
-                                            }
-                                            $case_counts[$procedure_key] = $p_case_count;
-                                        }
-                                        foreach ($category['procedures'] as $procedure_key => $procedure) {
-                                            $categories[$category_key]['procedures'][$procedure_key]['case_count'] = $case_counts[$procedure_key];
-                                        }
-                                    }
-                                }
-                                if (!empty($categories) && is_array($categories)) {
-                                    foreach ($categories as $category) {
-                                        $procedures_cat_data = [];
-                                        foreach ($api_data as $item) {
-                                            foreach ($category['procedures'] as $procedure) {
-                                                if (in_array($procedure['id'], $item['procedureIds'])) {
-                                                    if (!empty($item['photoSets'])) { 
-                                                        $procedures_cat_data[] = $procedure['id']; 
-                                                    }
-                                                }
-                                            }
-                                        }
-                                        $categorized_procedures[$websiteproperty_id][$category['id']] = [
-                                            'category_name' => $category['name'],
-                                            'procedures_count' => count($procedures_cat_data),
-                                            'procedures_data' => $category['procedures'],
-                                        ];
-                                    }
-                                    $all_properties[$websiteproperty_id] = $categorized_procedures[$websiteproperty_id];
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            function removeAccents($string) {
-                $accents = [
-                    'à' => 'a', 'á' => 'a', 'â' => 'a', 'ã' => 'a', 'ä' => 'a', 'å' => 'a', 'æ' => 'a',
-                    'è' => 'e', 'é' => 'e', 'ê' => 'e', 'ë' => 'e', 'ē' => 'e', 'ė' => 'e', 'ě' => 'e',
-                    'ì' => 'i', 'í' => 'i', 'î' => 'i', 'ï' => 'i', 'ī' => 'i', 'į' => 'i', 'ì' => 'i',
-                    'ò' => 'o', 'ó' => 'o', 'ô' => 'o', 'õ' => 'o', 'ö' => 'o', 'ø' => 'o', 'ō' => 'o',
-                    'ù' => 'u', 'ú' => 'u', 'û' => 'u', 'ü' => 'u', 'ū' => 'u', 'ų' => 'u', 'ű' => 'u',
-                    'ý' => 'y', 'ÿ' => 'y',
-                    'ç' => 'c', 'ć' => 'c', 'č' => 'c', 'ĉ' => 'c', 'ċ' => 'c',
-                    'ñ' => 'n', 'ń' => 'n', 'ņ' => 'n', 'ň' => 'n',
-                    'ś' => 's', 'š' => 's', 'ş' => 's',
-                    'ž' => 'z', 'ź' => 'z', 'ż' => 'z',
-                ];
-                foreach ($accents as $accented => $unaccented) {
-                    $string = str_replace($accented, $unaccented, $string);
-                }
-                return $string;
-            }
-        
-            function render_category_group($all_properties, $plugin_dir_path, $parts_page_name) {
-                if (!empty($all_properties) && is_array($all_properties)) {
-                    $merged_categories = [];
-                    foreach ($all_properties as $property_id => $categories) {
-                        foreach ($categories as $category_id => $category_data) {
-                            $category_name = $category_data['category_name'];
-                            $procedures_data = $category_data['procedures_data'];
-                            if (!isset($merged_categories[$category_name])) {
-                                $merged_categories[$category_name] = [
-                                    'category_name' => $category_name,
-                                    'procedures' => [],
-                                ];
-                            }
-                            foreach ($procedures_data as $procedure) {
-                                $procedure_name = $procedure['name'];
-                                $case_count = $procedure['case_count'];
-                                if (isset($merged_categories[$category_name]['procedures'][$procedure_name])) {
-                                    $merged_categories[$category_name]['procedures'][$procedure_name]['case_count'] += $case_count;
-                                } else {
-                                    $merged_categories[$category_name]['procedures'][$procedure_name] = [
-                                        'name' => $procedure_name,
-                                        'case_count' => $case_count,
-                                        'id' => $procedure['id']
-                                    ];
-                                }
-                            }
-                        }
-                    }
-
-                    foreach ($merged_categories as $category_name => $category_data) {
-                        $totalCaseCount = 0;
-                        foreach ($category_data['procedures'] as $procedure_name => $procedure_data) {
-                            $totalCaseCount += $procedure_data['case_count'];
-                        }
-                        if ($totalCaseCount != 0) {
-                            ?>
-                            <span class="bb-accordion" cat_title="<?= htmlspecialchars($category_name); ?>">
-                                <h3><?= $category_name; ?> <span>(<?= $totalCaseCount; ?>)</span></h3>
-                                <img src="<?= $plugin_dir_path ?>assets/images/plus-icon.svg" alt="plus icon">
-                            </span>
-                            <div class="bb-panel">
-                                <ul>
-                                    <?php
-                                    ksort($category_data['procedures']);
-                                    foreach ($category_data['procedures'] as $procedure_name => $procedure_data) {
-                                        if ($procedure_data['case_count'] != 0) {
-                                            
-                                            $converted_procedure_name = preg_replace('/[^a-zA-Z0-9]+/', '-', $procedure_data['name']);
-                                            $lower_procedure_name = strtolower($converted_procedure_name);
-                                            
-                                            $lower_procedure_name = urldecode($lower_procedure_name);
-                                            $lower_procedure_name = removeAccents($lower_procedure_name);
-                                            
-                                            $converted_procedure_name = urldecode($converted_procedure_name);
-                                            $converted_procedure_name = removeAccents($converted_procedure_name);
-                                            update_option($converted_procedure_name, $category_name);
-                                            update_option($lower_procedure_name, $category_name);
-                                            update_option($lower_procedure_name . '_id', $procedure_data['id']);
-                                            
-                                            update_option($procedure_data['id'] . '_title', $procedure_data['name']);
-                                            ?>
-                                            <li>
-                                                <a id="<?= esc_attr($procedure['id']); ?>" href="<?= "/" . $parts_page_name[0] . "/" . strtolower($converted_procedure_name) . "/"; ?>">
-                                                    <?= esc_html($procedure_data['name']); ?> <span>(<?php echo $procedure_data['case_count']; ?>)</span>
-                                                </a>
-                                            </li>
-                                            <?php
-                                        }
-                                    }
-                                    ?>
-                                </ul>
-                            </div>
-                            <?php
-                        }
-                    }
-                }
-            }
-
-            render_category_group($all_properties, BB_PLUGIN_DIR_PATH, $parts_page_name);
-            ?>
-            <ul>
-                <li>
-                    <a class="bb-sidebar_favorites" href="/<?=$parts_page_name[0]?>/favorites/">
-                        <h3> My Favorites <span id="bb_favorite_caseIds_count">(<?php echo get_option('bb_favorite_caseIds_count'); ?>)</span></h3>
-                    </a> 
-                </li> 
-            </ul>  
-        </div>
-    </div> 
-    
-    <a href="/<?=$parts_page_name[0]?>/consultation/" class="bb-sidebar-btn">REQUEST A CONSULTATION</a>
-    <p class="request-promo">Ready for the next step?<br>Contact us to request your consultation.</p>
-    <!-- <p>Before and after gallery powered by <span style="color:red">BRAG book™</span></p> -->
-    
-</div>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
