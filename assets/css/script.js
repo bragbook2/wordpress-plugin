@@ -1,21 +1,7 @@
 let load_more_count = 1;
 
-document.addEventListener("DOMContentLoaded", function (event) {
+document.addEventListener("DOMContentLoaded", function () {
   fetchCaseData(load_more_count);
-  if (event.target instanceof Element) {
-    let target = event.target.closest(".ajax-load-more");
-    let loadMoreButton = target.querySelector(".bb_ajax-load-more-btn");
-    if (loadMoreButton) {
-      // Get the current offset from data-offset
-      let currentOffsetLoad = parseInt(
-        loadMoreButton.getAttribute("data-offset"),
-        10
-      );
-      if(currentOffsetLoad == 1) {
-        loadMoreButton.style.display = "none";
-      }
-    }
-  }
 });
 
 document.addEventListener("click", function (event) {
@@ -38,21 +24,6 @@ document.addEventListener("click", function (event) {
 });
 
 function fetchCaseData(load_more_count) {
-  
-  const elementCase= document.querySelector('.bb-patient-box')
-  if(elementCase) {
-    elementCase.insertAdjacentHTML('beforeend', `<img id="bb_f_gif_sidebar" src="${bb_plugin_data.heartrunning}" alt="Loading...">`);
-  }
-  const element= document.querySelector('.bb-content-boxes')
-  if(element) {
-    element.insertAdjacentHTML('beforeend', `<img id="bb_f_gif_sidebar" src="${bb_plugin_data.heartrunning}" alt="Loading...">`);
-  }
-const loadMoreButtonEl=document.querySelector('.bb_ajax-load-more-btn');
-if(loadMoreButtonEl) {
-  loadMoreButtonEl.innerHTML = `<img id="bb_ajax-load-more-btn" src="${bb_plugin_data.heartrunning}" alt="Loading...">`;
-}
- // const element_apply = document.querySelector('.apply_bb_filter');
- // if (element_apply) element_apply.innerHTML = `<img id="apply_bb_filter" src="${bb_plugin_data.heartrunning}" alt="Loading...">`;
   var elementId = "";
   const pathSegments = window.location.pathname.split("/").filter(Boolean);
   const secondPart = pathSegments[0] || "";
@@ -70,8 +41,8 @@ if(loadMoreButtonEl) {
       "data-website-property-id"
     );
     var textOnly = Array.from(targetElement.childNodes)
-      .filter((node) => node.nodeType === Node.TEXT_NODE) 
-      .map((node) => node.textContent.trim()) 
+      .filter((node) => node.nodeType === Node.TEXT_NODE) // Get only text nodes
+      .map((node) => node.textContent.trim()) // Trim whitespace
       .join(" ");
 
     // Change color and opacity
@@ -91,28 +62,7 @@ if(loadMoreButtonEl) {
       }
     }
   }
-  let dynamicFilterBB = document.querySelectorAll(
-    '.bb-dynamic-filter input[type="checkbox"]:checked'
-  );
-  let staticFilterBB = document.querySelectorAll(
-    '.bb-static-filter input[type="checkbox"]:checked'
-  );
-  // Loop through each checkbox
-  let staticFilter = "";
-  let dynamicFilter = "";
-  staticFilterBB.forEach((checkbox) => {
-    let dataKey = checkbox.getAttribute("data-key");
-    let dataValue = checkbox.getAttribute("data-value");
-    staticFilter += `&${dataKey}=${dataValue}`;
-  });
 
-  dynamicFilterBB.forEach((checkbox) => {
-    let dataKey = checkbox.getAttribute("data-key");
-    let dataValue = checkbox.getAttribute("data-value");
-    dataKey = dataKey.replace(/\s+/g, "|||");
-    dynamicFilter += `&${dataKey}=${dataValue}`;
-
-  });
   const data = {
     action: "bb_case_api",
     count: count,
@@ -121,10 +71,8 @@ if(loadMoreButtonEl) {
     apiToken: apiToken,
     websitePropertyId: websitePropertyId,
     caseId: forthPart,
-    staticFilter: staticFilter,
-    dynamicFilter: dynamicFilter
   };
-  
+
   fetch(bb_plugin_data.ajaxurl, {
     method: "POST",
     headers: {
@@ -140,13 +88,6 @@ if(loadMoreButtonEl) {
           if (forthPart == "") {
             var bb_case_count = (count - 1) * 10;
             let contentBox = document.querySelector(".bb-content-boxes");
-         
-            document.querySelector('#bb_f_gif_sidebar')?.remove();
-            document.querySelector('#bb_ajax-load-more-btn')?.remove();
-            //  document.querySelector('#apply_bb_filter')?.remove();
-            document.querySelector('.bb_ajax-load-more-btn').innerHTML ='Load More';
-            const applyBBButton=document.querySelector('.apply_bb_filter');
-            if(applyBBButton) applyBBButton.innerHTML = `Apply`;
 
             caseSet.data.forEach((caseItem) => {
               if (caseItem.photoSets && caseItem.photoSets.length > 0) {
@@ -200,12 +141,11 @@ if(loadMoreButtonEl) {
               }
             });
           } else {
-            document.querySelector('#bb_f_gif_sidebar')?.remove();
             let patienLeftBox = document.querySelector(".bb-patient-left");
             if (patienLeftBox) {
               caseSet.data.forEach((caseItem) => {
                 let caseId = caseItem.id;
-                 console.log('here is flow');
+
                 if (caseId == forthPart) {
                   if (caseItem.photoSets && caseItem.photoSets.length > 0) {
                     caseItem.photoSets.forEach((value) => {
@@ -302,71 +242,69 @@ if(loadMoreButtonEl) {
           console.error("Invalid response structure:", data);
         }
         if (data.data && data.data.filter_data) {
-          if (document.querySelector('.bb-filter-content-inner') && document.querySelector('.bb-filter-content-inner').childElementCount === 0) {
-            let filterContent = document.querySelector(
-              ".bb-filter-content-inner"
-            );
-            let filter_data = JSON.parse(data.data.filter_data);
+          let filterContent = document.querySelector(
+            ".bb-filter-content-inner"
+          );
+          let filter_data = JSON.parse(data.data.filter_data);
 
-            // Static filters (e.g., height, weight, etc.)
-            if (filter_data.data.staticFilter) {
-              for (let filterKey in filter_data.data.staticFilter) {
-                let filterGroup = filter_data.data.staticFilter[filterKey];
-                let filterHTML = `<div class="bb-filter-content-inner-wrapper">
-                                        <button class="accordion">${filterKey} <img src="${bb_plugin_data.heartdown}" alt="down"></button>
-                                        <div class="panel">
-                                            <div class="bb-filter-select-wrapper">
-                                                <div class="bb-input-box">`;
+          // Static filters (e.g., height, weight, etc.)
+          if (filter_data.data.staticFilter) {
+            for (let filterKey in filter_data.data.staticFilter) {
+              let filterGroup = filter_data.data.staticFilter[filterKey];
+              let filterHTML = `<div class="bb-filter-content-inner-wrapper">
+                                      <button class="accordion">${filterKey} <img src="${bb_plugin_data.heartdown}" alt="down"></button>
+                                      <div class="panel">
+                                          <div class="bb-filter-select-wrapper">
+                                              <div class="bb-input-box">`;
 
-                filterGroup.forEach((option) => {
-                  filterHTML += `<label class="bb-checkbox-container bb-static-filter" for="m-${filterKey}-${option.value}">
-                                        ${option.label}
-                                        <input type="checkbox" id="m-${filterKey}-${option.value}" name="${filterKey}" data-key="${filterKey}" data-value="${option.value}" onchange="handleDynamicCheckboxChange('${filterKey}','${option.value}')">
-                                        <span class="checkmark"></span>
-                                      </label>`;
-                });
+              filterGroup.forEach((option) => {
+                filterHTML += `<label class="bb-checkbox-container bb-static-filter" for="m-${filterKey}-${option.value}">
+                                      ${option.label}
+                                      <input type="checkbox" id="m-${filterKey}-${option.value}" name="${filterKey}" data-key="${filterKey}" data-value="${option.value}" onchange="handleDynamicCheckboxChange('${filterKey}','${option.value}')">
+                                      <span class="checkmark"></span>
+                                     </label>`;
+              });
 
-                filterHTML += `</div></div></div></div>`;
-                filterContent.innerHTML += filterHTML;
-              }
+              filterHTML += `</div></div></div></div>`;
+              filterContent.innerHTML += filterHTML;
             }
-            if (filter_data.data.dynamicFilter) {
-              //if(filter_data.data.dynamicFilter.length > 0){
-              var filterHTMLA = `<div class='advanced-filters'><span>Advanced Filters</span></div>`;
-              // }
-              for (let filterKey in filter_data.data.dynamicFilter) {
-                let filterGroup = filter_data.data.dynamicFilter[filterKey];
-                filterHTMLA += `<div class="bb-filter-content-inner-wrapper">
-                                        <button class="accordion">${filterKey} <img src="${bb_plugin_data.heartdown}" alt="down"></button>
-                                        <div class="panel">
-                                            <div class="bb-filter-select-wrapper"><div class="bb-input-box">`;
-
-                filterGroup.forEach((option) => {
-                  let formattedKey = filterKey;
-                  let formattedOption = option;
-                  filterHTMLA += `<label class="bb-checkbox-container bb-dynamic-filter" for="${formattedKey}-${formattedOption}">
-                                        ${option}
-                                        <input type="checkbox" id="${formattedKey}-${formattedOption}" name="${formattedKey.replace(
-                    /\s+/g,
-                    ""
-                  )}" data-key="${formattedKey}" data-value="${formattedOption}" onchange="handleDynamicCheckboxChange('${formattedKey.replace(
-                    /\s+/g,
-                    ""
-                  )}','${formattedOption}')">
-                                        <span class="checkmark"></span>
-                                      </label>`;
-                });
-
-                filterHTMLA += `</div></div></div></div>`;
-              }
-              filterContent.innerHTML += filterHTMLA;
-            }
-            filterContent.innerHTML += `<div  id='apply_filter'>
-                <button class="apply_bb_filter" onClick='applyFilterBB(${count}, "${secondPart}", ${elementId}, "${apiToken}", ${websitePropertyId}, "${forthPart}", "${thirdPart}")'>Apply</button> 
-                </div>`;
-
-            bb_advance_filter();
           }
+          if (filter_data.data.dynamicFilter) {
+            //if(filter_data.data.dynamicFilter.length > 0){
+            var filterHTMLA = `<div class='advanced-filters'><span>Advanced Filters</span></div>`;
+            // }
+            for (let filterKey in filter_data.data.dynamicFilter) {
+              let filterGroup = filter_data.data.dynamicFilter[filterKey];
+              filterHTMLA += `<div class="bb-filter-content-inner-wrapper">
+                                      <button class="accordion">${filterKey} <img src="${bb_plugin_data.heartdown}" alt="down"></button>
+                                      <div class="panel">
+                                          <div class="bb-filter-select-wrapper"><div class="bb-input-box">`;
+
+              filterGroup.forEach((option) => {
+                let formattedKey = filterKey;
+                let formattedOption = option;
+                filterHTMLA += `<label class="bb-checkbox-container bb-dynamic-filter" for="${formattedKey}-${formattedOption}">
+                                      ${option}
+                                      <input type="checkbox" id="${formattedKey}-${formattedOption}" name="${formattedKey.replace(
+                  /\s+/g,
+                  ""
+                )}" data-key="${formattedKey}" data-value="${formattedOption}" onchange="handleDynamicCheckboxChange('${formattedKey.replace(
+                  /\s+/g,
+                  ""
+                )}','${formattedOption}')">
+                                      <span class="checkmark"></span>
+                                     </label>`;
+              });
+
+              filterHTMLA += `</div></div></div></div>`;
+            }
+            filterContent.innerHTML += filterHTMLA;
+          }
+          filterContent.innerHTML += `<div  id='apply_filter'>
+              <button onClick='applyFilterBB(${count}, "${secondPart}", ${elementId}, "${apiToken}", ${websitePropertyId}, "${forthPart}", "${thirdPart}")'>Apply</button> 
+              </div>`;
+              
+          bb_advance_filter();
         }
       } catch (err) {
         console.error("Error parsing case_set JSON:", err);
@@ -392,19 +330,9 @@ function handleDynamicCheckboxChange(key, value) {
   });
 }
 
-function applyFilterBB(
-  count,
-  secondPart,
-  elementId,
-  apiToken,
-  websitePropertyId,
-  forthPart,
-  thirdPart
-) {
-  document.querySelector(".bb-content-boxes").innerHTML = "";
-  document.querySelector('.apply_bb_filter').innerHTML = `<img id="apply_bb_filter" src="${bb_plugin_data.heartrunning}" alt="Loading...">`;
-  //document.querySelector(".apply_bb_filter").innerHTML = "";
-  
+function applyFilterBB(count, secondPart, elementId, apiToken, websitePropertyId, forthPart, thirdPart) {
+  document.querySelector(".bb-content-boxes").innerHTML = '';
+  // Select all the checkboxes with the class .bb-dynamic-filter (you can be more specific if needed)
   let dynamicFilterBB = document.querySelectorAll(
     '.bb-dynamic-filter input[type="checkbox"]:checked'
   );
@@ -418,30 +346,23 @@ function applyFilterBB(
     let dataKey = checkbox.getAttribute("data-key");
     let dataValue = checkbox.getAttribute("data-value");
     staticFilter += `&${dataKey}=${dataValue}`;
+   
   });
 
   dynamicFilterBB.forEach((checkbox) => {
     let dataKey = checkbox.getAttribute("data-key");
     let dataValue = checkbox.getAttribute("data-value");
-    dataKey = dataKey.replace(/\s+/g, "|||");
-    // dataValue=dataValue.replace( /\s+/g, "|");
     dynamicFilter += `&${dataKey}=${dataValue}`;
 
     // dynamicFilter[dataKey] = dataValue;
+    
   });
 
-  
+  console.log("staticFilter", staticFilter);
+  console.log("dynamicFilter", JSON.stringify(dynamicFilter));
 
-  let data = filter_and_paginate(
-    count,
-    secondPart,
-    elementId,
-    apiToken,
-    websitePropertyId,
-    forthPart,
-    staticFilter,
-    dynamicFilter
-  );
+
+  let data = filter_and_paginate(count, secondPart, elementId, apiToken, websitePropertyId, forthPart, staticFilter, dynamicFilter);
 
   fetch(bb_plugin_data.ajaxurl, {
     method: "POST",
@@ -452,7 +373,7 @@ function applyFilterBB(
   })
     .then((response) => response.json())
     .then((data) => {
-      
+      console.log('response:', data);
       try {
         if (data.data && data.data.case_set) {
           let caseSet = JSON.parse(data.data.case_set);
@@ -511,16 +432,15 @@ function applyFilterBB(
                 contentBox.innerHTML += newContentF;
               }
             });
-          }
+          } 
         } else {
           console.error("Invalid response structure:", data);
         }
+
       } catch (err) {
         console.error("Error parsing case_set JSON:", err);
       }
     });
-    document.querySelector('.apply_bb_filter').innerHTML = `Apply`;
-
 }
 function bb_advance_filter() {
   let filterAccInner = document.querySelectorAll(
@@ -552,16 +472,7 @@ function bb_advance_filter() {
     });
   });
 }
-function filter_and_paginate(
-  count,
-  secondPart,
-  elementId,
-  apiToken,
-  websitePropertyId,
-  forthPart,
-  staticFilter,
-  dynamicFilter
-) {
+function filter_and_paginate(count, secondPart, elementId, apiToken, websitePropertyId, forthPart, staticFilter, dynamicFilter) {
   const data = {
     action: "bb_case_api",
     count: count,

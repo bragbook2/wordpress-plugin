@@ -35,7 +35,8 @@ class Activator {
             'rightArrowUrl' => BB_PLUGIN_DIR_PATH . 'assets/images/caret-right.svg',
             'heartBordered' => BB_PLUGIN_DIR_PATH . 'assets/images/red-heart-outline.svg',
             'heartdown' => BB_PLUGIN_DIR_PATH . 'assets/images/down-arrow.svg',
-        'heartRed' => BB_PLUGIN_DIR_PATH . 'assets/images/red-heart.svg',
+            'heartRed' => BB_PLUGIN_DIR_PATH . 'assets/images/red-heart.svg',
+            'heartrunning' => BB_PLUGIN_DIR_PATH . 'assets/images/running-heart.gif',
             'ajaxurl' => admin_url('admin-ajax.php')
         ));
 		 

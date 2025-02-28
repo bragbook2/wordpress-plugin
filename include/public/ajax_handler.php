@@ -52,16 +52,22 @@ class Ajax_Handler {
             $caseId = sanitize_text_field($_POST['caseId']);
            // $bb_set_transient_urls = get_option( 'bb_set_transient_url_sidebar', [] );
             $page_slug = sanitize_text_field($_POST['pageSlug']);
+            $staticFilter = sanitize_text_field($_POST['staticFilter']);
+            $dynamicFilter = sanitize_text_field($_POST['dynamicFilter']);
            
             // if ( ! is_array( $bb_set_transient_urls ) ) {
             //     $bb_set_transient_urls = [];
             // } 
-            $filter_api = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/filters?apiToken={$apiToken}&procedureId={$procedureId}&websitePropertyId={$websitePropertyId}";
-            if (get_transient($filter_api) == false) {
-                $filter_get = self::case_and_filter_api($filter_api);
-            }else {
-                $filter_get = get_transient($filter_api);
-            }
+            $filter_get = '';
+           // if(!empty($staticFilter) || !empty($dynamicFilter)){
+                $filter_api = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/filters?apiToken={$apiToken}&procedureId={$procedureId}&websitePropertyId={$websitePropertyId}";
+                //   if (get_transient($filter_api) == false) {
+                       $filter_get = self::case_and_filter_api($filter_api);
+                   // }else {
+                   //     $filter_get = get_transient($filter_api);
+                   // }
+           // }
+         
             if($caseId !== "") {
                 
                 $url = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/cases?websitePropertyId={$websitePropertyId}&apiToken={$apiToken}&caseId={$caseId}&procedureId={$procedureId}";
@@ -78,8 +84,8 @@ class Ajax_Handler {
                 // }
                 
             }else {
-                $url = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/cases/paginate?websitePropertyId={$websitePropertyId}&count={$count}&apiToken={$apiToken}&procedureId={$procedureId}";
-
+                $url = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/cases/paginate?websitePropertyId={$websitePropertyId}&count={$count}&apiToken={$apiToken}&procedureId={$procedureId}{$staticFilter}{$dynamicFilter}";
+               
                 // if (get_transient($url) !== false) {
                 //     $response = [
                 //         'status' => 'success',
@@ -98,6 +104,7 @@ class Ajax_Handler {
                 'status' => 'success',
                 'message' => 'Data received successfully.',
                 'data' => [
+                    'url' => $url,
                     'case_set' => $data,
                     'filter_data' => $filter_get
                 ] 

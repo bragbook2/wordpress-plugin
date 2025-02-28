@@ -33,7 +33,7 @@ function bb_get_sidebar_data($parts_page_name, $combine_gallery_page_slug) {
                 continue;
             }
 
-            $bb_sidebar_url = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin?apiToken={$api_token}";
+            $bb_sidebar_url = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/sidebar?apiToken={$api_token}";
            
             $sidebar_list = get_api_sidebar_bb($bb_sidebar_url); 
             $sidebar_set = json_decode($sidebar_list, true) ?? []; 

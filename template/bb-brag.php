@@ -210,57 +210,57 @@ if ($bbrag_case_url == "/".$parts[0]."/consultation/") {
         </main>
     </div>
     <script>
-        function handleDynamicCheckboxChange(selectedCheckbox) {
-            const filter = selectedCheckbox.dataset.filter;
-            const checkboxes = document.querySelectorAll('input[type="checkbox"][data-filter="' + filter + '"]');
+        // function handleDynamicCheckboxChange(selectedCheckbox) {
+        //     const filter = selectedCheckbox.dataset.filter;
+        //     const checkboxes = document.querySelectorAll('input[type="checkbox"][data-filter="' + filter + '"]');
 
-            checkboxes.forEach(checkbox => {
-                if (checkbox !== selectedCheckbox) {
-                    checkbox.checked = false;
-                }
-            });
+        //     checkboxes.forEach(checkbox => {
+        //         if (checkbox !== selectedCheckbox) {
+        //             checkbox.checked = false;
+        //         }
+        //     });
 
-            const contentBoxes = document.querySelectorAll('.bb-content-box');
-            contentBoxes.forEach(box => {
-                const classes = box.className.toLowerCase();
-                let showBox = true;
-                const checkedCheckboxes = Array.from(document.querySelectorAll('input[type="checkbox"]:checked'));
-                checkedCheckboxes.forEach(checkedCheckbox => {
-                    const currentFilter = checkedCheckbox.dataset.filter.toLowerCase();
-                    const minValue = checkedCheckbox.dataset.min_value ? parseInt(checkedCheckbox.dataset.min_value, 10) : null;
-                    const maxValue = checkedCheckbox.dataset.max_value ? parseInt(checkedCheckbox.dataset.max_value, 10) : null;
-                    const stringValue = checkedCheckbox.dataset.value ? checkedCheckbox.dataset.value.toLowerCase() : '';
+        //     const contentBoxes = document.querySelectorAll('.bb-content-box');
+        //     contentBoxes.forEach(box => {
+        //         const classes = box.className.toLowerCase();
+        //         let showBox = true;
+        //         const checkedCheckboxes = Array.from(document.querySelectorAll('input[type="checkbox"]:checked'));
+        //         checkedCheckboxes.forEach(checkedCheckbox => {
+        //             const currentFilter = checkedCheckbox.dataset.filter.toLowerCase();
+        //             const minValue = checkedCheckbox.dataset.min_value ? parseInt(checkedCheckbox.dataset.min_value, 10) : null;
+        //             const maxValue = checkedCheckbox.dataset.max_value ? parseInt(checkedCheckbox.dataset.max_value, 10) : null;
+        //             const stringValue = checkedCheckbox.dataset.value ? checkedCheckbox.dataset.value.toLowerCase() : '';
 
-                    const attributeMatch = (function() {
-                        const attributeClass = classes.match(new RegExp(`${currentFilter}-(\\d+)`));
-                        if (attributeClass) {
-                            const value = parseInt(attributeClass[1], 10);
-                            if (minValue === null && maxValue === null) {
-                                return true;
-                            } else if (minValue === null) {
-                                return value <= maxValue;
-                            } else if (maxValue === null) {
-                                return value >= minValue;
-                            } else {
-                                return value >= minValue && value <= maxValue;
-                            }
-                        } 
-                        return false;
-                    })();
-                   const stringMatch = stringValue !== '' && (stringValue === 'all' || classes.includes(`${currentFilter}-${stringValue}`));
+        //             const attributeMatch = (function() {
+        //                 const attributeClass = classes.match(new RegExp(`${currentFilter}-(\\d+)`));
+        //                 if (attributeClass) {
+        //                     const value = parseInt(attributeClass[1], 10);
+        //                     if (minValue === null && maxValue === null) {
+        //                         return true;
+        //                     } else if (minValue === null) {
+        //                         return value <= maxValue;
+        //                     } else if (maxValue === null) {
+        //                         return value >= minValue;
+        //                     } else {
+        //                         return value >= minValue && value <= maxValue;
+        //                     }
+        //                 } 
+        //                 return false;
+        //             })();
+        //            const stringMatch = stringValue !== '' && (stringValue === 'all' || classes.includes(`${currentFilter}-${stringValue}`));
                    
-                    if (!attributeMatch && !stringMatch) {
-                        showBox = false; 
-                    }
-                });
+        //             if (!attributeMatch && !stringMatch) {
+        //                 showBox = false; 
+        //             }
+        //         });
                
-                box.style.display = showBox ? 'block' : 'none';
-            });
-        }
+        //         box.style.display = showBox ? 'block' : 'none';
+        //     });
+        // }
 
-        document.addEventListener('DOMContentLoaded', function() {
+        // document.addEventListener('DOMContentLoaded', function() {
             
-        });
+        // });
     </script>
 
 <?php
@@ -441,69 +441,69 @@ if ($bbrag_case_url == "/".$parts[0]."/consultation/") {
                 $bbrag_procedure_title = strtolower($bbrag_procedure_title);
                 $category_title_ = get_option($bbrag_procedure_title);
                 
-                $bb_matching_case_data = category_procedure_case($bbrag_procedure_title, $api_data, $category_title_);
-                $matching_case_data = $bb_matching_case_data[1];
-                $mainEntity = [];
-                $hasPart = [];
-                foreach($matching_case_data as $procedure_data) {
-                    $bb_new_image_procedure_data = isset($procedure_data['photoSets'][0]['highResPostProcessedImageLocation']) && !is_null($procedure_data['photoSets'][0]['highResPostProcessedImageLocation'])
-                        ? $procedure_data['photoSets'][0]['highResPostProcessedImageLocation'] 
-                            : (isset($procedure_data['photoSets'][0]['postProcessedImageLocation']) && !is_null($procedure_data['photoSets'][0]['postProcessedImageLocation']) 
-                                ? $procedure_data['photoSets'][0]['postProcessedImageLocation'] 
-                                : $procedure_data['photoSets'][0]['originalBeforeLocation']);
+                // $bb_matching_case_data = category_procedure_case($bbrag_procedure_title, $api_data, $category_title_);
+                // $matching_case_data = $bb_matching_case_data[1];
+                // $mainEntity = [];
+                // $hasPart = [];
+                // foreach($matching_case_data as $procedure_data) {
+                //     $bb_new_image_procedure_data = isset($procedure_data['photoSets'][0]['highResPostProcessedImageLocation']) && !is_null($procedure_data['photoSets'][0]['highResPostProcessedImageLocation'])
+                //         ? $procedure_data['photoSets'][0]['highResPostProcessedImageLocation'] 
+                //             : (isset($procedure_data['photoSets'][0]['postProcessedImageLocation']) && !is_null($procedure_data['photoSets'][0]['postProcessedImageLocation']) 
+                //                 ? $procedure_data['photoSets'][0]['postProcessedImageLocation'] 
+                //                 : $procedure_data['photoSets'][0]['originalBeforeLocation']);
 
-                    $images= [];
-                     $mainEntity[] = [
-                        "@type" => "ImageGallery",
-                        "name" => "Before and after " . $bbrag_procedure_title . " Gallery",
-                        "url" => home_url() . $bbrag_case_url . $bbrag_procedure_title,
-                        "image" => $bb_new_image_procedure_data
-                     ];
-                     foreach ($procedure_data['photoSets'] as $key => $case) {
-                        $bb_new_image_case = isset($case['highResPostProcessedImageLocation']) && !is_null($case['highResPostProcessedImageLocation'])
-                                        ? $case['highResPostProcessedImageLocation'] 
-                                            : (isset($case['postProcessedImageLocation']) && !is_null($case['postProcessedImageLocation']) 
-                                                ? $case['postProcessedImageLocation'] 
-                                                : $case['originalBeforeLocation']);
-                        $images[] = [
-                            "@type" => "ImageObject",
-                            "name" => $bbrag_procedure_title,
-                            "url" => home_url() . $bbrag_case_url . $bbrag_procedure_title . "/" . $procedure_data['photoSets'][0]['caseId'] . "/",
-                            "thumbnailUrl" => $bb_new_image_case
-                        ];
-                    }
+                //     $images= [];
+                //      $mainEntity[] = [
+                //         "@type" => "ImageGallery",
+                //         "name" => "Before and after " . $bbrag_procedure_title . " Gallery",
+                //         "url" => home_url() . $bbrag_case_url . $bbrag_procedure_title,
+                //         "image" => $bb_new_image_procedure_data
+                //      ];
+                //      foreach ($procedure_data['photoSets'] as $key => $case) {
+                //         $bb_new_image_case = isset($case['highResPostProcessedImageLocation']) && !is_null($case['highResPostProcessedImageLocation'])
+                //                         ? $case['highResPostProcessedImageLocation'] 
+                //                             : (isset($case['postProcessedImageLocation']) && !is_null($case['postProcessedImageLocation']) 
+                //                                 ? $case['postProcessedImageLocation'] 
+                //                                 : $case['originalBeforeLocation']);
+                //         $images[] = [
+                //             "@type" => "ImageObject",
+                //             "name" => $bbrag_procedure_title,
+                //             "url" => home_url() . $bbrag_case_url . $bbrag_procedure_title . "/" . $procedure_data['photoSets'][0]['caseId'] . "/",
+                //             "thumbnailUrl" => $bb_new_image_case
+                //         ];
+                //     }
                     
-                    $hasPart[] = [
-                        "@type" => "ImageGallery",
-                        "name" => "Featured " . $bbrag_procedure_title . " Cases",
-                        "description" => "Highlighted before and after " . $bbrag_procedure_title . " cases with high-quality images.",
-                        "url" => home_url() . $bbrag_case_url . $bbrag_procedure_title,
-                        "image" => $images
-                    ];
-                }
+                //     $hasPart[] = [
+                //         "@type" => "ImageGallery",
+                //         "name" => "Featured " . $bbrag_procedure_title . " Cases",
+                //         "description" => "Highlighted before and after " . $bbrag_procedure_title . " cases with high-quality images.",
+                //         "url" => home_url() . $bbrag_case_url . $bbrag_procedure_title,
+                //         "image" => $images
+                //     ];
+                // }
                 
-                $bb_description = isset($explode_string['0']) ? $explode_string['0'] : '';
-                $bb_page_title = get_the_title($page_id_via_slug);
-                $schema = [
-                    "@context" => "https://schema.org",
-                    "@type" => "CollectionPage",
-                    "name" => $bb_page_title,
-                    "description" => $bb_description,
-                    "url" => home_url().$bbrag_case_url,
-                    "mainEntity" => $mainEntity,
-                    "hasPart" => $hasPart,
-                    "breadcrumb" => [
-                        "@type" => "BreadcrumbList",
-                        "itemListElement" => [
-                            ["@type" => "ListItem", "position" => 1, "name" => "Home", "item" => home_url()],
-                            ["@type" => "ListItem", "position" => 2, "name" => get_the_title(), "item" => home_url() . $bbrag_case_url]
-                        ]
-                    ]
-                ];
-                $schema_json = json_encode($schema, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
+                // $bb_description = isset($explode_string['0']) ? $explode_string['0'] : '';
+                // $bb_page_title = get_the_title($page_id_via_slug);
+                // $schema = [
+                //     "@context" => "https://schema.org",
+                //     "@type" => "CollectionPage",
+                //     "name" => $bb_page_title,
+                //     "description" => $bb_description,
+                //     "url" => home_url().$bbrag_case_url,
+                //     "mainEntity" => $mainEntity,
+                //     "hasPart" => $hasPart,
+                //     "breadcrumb" => [
+                //         "@type" => "BreadcrumbList",
+                //         "itemListElement" => [
+                //             ["@type" => "ListItem", "position" => 1, "name" => "Home", "item" => home_url()],
+                //             ["@type" => "ListItem", "position" => 2, "name" => get_the_title(), "item" => home_url() . $bbrag_case_url]
+                //         ]
+                //     ]
+                // ];
+                // $schema_json = json_encode($schema, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
                 ?>
                 <script type="application/ld+json">
-                    <?php echo $schema_json; ?>
+                    <?php //echo $schema_json; ?>
                 </script>
             <div class="bb-content-area">
                 <div class="bb-filter-attic bb-filter-attic-borderless">
