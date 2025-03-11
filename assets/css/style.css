@@ -310,6 +310,7 @@ body {
     font-size: 1rem;
     border: 1px solid #D9D9D9;
     outline: none;
+    padding-left: 40px !important;
 
 }
 
@@ -462,25 +463,26 @@ button.bb-sidebar-toggle.bb-sidebar-head-toggle img {
     rotate: 45deg;
 }
 
-.bb-main .bb-accordion h3 {
+.bb-main .bb-accordion span {
     font-size: 22px;
     font-family: "Manrope", sans-serif;
     font-weight: 400;
     transition: all 0.3s;
+    display: flex;
 }
 
 .bb-sidebar_favorites h3 {
     font-size: 22px;
 }
 
-.bb-main .bb-accordion h3 span {
+.bb-main .bb-accordion span p {
     font: inherit;
     color: #bbbbbb;
     font-family: "Manrope", sans-serif;
     font-weight: 400;
 }
 
-.bb-main .bb-accordion.active h3 {
+.bb-main .bb-accordion.active span {
     color: var(--accent-color);
     font-family: "Manrope", sans-serif;
     font-weight: 600;
@@ -749,7 +751,7 @@ button.bb-sidebar-toggle.bb-sidebar-head-toggle img {
     display: none;
 }
 
-.bb-main .bb-filter-attic h2 {
+.bb-main .bb-filter-attic h1 {
     font-size: 64px;
     line-height: 1.2;
     font-family: ivypresto-display, serif;
@@ -859,7 +861,7 @@ button.bb-sidebar-toggle.bb-sidebar-head-toggle img {
     margin-bottom: 8px;
 }
 
-.bb-main .bb-filter-attic .bb-content-box-inner-left h5 {
+.bb-main .bb-filter-attic .bb-content-box-inner-left h2 {
     font-size: 15px;
     color: #000;
     font-family: "Manrope", sans-serif;
@@ -1948,7 +1950,7 @@ p.bb-fav-modal-close-button {
         margin-bottom: 40px;
     }
 
-    .bb-main .bb-accordion h3,
+    .bb-main .bb-accordion span,
     .bb-main .bb-panel ul li a {
         font-size: 16px;
     }
@@ -1995,7 +1997,7 @@ p.bb-fav-modal-close-button {
         padding-left: 18px;
     }
 
-    .bb-main .bb-accordion h3,
+    .bb-main .bb-accordion span,
     .bb-main .bb-panel ul li a {
         font-size: 15px;
     }
@@ -2025,7 +2027,7 @@ p.bb-fav-modal-close-button {
         width: 110px;
     }
 
-    .bb-main .bb-filter-attic h2 {
+    .bb-main .bb-filter-attic h1 {
         font-size: 24px;
     }
 
@@ -2461,10 +2463,6 @@ p.bb-fav-modal-close-button {
         display: flex;
         align-items: center;
         width: 100%;
-    }
-
-    .bb-patient-right .bb-patient-row {
-        display: none;
     }
 
     .bb-patient-right>p {

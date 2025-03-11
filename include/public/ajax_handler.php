@@ -52,6 +52,7 @@ class Ajax_Handler
             $websitePropertyId = sanitize_text_field($_POST['websitePropertyId']);
             $procedureId = sanitize_text_field($_POST['procedureId']);
             $caseId = sanitize_text_field($_POST['caseId']);
+            $seoSuffixUrl = sanitize_text_field($_POST['seoSuffixUrl']);
             // $bb_set_transient_urls = get_option( 'bb_set_transient_url_sidebar', [] );
             $page_slug = sanitize_text_field($_POST['pageSlug']);
             $staticFilter = sanitize_text_field($_POST['staticFilter']);
@@ -117,14 +118,13 @@ class Ajax_Handler
                     $data = wp_remote_retrieve_body($response);
 
                 } else {
-                    $url = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/cases?websitePropertyId={$websitePropertyId}&apiToken={$apiToken}&caseId={$caseId}&procedureId={$procedureId}";
+                    $url = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/cases?websitepropertyId={$websitePropertyId}&apiToken={$apiToken}&caseId={$caseId}&seoSuffixUrl={$seoSuffixUrl}&procedureId={$procedureId}";
 
                     if (get_transient($url) !== false) {
                         $data = get_transient($url);
                     } else {
                         $data = self::case_and_filter_api($url);
                     }
-
                 }
               //  die('here two');
 

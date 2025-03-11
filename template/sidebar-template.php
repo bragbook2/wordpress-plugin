@@ -152,7 +152,7 @@ if($combine_gallery_page_slug == $parts_page_name[0]) {
                                 foreach ($property_data['sidebar_set']['data'] as $procedure_name => $procedure_data) {
                                     ?>
                                     <span class="bb-accordion" cat_title="<?= htmlspecialchars($procedure_data['name']); ?>">
-                                        <h3><?= $procedure_data['name']; ?> <span>(<?= $procedure_data['totalCase']; ?>)</span></h3>
+                                        <span><?= $procedure_data['name']; ?> <p>(<?= $procedure_data['totalCase']; ?>)</p></span>
                                         <img src="<?= BB_PLUGIN_DIR_PATH ?>assets/images/plus-icon.svg" alt="plus icon">
                                     </span>
                                     <div class="bb-panel">
