@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
         loadMoreButton.getAttribute("data-offset"),
         10
       );
-      if(currentOffsetLoad == 1) {
+      if (currentOffsetLoad == 1) {
         loadMoreButton.style.display = "none";
       }
     }
@@ -38,26 +38,37 @@ document.addEventListener("click", function (event) {
 });
 
 function fetchCaseData(load_more_count) {
-  
-  const elementCase= document.querySelector('.bb-patient-box')
-  if(elementCase) {
-    elementCase.insertAdjacentHTML('beforeend', `<img id="bb_f_gif_sidebar" src="${bb_plugin_data.heartrunning}" alt="Loading...">`);
+  const elementCase = document.querySelector(".bb-patient-box");
+  if (elementCase) {
+    elementCase.insertAdjacentHTML(
+      "beforeend",
+      `<img id="bb_f_gif_sidebar" src="${bb_plugin_data.heartrunning}" alt="Loading...">`
+    );
   }
-  const element= document.querySelector('.bb-content-boxes')
-  if(element) {
-    element.insertAdjacentHTML('beforeend', `<img id="bb_f_gif_sidebar" src="${bb_plugin_data.heartrunning}" alt="Loading...">`);
+  const element = document.querySelector(".bb-content-boxes");
+  if (element) {
+    element.insertAdjacentHTML(
+      "beforeend",
+      `<img id="bb_f_gif_sidebar" src="${bb_plugin_data.heartrunning}" alt="Loading...">`
+    );
   }
-const loadMoreButtonEl=document.querySelector('.bb_ajax-load-more-btn');
-if(loadMoreButtonEl) {
-  loadMoreButtonEl.innerHTML = `<img id="bb_ajax-load-more-btn" src="${bb_plugin_data.heartrunning}" alt="Loading...">`;
-}
- // const element_apply = document.querySelector('.apply_bb_filter');
- // if (element_apply) element_apply.innerHTML = `<img id="apply_bb_filter" src="${bb_plugin_data.heartrunning}" alt="Loading...">`;
+  const loadMoreButtonEl = document.querySelector(".bb_ajax-load-more-btn");
+  if (loadMoreButtonEl) {
+    loadMoreButtonEl.innerHTML = `<img id="bb_ajax-load-more-btn" src="${bb_plugin_data.heartrunning}" alt="Loading...">`;
+  }
+  // const element_apply = document.querySelector('.apply_bb_filter');
+  // if (element_apply) element_apply.innerHTML = `<img id="apply_bb_filter" src="${bb_plugin_data.heartrunning}" alt="Loading...">`;
   var elementId = "";
   const pathSegments = window.location.pathname.split("/").filter(Boolean);
   const secondPart = pathSegments[0] || "";
   const thirdPart = pathSegments[1] || "";
-  const forthPart = pathSegments[2] || "";
+  var forthPart = pathSegments[2] || "";
+  const fifthPart = pathSegments[3] || "";
+  //alert(forthPart);
+  let favorites;
+  if(thirdPart == "favorites") {
+    favorites = thirdPart; 
+  }
 
   const count = load_more_count;
   const targetHref = `/${secondPart}/${thirdPart}/`;
@@ -70,8 +81,8 @@ if(loadMoreButtonEl) {
       "data-website-property-id"
     );
     var textOnly = Array.from(targetElement.childNodes)
-      .filter((node) => node.nodeType === Node.TEXT_NODE) 
-      .map((node) => node.textContent.trim()) 
+      .filter((node) => node.nodeType === Node.TEXT_NODE)
+      .map((node) => node.textContent.trim())
       .join(" ");
 
     // Change color and opacity
@@ -99,11 +110,15 @@ if(loadMoreButtonEl) {
   );
   // Loop through each checkbox
   let staticFilter = "";
+  let staticFilterCombine = {};
   let dynamicFilter = "";
+  let dynamicFilterCombine = {};
   staticFilterBB.forEach((checkbox) => {
     let dataKey = checkbox.getAttribute("data-key");
     let dataValue = checkbox.getAttribute("data-value");
     staticFilter += `&${dataKey}=${dataValue}`;
+    dataValue=isNaN(parseInt(dataValue))?`"${dataValue}"`:parseInt(dataValue);
+    staticFilterCombine[dataKey]=dataValue;
   });
 
   dynamicFilterBB.forEach((checkbox) => {
@@ -111,20 +126,25 @@ if(loadMoreButtonEl) {
     let dataValue = checkbox.getAttribute("data-value");
     dataKey = dataKey.replace(/\s+/g, "|||");
     dynamicFilter += `&${dataKey}=${dataValue}`;
-
+    dataValue=isNaN(parseInt(dataValue))?`${dataValue}`:parseInt(dataValue);
+    dynamicFilterCombine[dataKey]=dataValue;
   });
+  
   const data = {
     action: "bb_case_api",
     count: count,
     pageSlug: secondPart,
+    favorites: favorites,
     procedureId: elementId,
     apiToken: apiToken,
     websitePropertyId: websitePropertyId,
     caseId: forthPart,
     staticFilter: staticFilter,
-    dynamicFilter: dynamicFilter
+    dynamicFilter: dynamicFilter,
+    dynamicFilterCombine: Object.keys(dynamicFilterCombine).length?JSON.stringify(dynamicFilterCombine):0,
+    ...staticFilterCombine
   };
-  
+
   fetch(bb_plugin_data.ajaxurl, {
     method: "POST",
     headers: {
@@ -133,79 +153,170 @@ if(loadMoreButtonEl) {
     body: new URLSearchParams(data).toString(),
   })
     .then((response) => response.json())
-    .then((data) => {
+    .then((data) => { 
       try {
+        let heartImage;
+        let sidebarApi; 
+        if(data.data.sidebar_api) { 
+          sidebarApi = JSON.parse(JSON.parse(data.data.sidebar_api)).data?.reduce((procedures, b) => {
+            procedures.push(...b.procedures);
+            return procedures;
+          }, []); 
+        }
+
+        if(data.data.bragbook_favorite.length > 0) {
+          var fav_data = data.data.bragbook_favorite;
+          let element_fav_count = document.getElementById("bb_favorite_caseIds_count");
+          element_fav_count.textContent = "(" + `${fav_data.length}` + ")";
+        }
         if (data.data && data.data.case_set) {
           let caseSet = JSON.parse(data.data.case_set);
           if (forthPart == "") {
             var bb_case_count = (count - 1) * 10;
             let contentBox = document.querySelector(".bb-content-boxes");
-         
-            document.querySelector('#bb_f_gif_sidebar')?.remove();
-            document.querySelector('#bb_ajax-load-more-btn')?.remove();
+
+            document.querySelector("#bb_f_gif_sidebar")?.remove();
+            document.querySelector("#bb_ajax-load-more-btn")?.remove();
             //  document.querySelector('#apply_bb_filter')?.remove();
-            document.querySelector('.bb_ajax-load-more-btn').innerHTML ='Load More';
-            const applyBBButton=document.querySelector('.apply_bb_filter');
-            if(applyBBButton) applyBBButton.innerHTML = `Apply`;
+            if(thirdPart !== "favorites") {
+              document.querySelector(".bb_ajax-load-more-btn").innerHTML =
+              "Load More";
+            }
+            const applyBBButton = document.querySelector(".apply_bb_filter");
+            if (applyBBButton) applyBBButton.innerHTML = `Apply`;
+            
+            if(caseSet.data) {
+              caseSet.data.forEach((caseItem) => {
+                if (caseItem.photoSets && caseItem.photoSets.length > 0) {
+                  let photoSet = caseItem.photoSets[0];
+                  let imgSrc =
+                    photoSet.highResPostProcessedImageLocation ||
+                    photoSet.postProcessedImageLocation ||
+                    photoSet.originalBeforeLocation;
+                  let imgAlt = photoSet.seoAltText || "Procedure Image";
+                  let caseId = caseItem.id;
+                  let caseDetails = caseItem.details || "";
+                  caseItem.patientCount = ++bb_case_count;
+                  let procedureUrl = `/${secondPart}/${thirdPart}/${caseId}/`;
+                  if(fav_data && fav_data.includes(caseId)) {
+                    heartImage = bb_plugin_data.heartBordered;
+                  }else {
+                    heartImage = bb_plugin_data.heartRed;
+                  } 
+                  let newContent = `
+                              <div class="bb-content-box">
+                                  <div class="bb-content-thumbnail">
+                                      <a href="${procedureUrl}">
+                                          <img src="${imgSrc}" alt="${imgAlt}">
+                                      </a>
+                                      <img class="bb-heart-icon bb-open-fav-modal" 
+                                          data-case-id="${caseId}"
+                                          data-bb_api_token="${apiToken}" 
+                                          data-bb_website_id="${websitePropertyId}" 
+                                          src="${heartImage}" 
+                                          alt="heart">
+                                  </div>
+                                  <div class="bb-content-box-inner">
+                                      <div class="bb-content-box-inner-left">
+                                          <h5>${thirdPart} : Patient ${caseItem.patientCount}</h5>
+                                          <p>${caseDetails}</p> 
+                                      </div>
+                                      <div class="bb-content-box-inner-right">
+                                          <img class="bb-open-fav-modal" 
+                                              data-case-id="${caseId}" 
+                                              data-bb_api_token="${apiToken}" 
+                                              data-bb_website_id="${websitePropertyId}" 
+                                              src="${heartImage}" 
+                                              alt="heart">
+                                      </div>
+                                  </div>
+                                  <div class="bb-content-box-cta">
+                                      <a class="view-more-btn" href="${procedureUrl}">
+                                          View More
+                                      </a>
+                                  </div>
+                              </div>
+                          `;
+  
+                  contentBox.innerHTML += newContent;
+                }
+              });
+            } else if (caseSet.favorites) {
+              caseSet.favorites.forEach((caseItem) => {
+                if (caseItem.cases[0].photoSets && caseItem.cases[0].photoSets.length > 0 && sidebarApi) {
+                  if (caseItem && caseItem.cases[0].procedureIds.length > 0) {
+                    const isCombine = sidebarApi[0].ids;
+                    let slugName;
+                    if(isCombine) {
+                      const totalTokens=2;
+                      for(let i=0;i<totalTokens;i++){
+                        if(slugName) break;
+                        slugName= sidebarApi.find(p=>p.ids[i]==caseItem.cases[0].procedureIds[0])?.slugName;
+                      }
+                    }else{
+                      slugName= sidebarApi.find(p=>p.id==caseItem.cases[0].procedureIds[0])?.slugName;
+                    }
 
-            caseSet.data.forEach((caseItem) => {
-              if (caseItem.photoSets && caseItem.photoSets.length > 0) {
-                let photoSet = caseItem.photoSets[0];
-                let imgSrc =
-                  photoSet.highResPostProcessedImageLocation ||
-                  photoSet.postProcessedImageLocation ||
-                  photoSet.originalBeforeLocation;
-                let imgAlt = photoSet.seoAltText || "Procedure Image";
-                let caseId = caseItem.id;
-                let caseDetails = caseItem.details || "";
-                caseItem.patientCount = ++bb_case_count;
-                let procedureUrl = `/${secondPart}/${thirdPart}/${caseId}/`;
-
-                let newContent = `
-                            <div class="bb-content-box">
-                                <div class="bb-content-thumbnail">
-                                    <a href="${procedureUrl}">
-                                        <img src="${imgSrc}" alt="${imgAlt}">
-                                    </a>
-                                    <img class="bb-heart-icon bb-open-fav-modal" 
-                                        data-case-id="${caseId}"
-                                        data-bb_api_token="${apiToken}" 
-                                        data-bb_website_id="${websitePropertyId}" 
-                                        src="${bb_plugin_data.heartRed}" 
-                                        alt="heart">
-                                </div>
-                                <div class="bb-content-box-inner">
-                                    <div class="bb-content-box-inner-left">
-                                        <h5>${thirdPart} : Patient ${caseItem.patientCount}</h5>
-                                        <p>${caseDetails}</p> 
-                                    </div>
-                                    <div class="bb-content-box-inner-right">
-                                        <img class="bb-open-fav-modal" 
-                                            data-case-id="${caseId}" 
-                                            data-bb_api_token="d49236c4-6288-409e-9218-a732e5eb5a1a" 
-                                            data-bb_website_id="75" 
-                                            src="${bb_plugin_data.heartRed}" 
+                    let photoSet = caseItem.cases[0].photoSets[0];
+                    let imgSrc =
+                      photoSet.highResPostProcessedImageLocation ||
+                      photoSet.postProcessedImageLocation ||
+                      photoSet.originalBeforeLocation;
+                    let imgAlt = photoSet.seoAltText || "Procedure Image";
+                    let caseId = caseItem.cases[0].id;
+                    let caseDetails = caseItem.cases[0].details || "";
+                    caseItem.patientCount = ++bb_case_count;
+                    let procedureUrl = `/${secondPart}/${slugName}/${caseId}/`;
+                    
+                    heartImage = bb_plugin_data.heartBordered;
+                    
+                    let newContent = `
+                                <div class="bb-content-box">
+                                    <div class="bb-content-thumbnail">
+                                        <a href="${procedureUrl}">
+                                            <img src="${imgSrc}" alt="${imgAlt}">
+                                        </a>
+                                        <img class="bb-heart-icon bb-open-fav-modal" 
+                                            data-case-id="${caseId}"
+                                            data-bb_api_token="${apiToken}" 
+                                            data-bb_website_id="${websitePropertyId}" 
+                                            src="${heartImage}" 
                                             alt="heart">
                                     </div>
+                                    <div class="bb-content-box-inner">
+                                        <div class="bb-content-box-inner-left">
+                                            <h5>${thirdPart} : Patient ${caseItem.patientCount}</h5>
+                                            <p>${caseDetails}</p> 
+                                        </div>
+                                        <div class="bb-content-box-inner-right">
+                                            <img class="bb-open-fav-modal" 
+                                                data-case-id="${caseId}" 
+                                                data-bb_api_token="${apiToken}" 
+                                                data-bb_website_id="${websitePropertyId}" 
+                                                src="${heartImage}" 
+                                                alt="heart">
+                                        </div>
+                                    </div>
+                                    <div class="bb-content-box-cta">
+                                        <a class="view-more-btn" href="${procedureUrl}">
+                                            View More
+                                        </a>
+                                    </div>
                                 </div>
-                                <div class="bb-content-box-cta">
-                                    <a class="view-more-btn" href="${procedureUrl}">
-                                        View More
-                                    </a>
-                                </div>
-                            </div>
-                        `;
-
-                contentBox.innerHTML += newContent;
-              }
-            });
+                            `;
+    
+                    contentBox.innerHTML += newContent;
+                  }
+                }
+              });
+            }
+            
           } else {
-            document.querySelector('#bb_f_gif_sidebar')?.remove();
+            document.querySelector("#bb_f_gif_sidebar")?.remove();
             let patienLeftBox = document.querySelector(".bb-patient-left");
             if (patienLeftBox) {
               caseSet.data.forEach((caseItem) => {
                 let caseId = caseItem.id;
-                 console.log('here is flow');
                 if (caseId == forthPart) {
                   if (caseItem.photoSets && caseItem.photoSets.length > 0) {
                     caseItem.photoSets.forEach((value) => {
@@ -263,7 +374,11 @@ if(loadMoreButtonEl) {
                 let revisionSurgery = caseItem.revisionSurgery
                   ? `<li>This case is a revision of a previous procedure.</li>`
                   : "";
-
+                  if(fav_data.includes(caseItem.id)) {
+                    heartImage = bb_plugin_data.heartBordered;
+                  }else {
+                    heartImage = bb_plugin_data.heartRed;
+                  } 
                 let bb_right_data = `
                         <div class="bb-patient-row">
                             <h2>${textOnly}</h2>
@@ -271,7 +386,7 @@ if(loadMoreButtonEl) {
                                 data-case-id="${forthPart}" 
                                 data-bb_api_token="${apiToken}" 
                                 data-bb_website_id="${websitePropertyId}" 
-                                src="${bb_plugin_data.heartRed}" alt="heart">
+                                src="${heartImage}" alt="heart">
                         </div>
                         <ul>
                             ${height}
@@ -297,12 +412,16 @@ if(loadMoreButtonEl) {
                 renderPagination(paginationData, caseItem.id, targetHref);
               });
             }
-          }
+          } 
         } else {
           console.error("Invalid response structure:", data);
         }
         if (data.data && data.data.filter_data) {
-          if (document.querySelector('.bb-filter-content-inner') && document.querySelector('.bb-filter-content-inner').childElementCount === 0) {
+          if (
+            document.querySelector(".bb-filter-content-inner") &&
+            document.querySelector(".bb-filter-content-inner")
+              .childElementCount === 0
+          ) {
             let filterContent = document.querySelector(
               ".bb-filter-content-inner"
             );
@@ -362,7 +481,7 @@ if(loadMoreButtonEl) {
               filterContent.innerHTML += filterHTMLA;
             }
             filterContent.innerHTML += `<div  id='apply_filter'>
-                <button class="apply_bb_filter" onClick='applyFilterBB(${count}, "${secondPart}", ${elementId}, "${apiToken}", ${websitePropertyId}, "${forthPart}", "${thirdPart}")'>Apply</button> 
+                <button class="apply_bb_filter" onClick='applyFilterBB(${count}, "${secondPart}", "${elementId}", "${apiToken}", "${websitePropertyId}", "${forthPart}", "${thirdPart}")'>Apply</button> 
                 </div>`;
 
             bb_advance_filter();
@@ -376,7 +495,6 @@ if(loadMoreButtonEl) {
       console.error("Error during AJAX request:", error);
     });
 }
-
 function handleDynamicCheckboxChange(key, value) {
   const checkboxes = document.querySelectorAll(`input[name=${key}]`);
 
@@ -402,9 +520,11 @@ function applyFilterBB(
   thirdPart
 ) {
   document.querySelector(".bb-content-boxes").innerHTML = "";
-  document.querySelector('.apply_bb_filter').innerHTML = `<img id="apply_bb_filter" src="${bb_plugin_data.heartrunning}" alt="Loading...">`;
+  document.querySelector(
+    ".apply_bb_filter"
+  ).innerHTML = `<img id="apply_bb_filter" src="${bb_plugin_data.heartrunning}" alt="Loading...">`;
   //document.querySelector(".apply_bb_filter").innerHTML = "";
-  
+
   let dynamicFilterBB = document.querySelectorAll(
     '.bb-dynamic-filter input[type="checkbox"]:checked'
   );
@@ -412,35 +532,43 @@ function applyFilterBB(
     '.bb-static-filter input[type="checkbox"]:checked'
   );
   // Loop through each checkbox
+  let staticFilterCombine = {};
   let staticFilter = "";
   let dynamicFilter = "";
+  // let dynamicFilterCombine = `"filters": {`;
+  let dynamicFilterCombine = {};
+
   staticFilterBB.forEach((checkbox) => {
     let dataKey = checkbox.getAttribute("data-key");
     let dataValue = checkbox.getAttribute("data-value");
     staticFilter += `&${dataKey}=${dataValue}`;
+    dataValue=isNaN(parseInt(dataValue))?`"${dataValue}"`:parseInt(dataValue);
+    staticFilterCombine[dataKey]=dataValue;
   });
 
+
+  
   dynamicFilterBB.forEach((checkbox) => {
     let dataKey = checkbox.getAttribute("data-key");
     let dataValue = checkbox.getAttribute("data-value");
     dataKey = dataKey.replace(/\s+/g, "|||");
-    // dataValue=dataValue.replace( /\s+/g, "|");
     dynamicFilter += `&${dataKey}=${dataValue}`;
-
-    // dynamicFilter[dataKey] = dataValue;
+    dataValue=isNaN(parseInt(dataValue))?`${dataValue}`:parseInt(dataValue);
+    dynamicFilterCombine[dataKey]=dataValue;
+    // dynamicFilterCombine += `"${dataKey}":"${dataValue}",`;
   });
-
-  
-
+  // dynamicFilterCombine += "}";
   let data = filter_and_paginate(
     count,
     secondPart,
     elementId,
-    apiToken,
+    apiToken, 
     websitePropertyId,
     forthPart,
     staticFilter,
-    dynamicFilter
+    dynamicFilter,
+    dynamicFilterCombine,
+    staticFilterCombine
   );
 
   fetch(bb_plugin_data.ajaxurl, {
@@ -452,8 +580,9 @@ function applyFilterBB(
   })
     .then((response) => response.json())
     .then((data) => {
-      
       try {
+        var fav_data = data.data.bragbook_favorite;
+        let heartImage;
         if (data.data && data.data.case_set) {
           let caseSet = JSON.parse(data.data.case_set);
           if (forthPart == "") {
@@ -469,6 +598,11 @@ function applyFilterBB(
                   photoSet.originalBeforeLocation;
                 let imgAlt = photoSet.seoAltText || "Procedure Image";
                 let caseId = caseItem.id;
+                if(fav_data.includes(caseId)) {
+                  heartImage = bb_plugin_data.heartBordered;
+                }else {
+                  heartImage = bb_plugin_data.heartRed;
+                }
                 let caseDetails = caseItem.details || "";
                 caseItem.patientCount = ++bb_case_count;
                 let procedureUrl = `/${secondPart}/${thirdPart}/${caseId}/`;
@@ -483,7 +617,7 @@ function applyFilterBB(
                                         data-case-id="${caseId}"
                                         data-bb_api_token="${apiToken}" 
                                         data-bb_website_id="${websitePropertyId}" 
-                                        src="${bb_plugin_data.heartRed}" 
+                                        src="${heartImage}" 
                                         alt="heart">
                                 </div>
                                 <div class="bb-content-box-inner">
@@ -494,9 +628,9 @@ function applyFilterBB(
                                     <div class="bb-content-box-inner-right">
                                         <img class="bb-open-fav-modal" 
                                             data-case-id="${caseId}" 
-                                            data-bb_api_token="d49236c4-6288-409e-9218-a732e5eb5a1a" 
-                                            data-bb_website_id="75" 
-                                            src="${bb_plugin_data.heartRed}" 
+                                            data-bb_api_token="${apiToken}" 
+                                            data-bb_website_id="${websitePropertyId}" 
+                                            src="${heartImage}" 
                                             alt="heart">
                                     </div>
                                 </div>
@@ -519,8 +653,7 @@ function applyFilterBB(
         console.error("Error parsing case_set JSON:", err);
       }
     });
-    document.querySelector('.apply_bb_filter').innerHTML = `Apply`;
-
+  document.querySelector(".apply_bb_filter").innerHTML = `Apply`;
 }
 function bb_advance_filter() {
   let filterAccInner = document.querySelectorAll(
@@ -559,10 +692,12 @@ function filter_and_paginate(
   apiToken,
   websitePropertyId,
   forthPart,
-  staticFilter,
-  dynamicFilter
+  staticFilter, 
+  dynamicFilter,
+  dynamicFilterCombine,
+  staticFilterCombine
 ) {
-  const data = {
+  const data = { 
     action: "bb_case_api",
     count: count,
     pageSlug: secondPart,
@@ -572,6 +707,8 @@ function filter_and_paginate(
     caseId: forthPart,
     staticFilter: staticFilter,
     dynamicFilter: dynamicFilter,
+    dynamicFilterCombine: Object.keys(dynamicFilterCombine).length?JSON.stringify(dynamicFilterCombine):0,
+    ...staticFilterCombine
   };
   return data;
 }
@@ -735,8 +872,9 @@ for (let i = 0; i < bb_acc.length; i++) {
 
 jQuery(document).ready(function ($) {
   // SLIDER
+  let bb_slider;
   if ($.fn.slick) {
-    const bb_slider = $("body .bb-slider").slick({
+     bb_slider = $("body .bb-slider").slick({
       // 	   $('body .bb-slider').slick({
       infinite: true,
       slidesToShow: 3,
@@ -1224,14 +1362,29 @@ jQuery(document).ready(function ($) {
       $("#bragbook_seeting_form").trigger("submit");
     });
 });
+function closeModal() {
+  var modal = document.querySelector(".bb-fav-modal");
+  if (modal) {
+    modal.classList.remove("is-open"); 
+      var opacity = 1;
+      opacity -= 0.05;
+      if (opacity <= 0) {
+        modal.style.opacity = 0;
+        modal.classList.remove("is-open");
+        return true;
+      }
+      modal.style.opacity = opacity;
+      
+  }
+}
+document.addEventListener('DOMContentLoaded', function () {
+  const modal = document.querySelector(".bb-fav-modal");
+  const modalInner = document.querySelector(".bb-fav-modal-inner");
 
-setTimeout(() => {
-  const modalToggle = Array.from(
-    document.querySelectorAll(".bb-open-fav-modal")
-  );
-  modal = document.querySelector(".bb-fav-modal");
-  modalInner = document.querySelector(".bb-fav-modal-inner");
-  if (modalInner && modalInner.querySelector) {
+  // Check if modalInner exists
+  let form, caseIdInput, bbApiTokenInput, bbWebsiteIdInput;
+
+  if (modalInner) {
     form = modalInner.querySelector("form");
     caseIdInput = modalInner.querySelector("input[name='case-id']");
     bbApiTokenInput = modalInner.querySelector("input[name='api-token']");
@@ -1246,39 +1399,23 @@ setTimeout(() => {
 
   // Function to open the modal
   function openModal(caseId, bbApiToken, bbWebsiteId) {
-    // Set the caseId value in the form
-    if (caseIdInput) {
-      caseIdInput.value = caseId;
-    }
-    if (bbApiTokenInput) {
-      bbApiTokenInput.value = bbApiToken;
-    }
-    if (bbWebsiteIdInput) {
-      bbWebsiteIdInput.value = bbWebsiteId;
-    }
+    // Set the caseId value in the form if the inputs exist
+    if (caseIdInput) caseIdInput.value = caseId;
+    if (bbApiTokenInput) bbApiTokenInput.value = bbApiToken;
+    if (bbWebsiteIdInput) bbWebsiteIdInput.value = bbWebsiteId;
 
     var encodedCookieValue = getCookie("wordpress_favorite_email");
     if (encodedCookieValue !== undefined) {
       var bb_favorite_email = decodeURIComponent(encodedCookieValue);
-      var bb_favorite_name = getCookie("wordpress_favorite_name");
-      var bb_favorite_name = decodeURIComponent(bb_favorite_name);
-
-      var bb_favorite_phone = getCookie("wordpress_favorite_phone");
-      var bb_favorite_phone = decodeURIComponent(bb_favorite_phone);
-
-      var bb_favorite_case_id = getCookie("wordpress_favorite_case_id");
-      var bb_favorite_case_id = decodeURIComponent(bb_favorite_case_id);
-      var caseId = Number(caseId);
-
-      var bb_favorite_api_token = getCookie("wordpress_favorite_api_token");
-      var bb_favorite_api_token = decodeURIComponent(bb_favorite_api_token);
-
-      var bb_favorite_website_id = getCookie("wordpress_favorite_website_id");
-      var bb_favorite_website_id = decodeURIComponent(bb_favorite_website_id);
+      var bb_favorite_name = decodeURIComponent(getCookie("wordpress_favorite_name"));
+      var bb_favorite_phone = decodeURIComponent(getCookie("wordpress_favorite_phone"));
+      var bb_favorite_case_id = decodeURIComponent(getCookie("wordpress_favorite_case_id"));
+      var bb_favorite_api_token = decodeURIComponent(getCookie("wordpress_favorite_api_token"));
+      var bb_favorite_website_id = decodeURIComponent(getCookie("wordpress_favorite_website_id"));
 
       var bb_fav_list_cookie = bb_favorite_case_id.split(",").map(Number);
       var bb_exist_list = new Set(bb_fav_list_cookie);
-      var bb_exist = bb_exist_list.has(caseId);
+      var bb_exist = bb_exist_list.has(Number(caseId));
 
       if (bb_exist) {
         alert("Already favorite!");
@@ -1304,137 +1441,134 @@ setTimeout(() => {
     fadeOut(modal);
   }
 
-  // Add event listeners for modal toggles
-  if (modalToggle) {
-    modalToggle.forEach((toggle) => {
-      toggle.addEventListener("click", (e) => {
-        e.stopPropagation(); // Prevent the click event from propagating
-
-        const caseId = toggle.getAttribute("data-case-id");
-        const bbApiToken = toggle.getAttribute("data-bb_api_token");
-        const bbWebsiteId = toggle.getAttribute("data-bb_website_id");
-        openModal(caseId, bbApiToken, bbWebsiteId);
-        //      openModal(caseId);
-      });
+  // Add event listener to the close button (X)
+  const closeButton = modalInner?.querySelector(".bb-fav-modal-close-button");
+  if (closeButton) {
+    closeButton.addEventListener("click", function (e) {
+      e.stopPropagation(); // Prevent event from bubbling
+      closeModal();
     });
-
-    // Close the modal when clicking outside the modal content
-    document.addEventListener("click", (event) => {
-      if (
-        modal &&
-        modal.classList.contains("is-open") &&
-        !modalInner.contains(event.target)
-      ) {
-        closeModal();
-      }
-    });
-
-    function bb_favorites_submission(data) {
-      // Submit form with caseId
-      var caseId = data.caseIds;
-      jQuery.ajax({
-        url: bb_plugin_data.ajaxurl,
-        type: "POST",
-        data: {
-          action: "bragbook_my_favorite",
-          email: data.email,
-          phone: data.phone,
-          name: data.name,
-          caseIds: data.caseIds,
-          bbApiTokens: data.bbApiTokens,
-          bbWebsiteIds: data.bbWebsiteIds,
-        },
-        success: function (response) {
-          if (response.success) {
-            var imgElement = jQuery(`img[data-case-id="${caseId}"]`);
-            if (imgElement.length) {
-              // Replace the src attribute
-              imgElement.each(function () {
-                jQuery(this).attr("src", bb_plugin_data.heartBordered);
-              });
-            }
-            // Select the <span> element and get its current text value
-            var $span = jQuery("a.bb-sidebar_favorites span");
-            var text = $span.text();
-            // Extract the number between parentheses
-            var match = text.match(/\((\d+)\)/);
-            if (match) {
-              var currentValue = parseInt(match[1], 10);
-
-              // Increment the value
-              var newValue = currentValue + 1;
-
-              // Update the <span> element with the new value, keeping parentheses
-              $span.text("(" + newValue + ")");
-            }
-            closeModal();
-          } else {
-            alert("Failed to save favorite.");
-            closeModal();
-          }
-        },
-        error: function (error) {
-          console.error("Error:", error);
-          // alert('An error occurred.');
-          closeModal();
-        },
-      });
-    }
-    if (modalInner && modalInner.querySelector) {
-      // Add event listener for form submission
-      form.addEventListener("submit", (e) => {
-        e.preventDefault(); // Prevent default form submission
-
-        // Get the case-id value from the input
-        const caseId = caseIdInput.value;
-        const bbApiToken = bbApiTokenInput.value;
-        const bbWebsiteId = bbWebsiteIdInput.value;
-        var formData = new FormData(form);
-        var data = {
-          email: formData.get("email"),
-          phone: formData.get("number"),
-          name: formData.get("name"),
-          caseIds: [caseId],
-          bbApiTokens: [bbApiToken],
-          bbWebsiteIds: [bbWebsiteId],
-        };
-        bb_favorites_submission(data);
-      });
-    }
-    // Fade in and out functions
-    function fadeOut(element) {
-      var opacity = 1;
-
-      function decrease() {
-        opacity -= 0.05;
-        if (opacity <= 0) {
-          element.style.opacity = 0;
-          element.classList.remove("is-open");
-          return true;
-        }
-        element.style.opacity = opacity;
-        requestAnimationFrame(decrease);
-      }
-      decrease();
-    }
-
-    function fadeIn(element) {
-      var opacity = 0;
-      element.classList.add("is-open");
-
-      function increase() {
-        opacity += 0.05;
-        if (opacity >= 1) {
-          element.style.opacity = 1;
-          return true;
-        }
-        element.style.opacity = opacity;
-        requestAnimationFrame(increase);
-      }
-      increase();
-    }
   }
-}, 2000);
+
+  // Event listener for modal toggles (open modal)
+  document.body.addEventListener("click", function (e) {
+    const target = e.target;
+
+    if (target && target.classList.contains("bb-open-fav-modal")) {
+      e.stopPropagation();
+      const caseId = target.getAttribute("data-case-id");
+      const bbApiToken = target.getAttribute("data-bb_api_token");
+      const bbWebsiteId = target.getAttribute("data-bb_website_id");
+      openModal(caseId, bbApiToken, bbWebsiteId);
+    }
+  });
+
+  // Close the modal when clicking outside the modal content
+  document.addEventListener("click", function (event) {
+    if (modal && modal.classList.contains("is-open") && !modalInner.contains(event.target)) {
+      closeModal();
+    }
+  });
+
+  // Form submission handler
+  if (form) {
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      // Ensure the inputs are defined before using
+      const caseId = caseIdInput ? caseIdInput.value : '';
+      const bbApiToken = bbApiTokenInput ? bbApiTokenInput.value : '';
+      const bbWebsiteId = bbWebsiteIdInput ? bbWebsiteIdInput.value : '';
+
+      var formData = new FormData(form);
+      var data = {
+        email: formData.get("email"),
+        phone: formData.get("number"),
+        name: formData.get("name"),
+        caseIds: [caseId],
+        bbApiTokens: [bbApiToken],
+        bbWebsiteIds: [bbWebsiteId],
+      };
+      bb_favorites_submission(data);
+    });
+  }
+
+  // Submission logic
+  function bb_favorites_submission(data) {
+    jQuery.ajax({
+      url: bb_plugin_data.ajaxurl,
+      type: "POST",
+      data: {
+        action: "bragbook_my_favorite",
+        email: data.email,
+        phone: data.phone,
+        name: data.name,
+        caseIds: data.caseIds,
+        bbApiTokens: data.bbApiTokens,
+        bbWebsiteIds: data.bbWebsiteIds,
+      },
+      success: function (response) {
+        if (response.success) {
+          var imgElement = jQuery(`img[data-case-id="${data.caseIds[0]}"]`);
+          if (imgElement.length) {
+            imgElement.each(function () {
+              jQuery(this).attr("src", bb_plugin_data.heartBordered);
+            });
+          }
+          var $span = jQuery("a.bb-sidebar_favorites span");
+          var text = $span.text();
+          var match = text.match(/\((\d+)\)/);
+          if (match) {
+            var currentValue = parseInt(match[1], 10);
+            var newValue = currentValue + 1;
+            $span.text(`(${newValue})`);
+          }
+          closeModal();
+        } else {
+          alert("Failed to save favorite.");
+          closeModal();
+        }
+      },
+      error: function (error) {
+        console.error("Error:", error);
+        closeModal();
+      },
+    });
+  }
+
+  // Fade functions
+  function fadeOut(element) {
+    var opacity = 1;
+    function decrease() {
+      opacity -= 0.05;
+      if (opacity <= 0) {
+        element.style.opacity = 0;
+        element.classList.remove("is-open");
+        return true;
+      }
+      element.style.opacity = opacity;
+      requestAnimationFrame(decrease);
+    }
+    decrease();
+  }
+
+  function fadeIn(element) {
+    var opacity = 0;
+    element.classList.add("is-open");
+    function increase() {
+      opacity += 0.05;
+      if (opacity >= 1) {
+        element.style.opacity = 1;
+        return true;
+      }
+      element.style.opacity = opacity;
+      requestAnimationFrame(increase);
+    }
+    increase();
+  }
+});
+
+
 
 Array.from(document.querySelectorAll(".bb-filter-select")).forEach((filter) => {
   if (filter) {
@@ -1474,62 +1608,50 @@ if (document.querySelector(".bb-main .bb-form")) {
     }
   });
 }
-
-setTimeout(() => {
-  // Get modal elements
+setTimeout(function () {
+  modalInitBB();
+}, 8000);
+function modalInitBB() {
   const bbrag_modal = document.getElementById("bbrag_modal");
   const bbrag_modalImage = document.getElementById("bbrag_modalImage");
   const bbrag_closeModal = document.querySelector(".bbrag_close");
   const bbrag_prevArrow = document.querySelector(".bbrag_prev");
   const bbrag_nextArrow = document.querySelector(".bbrag_next");
-
-  let bbrag_currentIndex = 0;
   const bbrag_images = document.querySelectorAll(".bbrag_gallery_image");
-  // Function to open the modal and display the selected image
-  function bbrag_openModal(index) {
-    bbrag_currentIndex = index;
-    bbrag_modal.style.display = "block";
-    bbrag_modalImage.src = bbrag_images[bbrag_currentIndex].src;
-  }
+  let bbrag_currentIndex = 0;
 
-  // Function to close the modal
-  function bbrag_closeModalHandler() {
-    bbrag_modal.style.display = "none";
-  }
-
-  // Function to show the next image
-  function bbrag_showNextImage() {
-    bbrag_currentIndex = (bbrag_currentIndex + 1) % bbrag_images.length;
-    bbrag_modalImage.src = bbrag_images[bbrag_currentIndex].src;
-  }
-
-  // Function to show the previous image
-  function bbrag_showPrevImage() {
-    bbrag_currentIndex =
-      (bbrag_currentIndex - 1 + bbrag_images.length) % bbrag_images.length;
-    bbrag_modalImage.src = bbrag_images[bbrag_currentIndex].src;
-  }
-
-  // Add click event listeners to images
   bbrag_images.forEach((img, index) => {
-    img.addEventListener("click", () => bbrag_openModal(index));
+    img.addEventListener("click", () => {
+      bbrag_currentIndex = index;
+      bbrag_modal.style.display = "block";
+      bbrag_modalImage.src = bbrag_images[bbrag_currentIndex].src;
+    });
   });
 
-  // Add click event listeners to modal controls
   if (bbrag_closeModal) {
-    bbrag_closeModal.addEventListener("click", bbrag_closeModalHandler);
-  }
-  if (bbrag_prevArrow) {
-    bbrag_prevArrow.addEventListener("click", bbrag_showPrevImage);
-  }
-  if (bbrag_nextArrow) {
-    bbrag_nextArrow.addEventListener("click", bbrag_showNextImage);
+    bbrag_closeModal.addEventListener("click", () => {
+      bbrag_modal.style.display = "none";
+    });
   }
 
-  // Close the modal if the user clicks outside of the image
+  if (bbrag_prevArrow) {
+    bbrag_prevArrow.addEventListener("click", () => {
+      bbrag_currentIndex =
+        (bbrag_currentIndex - 1 + bbrag_images.length) % bbrag_images.length;
+      bbrag_modalImage.src = bbrag_images[bbrag_currentIndex].src;
+    });
+  }
+
+  if (bbrag_nextArrow) {
+    bbrag_nextArrow.addEventListener("click", () => {
+      bbrag_currentIndex = (bbrag_currentIndex + 1) % bbrag_images.length;
+      bbrag_modalImage.src = bbrag_images[bbrag_currentIndex].src;
+    });
+  }
+
   window.addEventListener("click", (event) => {
     if (event.target === bbrag_modal) {
       bbrag_closeModalHandler();
     }
   });
-}, 2000);
+}

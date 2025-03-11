@@ -180,7 +180,7 @@ if ($bbrag_case_url == "/".$parts[0]."/consultation/") {
                 </div>
             </div>
             <div class="bb-fav-modal">
-                <div class="bb-fav-modal-inner">
+                <div class="bb-fav-modal-inner"> 
                     <p class="bb-fav-modal-close-button" onClick="closeModal()">X</p>
                     <img class="bb-thumbnail" src="<?php echo BB_PLUGIN_DIR_PATH; ?>assets/images/myfavs-logo.svg" alt="logo">
                     <h3>You are Loving these!</h3>
