@@ -1,247 +1,273 @@
-let load_more_count = 1;
+let loadMoreCount = 1;
 
-document.addEventListener("DOMContentLoaded", function (event) {
-  fetchCaseData(load_more_count);
-  if (event.target instanceof Element) {
-    let target = event.target.closest(".ajax-load-more");
-    let loadMoreButton = target.querySelector(".bb_ajax-load-more-btn");
-    if (loadMoreButton) {
-      // Get the current offset from data-offset
-      let currentOffsetLoad = parseInt(
-        loadMoreButton.getAttribute("data-offset"),
-        10
-      );
-      if (currentOffsetLoad == 1) {
-        loadMoreButton.style.display = "none";
-      }
-    }
+document.addEventListener("DOMContentLoaded", () => {
+  fetchCaseData(loadMoreCount);
+  handleLoadMoreButton();
+  handleFilterToggle();
+  handleSingleClickToggles();
+  handleMultipleClickToggles();
+});
+
+function handleLoadMoreButton() {
+  const loadMoreContainer = document.querySelector(".ajax-load-more");
+  if (!loadMoreContainer) return;
+
+  const loadMoreButton = loadMoreContainer.querySelector(".bb_ajax-load-more-btn");
+  if (!loadMoreButton) return;
+
+  const currentOffset = parseInt(loadMoreButton.getAttribute("data-offset"), 10);
+  if (currentOffset === 1) loadMoreButton.style.display = "none";
+}
+
+function handleFilterToggle() {
+  if (filterBtn) {
+    filterBtn.addEventListener("click", () => {
+      filterContent.classList.toggle("active");
+    });
+  }
+}
+
+function handleSingleClickToggles() {
+  const clickables = document.getElementsByClassName("toggle-on-click");
+  if (clickables.length === 0) return;
+
+  Array.from(clickables).forEach((item) => {
+    const toggleClasses = getToggleClasses(item);
+    item.addEventListener("click", () => {
+      toggleClasses.forEach((classname) => toggleElement(classname));
+      item.classList.toggle("isActive");
+    });
+  });
+}
+
+function handleMultipleClickToggles() {
+  const clickables = document.getElementsByClassName("toggle-on-click-multiple");
+  const clickablesClose = document.getElementsByClassName("toggle-on-click-multiple-close");
+
+  if (clickablesClose.length === 0) return;
+
+  const clickablesArr = Array.from(clickables);
+  Array.from(clickablesClose).forEach((item) => {
+    const toggleClasses = getToggleClasses(item);
+
+    item.addEventListener("click", () => {
+      toggleClasses.forEach((classname) => removeActiveClass(classname));
+      clickablesArr.forEach((clickable) => clickable.classList.remove("isActive"));
+      item.classList.toggle("isActive");
+    });
+  });
+}
+
+function getToggleClasses(element) {
+  return Array.from(element.classList)
+    .filter((classname) => classname.startsWith("toggle-"))
+    .map((classname) => classname.slice(7));
+}
+
+function toggleElement(classname) {
+  const element = document.querySelector(`.${classname}`);
+  if (element) element.classList.toggle("isActive");
+}
+
+function removeActiveClass(classname) {
+  const element = document.querySelector(`.${classname}`);
+  if (element) element.classList.remove("isActive");
+}
+
+
+document.addEventListener("click", (event) => {
+  const loadMoreContainer = event.target.closest(".ajax-load-more");
+  if (!loadMoreContainer) return;
+
+  event.preventDefault();
+  const loadMoreButton = loadMoreContainer.querySelector(".bb_ajax-load-more-btn");
+  if (loadMoreButton) {
+    let currentOffset = parseInt(loadMoreButton.getAttribute("data-offset"), 10);
+    fetchCaseData(currentOffset);
+    loadMoreButton.setAttribute("data-offset", ++currentOffset);
   }
 });
 
-document.addEventListener("click", function (event) {
-  let target = event.target.closest(".ajax-load-more");
-  if (target) {
-    event.preventDefault();
-    let loadMoreButton = target.querySelector(".bb_ajax-load-more-btn");
-    if (loadMoreButton) {
-      // Get the current offset from data-offset
-      let currentOffset = parseInt(
-        loadMoreButton.getAttribute("data-offset"),
-        10
-      );
-      fetchCaseData(currentOffset);
-      // Increment the count by 1
-      currentOffset += 1;
-      loadMoreButton.setAttribute("data-offset", currentOffset);
-    }
-  }
-});
+function fetchCaseData(loadMoreCount) {
+  try {
+    let count = loadMoreCount;
+    const pathSegments = window.location.pathname.split("/").filter(Boolean);
 
-function fetchCaseData(load_more_count) {
-  const elementCase = document.querySelector(".bb-patient-box");
-  if (elementCase) {
-    elementCase.insertAdjacentHTML(
-      "beforeend",
-      `<img id="bb_f_gif_sidebar" src="${bb_plugin_data.heartrunning}" alt="Loading...">`
-    );
-  }
-  const element = document.querySelector(".bb-content-boxes");
-  if (element) {
-    element.insertAdjacentHTML(
-      "beforeend",
-      `<img id="bb_f_gif_sidebar" src="${bb_plugin_data.heartrunning}" alt="Loading...">`
-    );
-  }
-  const loadMoreButtonEl = document.querySelector(".bb_ajax-load-more-btn");
-  if (loadMoreButtonEl) {
-    loadMoreButtonEl.innerHTML = `<img id="bb_ajax-load-more-btn" src="${bb_plugin_data.heartrunning}" alt="Loading...">`;
-  }
-  // const element_apply = document.querySelector('.apply_bb_filter');
-  // if (element_apply) element_apply.innerHTML = `<img id="apply_bb_filter" src="${bb_plugin_data.heartrunning}" alt="Loading...">`;
-  var elementId = "";
-  const pathSegments = window.location.pathname.split("/").filter(Boolean);
-  const secondPart = pathSegments[0] || "";
-  const thirdPart = pathSegments[1] || "";
-  var forthPart = pathSegments[2] || "";
-  const fifthPart = pathSegments[3] || "";
-  //alert(forthPart);
-  let favorites;
-  if(thirdPart == "favorites") {
-    favorites = thirdPart; 
-  }
+    const isCarouselPage = pathSegments.length === 1;
+    const isListsPage = pathSegments.length === 2;
+    const isViewMoreDetailPage = pathSegments.length === 3;
+    const isFavoriteListPage = pathSegments[1] === "favorites" && pathSegments.length === 2;
+    const currentPage = { isCarouselPage, isListsPage, isViewMoreDetailPage, isFavoriteListPage }
 
-  const count = load_more_count;
-  const targetHref = `/${secondPart}/${thirdPart}/`;
-  const targetElement = document.querySelector(`a[href="${targetHref}"]`);
+    const pageSlug = pathSegments[0] || "";
+    const procedureSlug = pathSegments[1] || "";
+    const caseIdentifier = pathSegments[2]?.includes("bb-case") ? pathSegments[2].split("-").pop() : "";
+    let seoSuffixUrl = caseIdentifier ? "" : pathSegments[2];
 
-  if (targetElement) {
-    elementId = targetElement.id;
-    var apiToken = targetElement.getAttribute("data-api-token");
-    var websitePropertyId = targetElement.getAttribute(
-      "data-website-property-id"
-    );
-    var textOnly = Array.from(targetElement.childNodes)
-      .filter((node) => node.nodeType === Node.TEXT_NODE)
-      .map((node) => node.textContent.trim())
-      .join(" ");
+    const targetLinkSelector = `/${pageSlug}/${procedureSlug}/`;
+    const targetLinkElement = document.querySelector(`a[href="${targetLinkSelector}"]`);
 
-    // Change color and opacity
-    targetElement.style.color = "#000";
-    targetElement.style.opacity = "1";
+    const elementId = targetLinkElement?.id || "";
+    const apiToken = targetLinkElement?.getAttribute("data-api-token");
+    const websitePropertyId = targetLinkElement?.getAttribute("data-website-property-id");
+    let linkText;
+    if (targetLinkElement) {
+      linkText = Array.from(targetLinkElement.childNodes)
+        .filter((node) => node.nodeType === Node.TEXT_NODE)
+        .map((node) => node.textContent.trim())
+        .join(" ");
 
-    // Open the corresponding accordion panel
-    let accordionButton =
-      targetElement.closest(".bb-panel")?.previousElementSibling;
-    if (accordionButton && accordionButton.classList.contains("bb-accordion")) {
-      accordionButton.classList.add("active");
+      Object.assign(targetLinkElement.style, { color: "#000", opacity: "1" });
 
-      let panel = accordionButton.nextElementSibling;
-      if (panel && panel.classList.contains("bb-panel")) {
-        panel.style.display = "block";
-        panel.style.maxHeight = panel.scrollHeight + "px";
+      const accordionButton = targetLinkElement.closest(".bb-panel")?.previousElementSibling;
+      if (accordionButton?.classList.contains("bb-accordion")) {
+        accordionButton.classList.add("active");
+
+        const accordionPanel = accordionButton.nextElementSibling;
+        if (accordionPanel?.classList.contains("bb-panel")) {
+          accordionPanel.style.display = "block";
+          accordionPanel.style.maxHeight = `${accordionPanel.scrollHeight}px`;
+        }
       }
     }
-  }
-  let dynamicFilterBB = document.querySelectorAll(
-    '.bb-dynamic-filter input[type="checkbox"]:checked'
-  );
-  let staticFilterBB = document.querySelectorAll(
-    '.bb-static-filter input[type="checkbox"]:checked'
-  );
-  // Loop through each checkbox
-  let staticFilter = "";
-  let staticFilterCombine = {};
-  let dynamicFilter = "";
-  let dynamicFilterCombine = {};
-  staticFilterBB.forEach((checkbox) => {
-    let dataKey = checkbox.getAttribute("data-key");
-    let dataValue = checkbox.getAttribute("data-value");
-    staticFilter += `&${dataKey}=${dataValue}`;
-    dataValue=isNaN(parseInt(dataValue))?`"${dataValue}"`:parseInt(dataValue);
-    staticFilterCombine[dataKey]=dataValue;
-  });
 
-  dynamicFilterBB.forEach((checkbox) => {
-    let dataKey = checkbox.getAttribute("data-key");
-    let dataValue = checkbox.getAttribute("data-value");
-    dataKey = dataKey.replace(/\s+/g, "|||");
-    dynamicFilter += `&${dataKey}=${dataValue}`;
-    dataValue=isNaN(parseInt(dataValue))?`${dataValue}`:parseInt(dataValue);
-    dynamicFilterCombine[dataKey]=dataValue;
-  });
-  let updatedCaseId = "";
-  let seoSuffixUrl = "";
-  if(forthPart.includes("bb-case")) {
-    updatedCaseId = forthPart.split("-").pop()
-  } else {
-    seoSuffixUrl = forthPart
-  }
+    const getSelectedCheckboxes = (selector) => {
+      return Array.from(document.querySelectorAll(selector)).map((checkbox) => ({
+        key: checkbox.getAttribute("data-key"),
+        value: checkbox.getAttribute("data-value"),
+      }));
+    };
 
-  const data = {
-    action: "bb_case_api",
-    count: count,
-    pageSlug: secondPart,
-    favorites: favorites,
-    procedureId: elementId,
-    apiToken: apiToken,
-    websitePropertyId: websitePropertyId,
-    caseId: updatedCaseId,
-    seoSuffixUrl: seoSuffixUrl,
-    staticFilter: staticFilter,
-    dynamicFilter: dynamicFilter,
-    dynamicFilterCombine: Object.keys(dynamicFilterCombine).length?JSON.stringify(dynamicFilterCombine):0,
-    ...staticFilterCombine
-  };
+    const processFilterSelection = (selectedCheckboxes, isDynamic = false) => {
+      let queryString = "";
+      let filterData = {};
 
-  fetch(bb_plugin_data.ajaxurl, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: new URLSearchParams(data).toString(),
-  })
-    .then((response) => response.json())
-    .then((data) => { 
-      try {
-        let heartImage;
-        let sidebarApi; 
-        if(data.data.sidebar_api) { 
-          sidebarApi = JSON.parse(JSON.parse(data.data.sidebar_api)).data?.reduce((procedures, b) => {
-            procedures.push(...b.procedures);
-            return procedures;
-          }, []); 
-        }
+      selectedCheckboxes.forEach(({ key, value }) => {
+        const formattedKey = isDynamic ? key.replace(/\s+/g, "|||") : key;
+        const formattedValue = isNaN(parseInt(value)) ? value : parseInt(value);
 
-        if(data.data.bragbook_favorite.length > 0) {
-          var fav_data = data.data.bragbook_favorite;
-          let element_fav_count = document.getElementById("bb_favorite_caseIds_count");
-          element_fav_count.textContent = "(" + `${fav_data.length}` + ")";
-        }
-        if (data.data && data.data.case_set) {
-          let caseSet = JSON.parse(data.data.case_set);
-          if (forthPart == "") {
-            var bb_case_count = (count - 1) * 10;
-            let contentBox = document.querySelector(".bb-content-boxes");
+        queryString += `&${formattedKey}=${value}`;
+        filterData[formattedKey] = formattedValue;
+      });
 
-            document.querySelector("#bb_f_gif_sidebar")?.remove();
-            document.querySelector("#bb_ajax-load-more-btn")?.remove();
-            //  document.querySelector('#apply_bb_filter')?.remove();
-            if(thirdPart !== "favorites") {
-              document.querySelector(".bb_ajax-load-more-btn").innerHTML =
-              "Load More";
+      return { queryString, filterData };
+    };
+
+    const staticFilters = getSelectedCheckboxes('.bb-static-filter input[type="checkbox"]:checked');
+    const dynamicFilters = getSelectedCheckboxes('.bb-dynamic-filter input[type="checkbox"]:checked');
+
+    const { queryString: staticFilterQuery, filterData: staticFilterData } = processFilterSelection(staticFilters);
+    const { queryString: dynamicFilterQuery, filterData: dynamicFilterData } = processFilterSelection(dynamicFilters, true);
+
+    const requestData = {
+      action: "bb_case_api",
+      count: loadMoreCount,
+      pageSlug,
+      favorites: isFavoriteListPage ? 'favorites' : null,
+      procedureId: elementId,
+      apiToken,
+      websitePropertyId,
+      caseId: caseIdentifier,
+      seoSuffixUrl,
+      staticFilter: staticFilterQuery,
+      dynamicFilter: dynamicFilterQuery,
+      dynamicFilterCombine: Object.keys(dynamicFilterData).length ? JSON.stringify(dynamicFilterData) : 0,
+      ...staticFilterData,
+      currentPage: JSON.stringify(currentPage)
+    };
+
+    console.log((requestData));
+
+    fetch(bb_plugin_data.ajaxurl, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded", },
+      body: new URLSearchParams(requestData).toString(),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("Ressponse => ", data);
+
+        try {
+          let heartImage;
+          let sidebarApi;
+          if (data.data.sidebar_api) {
+            try {
+              const parsedSidebarApi = JSON.parse(JSON.parse(data.data.sidebar_api));
+              sidebarApi = parsedSidebarApi.data?.flatMap(item => item.procedures) || [];
+            } catch (error) {
+              console.error("Error parsing sidebar_api:", error);
+              sidebarApi = [];
             }
-            const applyBBButton = document.querySelector(".apply_bb_filter");
-            if (applyBBButton) applyBBButton.innerHTML = `Apply`;
-            let images = [];
-            if(caseSet.data) {
-              
-              caseSet.data.forEach((caseItem, index) => {
-                if (caseItem.photoSets && caseItem.photoSets.length > 0) {
-                  let photoSet = caseItem.photoSets[0];
-                  let imgSrc =
-                    photoSet.highResPostProcessedImageLocation ||
-                    photoSet.postProcessedImageLocation ||
-                    photoSet.originalBeforeLocation;
-                  let imgAlt = photoSet.seoAltText + " - angle " + (index + 1) || "Procedure Image";
-                  let caseItemId = caseItem.id;
-                  let caseDetails = caseItem.details || "";
-                  caseItem.patientCount = ++bb_case_count;
+          }
 
-                  console.log("caseItem::", caseItem);
-                  
-                  let caseId = "";
-                  seoSuffixUrl = caseItem.caseDetails[0].seoSuffixUrl;
-                  if(seoSuffixUrl) {
-                    caseId = seoSuffixUrl; 
-                  } else {
-                    caseId = "bb-case-"+caseItemId;
-                  }
-                  let procedureUrl = `/${secondPart}/${thirdPart}/${caseId}/`;
-                  
-                  if(fav_data && fav_data.includes(caseId)) {
-                    heartImage = bb_plugin_data.heartBordered;
-                  }else {
-                    heartImage = bb_plugin_data.heartRed;
-                  }  
-                  let imageObj = {
-                    "@type": "ImageObject",
-                    "name": thirdPart, 
-                    "description": `Photo gallery of ${thirdPart} results showing before and after photos from different angles.`,
-                    "url": `${targetHref}${caseItem.caseId}`,  
-                    "thumbnailUrl": imgSrc
-                };
-                
-                let proceduralName = "";
-                if(caseItem.caseDetails[0].seoHeadline) {
-                  proceduralName = caseItem.caseDetails[0].seoHeadline
-                } else {
-                  let titleWithoutDashes = thirdPart.replace(/-/g, ' ');
-                  proceduralName = titleWithoutDashes + ': Patient ' + caseItem.patientCount;
-                }
-                
-                // Add the image object to the images array
-                images.push(imageObj);
-                  let newContent = `
+          if (data.data.bragbook_favorite.length > 0) {
+            var fav_data = data.data.bragbook_favorite;
+            let element_fav_count = document.getElementById("bb_favorite_caseIds_count");
+            element_fav_count.textContent = "(" + `${fav_data.length}` + ")";
+          }
+          if (data.data && data.data.case_set) {
+            let caseSet = JSON.parse(data.data.case_set);
+            if (caseIdentifier == "") {
+              console.log("hasLoadMore::", caseSet.hasLoadMore);
+              if(!caseSet.hasLoadMore) document.getElementById("load-container").style.display="none"
+              var bb_case_count = (count - 1) * 10;
+              let contentBox = document.querySelector(".bb-content-boxes");
+              document.querySelector("#bb_ajax-load-more-btn")?.remove();
+              if (procedureSlug !== "favorites") {
+                document.querySelector(".bb_ajax-load-more-btn").innerHTML =
+                  "Load More";
+              }
+              const applyBBButton = document.querySelector(".apply_bb_filter");
+              if (applyBBButton) applyBBButton.innerHTML = `Apply`;
+              let images = [];
+              if (caseSet.data) {
+
+                caseSet.data.forEach((caseItem, index) => {
+                  if (caseItem.photoSets && caseItem.photoSets.length > 0) {
+                    let photoSet = caseItem.photoSets[0];
+                    let imgSrc =
+                      photoSet.highResPostProcessedImageLocation ||
+                      photoSet.postProcessedImageLocation ||
+                      photoSet.originalBeforeLocation;
+                    let imgAlt = photoSet.seoAltText + " - angle " + (index + 1) || "Procedure Image";
+                    let caseItemId = caseItem.id;
+                    let caseDetails = caseItem.details || "";
+                    caseItem.patientCount = ++bb_case_count;
+
+                    console.log("caseItem::--", caseItem);
+
+                    let caseId = "";
+                    seoSuffixUrl = caseItem.caseDetails[0].seoSuffixUrl;
+                    if (seoSuffixUrl) {
+                      caseId = seoSuffixUrl;
+                    } else {
+                      caseId = "bb-case-" + caseItemId;
+                    }
+                    let procedureUrl = `/${pageSlug}/${procedureSlug}/${caseId}/`;
+
+                    if (fav_data && fav_data.includes(caseItemId)) {
+                      heartImage = bb_plugin_data.heartBordered;
+                    } else {
+                      heartImage = bb_plugin_data.heartRed;
+                    }
+                    let imageObj = {
+                      "@type": "ImageObject",
+                      "name": procedureSlug,
+                      "description": `Photo gallery of ${procedureSlug} results showing before and after photos from different angles.`,
+                      "url": `${targetLinkSelector}${caseItem.caseId}`,
+                      "thumbnailUrl": imgSrc
+                    };
+
+                    let proceduralName = "";
+                    if (caseItem.caseDetails[0].seoHeadline) {
+                      proceduralName = caseItem.caseDetails[0].seoHeadline
+                    } else {
+                      let titleWithoutDashes = procedureSlug.replace(/-/g, ' ');
+                      proceduralName = titleWithoutDashes + ': Patient ' + caseItem.patientCount;
+                    }
+
+                    images.push(imageObj);
+                    let newContent = `
                               <div class="bb-content-box">
                                   <div class="bb-content-thumbnail">
                                       <a href="${procedureUrl}">
@@ -261,7 +287,7 @@ function fetchCaseData(load_more_count) {
                                       </div>
                                       <div class="bb-content-box-inner-right">
                                           <img class="bb-open-fav-modal" 
-                                              data-case-id="${caseId}" 
+                                              data-case-id="${caseItemId}" 
                                               data-bb_api_token="${apiToken}" 
                                               data-bb_website_id="${websitePropertyId}" 
                                               src="${heartImage}" 
@@ -275,78 +301,87 @@ function fetchCaseData(load_more_count) {
                                   </div>
                               </div>
                           `;
-  
-                  contentBox.innerHTML += newContent;
-                }
-              });
+
+                    contentBox.innerHTML += newContent;
+                  }
+                });
                 let schema = {
-                    "@context": "https://schema.org",
-                    "@type": "ImageGallery",
-                    "name": `${thirdPart} Before & After Gallery`,
-                    "description": `Review ${caseSet.data.length} ${thirdPart} before and after cases. Each case includes photos from multiple angles, along with details about the procedure.`,
-                    "url": `/${secondPart}/${thirdPart}/`,  // Assuming `secondPart` and `thirdPart` are dynamically generated
-                    "image": images,
-                    "breadcrumb": {
-                        "@type": "BreadcrumbList",
-                        "itemListElement": [
-                            {
-                                "@type": "ListItem",
-                                "position": 1,
-                                "name": "Home",
-                                "item": `/`
-                            },
-                            {
-                                "@type": "ListItem",
-                                "position": 2,
-                                "name": `${thirdPart}`,
-                                "item": `/${secondPart}/${thirdPart}/`
-                            },
-                            {
-                                "@type": "ListItem",
-                                "position": 3,
-                                "name": `${thirdPart} Procedure`,
-                                "item": `/${secondPart}/${thirdPart}/`
-                            }
-                        ]
-                    }
+                  "@context": "https://schema.org",
+                  "@type": "ImageGallery",
+                  "name": `${procedureSlug} Before & After Gallery`,
+                  "description": `Review ${caseSet.data.length} ${procedureSlug} before and after cases. Each case includes photos from multiple angles, along with details about the procedure.`,
+                  "url": `/${pageSlug}/${procedureSlug}/`,
+                  "image": images,
+                  "breadcrumb": {
+                    "@type": "BreadcrumbList",
+                    "itemListElement": [
+                      {
+                        "@type": "ListItem",
+                        "position": 1,
+                        "name": "Home",
+                        "item": `/`
+                      },
+                      {
+                        "@type": "ListItem",
+                        "position": 2,
+                        "name": `${procedureSlug}`,
+                        "item": `/${pageSlug}/${procedureSlug}/`
+                      },
+                      {
+                        "@type": "ListItem",
+                        "position": 3,
+                        "name": `${procedureSlug} Procedure`,
+                        "item": `/${pageSlug}/${procedureSlug}/`
+                      }
+                    ]
+                  }
                 };
-                // Inject the generated schema as JSON-LD into the HTML 
-                let schemaJson = JSON.stringify(schema, null, 4); // Pretty-print the schema 
+                let schemaJson = JSON.stringify(schema, null, 4);
                 let schemaScript = document.createElement('script');
                 schemaScript.type = 'application/ld+json';
                 schemaScript.innerHTML = schemaJson;
                 document.head.appendChild(schemaScript);
-              
-            } else if (caseSet.favorites) {
-              caseSet.favorites.forEach((caseItem) => {
-                if (caseItem.cases[0].photoSets && caseItem.cases[0].photoSets.length > 0 && sidebarApi) {
-                  if (caseItem && caseItem.cases[0].procedureIds.length > 0) {
-                    const isCombine = sidebarApi[0].ids;
-                    let slugName;
-                    if(isCombine) {
-                      const totalTokens=2;
-                      for(let i=0;i<totalTokens;i++){
-                        if(slugName) break;
-                        slugName= sidebarApi.find(p=>p.ids[i]==caseItem.cases[0].procedureIds[0])?.slugName;
-                      }
-                    }else{
-                      slugName= sidebarApi.find(p=>p.id==caseItem.cases[0].procedureIds[0])?.slugName;
-                    }
 
-                    let photoSet = caseItem.cases[0].photoSets[0];
-                    let imgSrc =
-                      photoSet.highResPostProcessedImageLocation ||
-                      photoSet.postProcessedImageLocation ||
-                      photoSet.originalBeforeLocation;
-                    let imgAlt = photoSet.seoAltText || "Procedure Image";
-                    let caseId = caseItem.cases[0].id;
-                    let caseDetails = caseItem.cases[0].details || "";
-                    caseItem.patientCount = ++bb_case_count;
-                    let procedureUrl = `/${secondPart}/${slugName}/${caseId}/`;
-                    
-                    heartImage = bb_plugin_data.heartBordered;
-                    
-                    let newContent = `
+              } else if (caseSet.favorites) {
+                caseSet.favorites.forEach((caseItem) => {
+                  if (caseItem.cases[0].photoSets && caseItem.cases[0].photoSets.length > 0 && sidebarApi) {
+                    if (caseItem && caseItem.cases[0].procedureIds.length > 0) {
+                      const isCombine = sidebarApi[0].ids;
+                      let slugName;
+                      if (isCombine) {
+                        const totalTokens = 2;
+                        for (let i = 0; i < totalTokens; i++) {
+                          if (slugName) break;
+                          slugName = sidebarApi.find(p => p.ids[i] == caseItem.cases[0].procedureIds[0])?.slugName;
+                        }
+                      } else {
+                        slugName = sidebarApi.find(p => p.id == caseItem.cases[0].procedureIds[0])?.slugName;
+                      }
+
+                      let photoSet = caseItem.cases[0].photoSets[0];
+                      let imgSrc =
+                        photoSet.highResPostProcessedImageLocation ||
+                        photoSet.postProcessedImageLocation ||
+                        photoSet.originalBeforeLocation;
+                      let imgAlt = photoSet.seoAltText || "Procedure Image";
+                      let caseItemId = caseItem.cases[0].id;
+                      let caseDetails = caseItem.cases[0].details || "";
+                      caseItem.patientCount = ++bb_case_count;
+
+                      console.log("caseItem:", caseItem);
+
+                      let caseId = "";
+                      let seoSuffixUrl = caseItem.cases[0].caseDetails[0]?.seoSuffixUrl;
+                      if (seoSuffixUrl) {
+                        caseId = seoSuffixUrl;
+                      } else {
+                        caseId = "bb-case-" + caseItemId;
+                      }
+                      let procedureUrl = `/${pageSlug}/${slugName}/${caseId}/`;
+
+                      heartImage = bb_plugin_data.heartBordered;
+
+                      let newContent = `
                                 <div class="bb-content-box">
                                     <div class="bb-content-thumbnail">
                                         <a href="${procedureUrl}">
@@ -361,7 +396,7 @@ function fetchCaseData(load_more_count) {
                                     </div>
                                     <div class="bb-content-box-inner">
                                         <div class="bb-content-box-inner-left">
-                                            <h5>${thirdPart} : Patient ${caseItem.patientCount}</h5>
+                                            <h5>${procedureSlug} : Patient ${caseItem.patientCount}</h5>
                                             <p>${caseDetails}</p> 
                                         </div>
                                         <div class="bb-content-box-inner-right">
@@ -380,106 +415,104 @@ function fetchCaseData(load_more_count) {
                                     </div>
                                 </div>
                             `;
-    
-                    contentBox.innerHTML += newContent;
-                  }
-                }
-              });
-            }
-            
-          } else {
-            let images_case = [];
-            document.querySelector("#bb_f_gif_sidebar")?.remove();
-            let patienLeftBox = document.querySelector(".bb-patient-left");
-            if (patienLeftBox) {
-              caseSet.data.forEach((caseItem) => {
-                let caseId = caseItem.id;
-                if (caseId == updatedCaseId) {
-                  if (caseItem.photoSets && caseItem.photoSets.length > 0) {
-                    caseItem.photoSets.forEach((value, itemIndex) => {
-                      console.log('itemIndex: ',itemIndex);
-                      let bb_new_image_value =
-                        value.highResPostProcessedImageLocation ??
-                        value.postProcessedImageLocation ??
-                        value.originalBeforeLocation;
 
-                      let imgElement = document.createElement("img");
-                      imgElement.className =
-                        "bbrag_gallery_image testing-image";
-                      imgElement.src = bb_new_image_value;
-                      imgElement.alt = value.seoAltText + " - angle " + (itemIndex +1) ?? "Procedure Image";
-                      patienLeftBox.appendChild(imgElement);
-                      let imageObjc = {
-                        "@type": "ImageObject",
-                        "name": thirdPart, 
-                        "description": `Photo gallery of ${thirdPart} results showing before and after photos from different angles.`,
-                        "url": `${targetHref}${caseItem.id}`,  
-                        "thumbnailUrl": bb_new_image_value
-                      };
-          
-                      // Add the image object to the images array
-                      images_case.push(imageObjc); 
-                    });
-                    
+                      contentBox.innerHTML += newContent;
+                    }
                   }
-                }
-              });
-            }
-            let patientRightBox = document.querySelector(".bb-patient-right");
-            if (patientRightBox) {
-              caseSet.data.forEach((caseItem) => {
-                let patientDetail = caseItem.details || "";
-                let height = caseItem.height
-                  ? `<li>HEIGHT: ${caseItem.height
+                });
+              }
+
+            } else {
+              let images_case = [];
+              document.querySelector("#bb_f_gif_sidebar")?.remove();
+              let patienLeftBox = document.querySelector(".bb-patient-left");
+              if (patienLeftBox) {
+                caseSet.data.forEach((caseItem) => {
+                  let caseId = caseItem.id;
+                  if (caseId == caseIdentifier) {
+                    if (caseItem.photoSets && caseItem.photoSets.length > 0) {
+                      caseItem.photoSets.forEach((value, itemIndex) => {
+                        console.log('itemIndex: ', itemIndex);
+                        let bb_new_image_value =
+                          value.highResPostProcessedImageLocation ??
+                          value.postProcessedImageLocation ??
+                          value.originalBeforeLocation;
+
+                        let imgElement = document.createElement("img");
+                        imgElement.className =
+                          "bbrag_gallery_image testing-image";
+                        imgElement.src = bb_new_image_value;
+                        imgElement.alt = value.seoAltText + " - angle " + (itemIndex + 1) ?? "Procedure Image";
+                        patienLeftBox.appendChild(imgElement);
+                        let imageObjc = {
+                          "@type": "ImageObject",
+                          "name": procedureSlug,
+                          "description": `Photo gallery of ${procedureSlug} results showing before and after photos from different angles.`,
+                          "url": `${targetLinkSelector}${caseItem.id}`,
+                          "thumbnailUrl": bb_new_image_value
+                        };
+
+                        images_case.push(imageObjc);
+                      });
+
+                    }
+                  }
+                });
+              }
+              let patientRightBox = document.querySelector(".bb-patient-right");
+              if (patientRightBox) {
+                caseSet.data.forEach((caseItem) => {
+                  let patientDetail = caseItem.details || "";
+                  let height = caseItem.height
+                    ? `<li>HEIGHT: ${caseItem.height
                       .toString()
                       .toLowerCase()}</li>`
-                  : "";
-                let width = caseItem.weight
-                  ? `<li>WEIGHT: ${caseItem.weight
+                    : "";
+                  let width = caseItem.weight
+                    ? `<li>WEIGHT: ${caseItem.weight
                       .toString()
                       .toLowerCase()}</li>`
-                  : "";
-                let race = caseItem.ethnicity
-                  ? `<li>RACE: ${caseItem.ethnicity.toLowerCase()}</li>`
-                  : "";
-                let gender = caseItem.gender
-                  ? `<li>GENDER: ${caseItem.gender.toLowerCase()}</li>`
-                  : "";
-                let age = caseItem.age
-                  ? `<li>AGE: ${caseItem.age.toString().toLowerCase()}</li>`
-                  : "";
-                let timeframe =
-                  caseItem.after1Timeframe && caseItem.after1Unit
-                    ? `<li>POST-OP PERIOD: ${caseItem.after1Timeframe
+                    : "";
+                  let race = caseItem.ethnicity
+                    ? `<li>RACE: ${caseItem.ethnicity.toLowerCase()}</li>`
+                    : "";
+                  let gender = caseItem.gender
+                    ? `<li>GENDER: ${caseItem.gender.toLowerCase()}</li>`
+                    : "";
+                  let age = caseItem.age
+                    ? `<li>AGE: ${caseItem.age.toString().toLowerCase()}</li>`
+                    : "";
+                  let timeframe =
+                    caseItem.after1Timeframe && caseItem.after1Unit
+                      ? `<li>POST-OP PERIOD: ${caseItem.after1Timeframe
                         .toString()
                         .toLowerCase()} ${caseItem.after1Unit.toLowerCase()}</li>`
-                    : "";
-                let timeframe2 =
-                  caseItem.after2Timeframe && caseItem.after2Unit
-                    ? `<li>2nd AFTER: ${caseItem.after2Timeframe
+                      : "";
+                  let timeframe2 =
+                    caseItem.after2Timeframe && caseItem.after2Unit
+                      ? `<li>2nd AFTER: ${caseItem.after2Timeframe
                         .toString()
                         .toLowerCase()} ${caseItem.after2Unit.toLowerCase()}</li>`
+                      : "";
+                  let revisionSurgery = caseItem.revisionSurgery
+                    ? `<li>This case is a revision of a previous procedure.</li>`
                     : "";
-                let revisionSurgery = caseItem.revisionSurgery
-                  ? `<li>This case is a revision of a previous procedure.</li>`
-                  : "";
-                  if(fav_data?.includes(caseItem.id)) {
+                  if (fav_data?.includes(caseItem.id)) {
                     heartImage = bb_plugin_data.heartBordered;
-                  }else {
+                  } else {
                     heartImage = bb_plugin_data.heartRed;
-                  } 
-                  console.log("Case Details::::: ", caseItem); 
+                  }
+                  console.log("Case Details::::: ", caseItem);
 
-                  // Split the string by the delimiter ' - ' and get the second part
                   let title_suffix = document.title.split(' - ')[1];
-                  
+
                   document.title = caseItem.caseDetails[0]?.seoPageTitle + " - " + title_suffix || document.title;
-                
-                let bb_right_data = `
+
+                  let bb_right_data = `
                         <div class="bb-patient-row">
-                            <h2>${caseItem.caseDetails[0]?.seoHeadline || textOnly}</h2>
+                            <h2>${caseItem.caseDetails[0]?.seoHeadline || linkText}</h2>
                             <img class="bb-heart-icon bb-open-fav-modal" 
-                                data-case-id="${forthPart}" 
+                                data-case-id="${caseIdentifier}" 
                                 data-bb_api_token="${apiToken}" 
                                 data-bb_website_id="${websitePropertyId}" 
                                 src="${heartImage}" alt="heart">
@@ -500,170 +533,167 @@ function fetchCaseData(load_more_count) {
                         </div>
                     `;
 
-                patientRightBox.innerHTML += bb_right_data;
-                let paginationData = generatePagination(
-                  caseItem.caseIds,
-                  caseItem.id
-                );
-                renderPagination(paginationData, caseItem.id, targetHref);
-              });
-            }
-            // Create schema object once after processing all cases
-            let bb_case_url_title = 'Cosmetic Procedure'; // Adjust based on your actual dynamic data
-            let bb_current_case_page_count = ''; //caseSet.data.length; // Adjust according to your data
-            let default_and_seo_page_title = "Procedure Title"; // Set dynamically
-            let procedure_description = "Detailed description of the procedure."; // Set dynamically
-            let bb_gallery_page_title = "Gallery Page Title"; // Set dynamically
-            let case_page_title = "Case Page Title"; // Set dynamically
-            let bbrag_case_url = "/case-gallery"; // Set dynamically
-            let bb_pro_cat_page = "/category-page"; // Set dynamically
-            let targetHrefc = "/target-url/"; // Set dynamically
-            let forthPartc = "case-id"; // Adjust accordingly
-    
-            let schema = {
-              "@context": "https://schema.org",
-              "@type": "ImageGallery",
-              "name": `Before and After Gallery ${bb_case_url_title} : Patient ${bb_current_case_page_count}`,
-              "description": `Photo gallery of ${bb_case_url_title} results showing before and after photos from different angles.`,
-              "mainEntity": {
+                  patientRightBox.innerHTML += bb_right_data;
+                  let paginationData = generatePagination(
+                    caseItem.caseIds,
+                    caseItem
+                  );
+                  renderPagination(paginationData, caseItem.id, targetLinkSelector);
+                });
+              }
+              // Create schema object once after processing all cases
+              let bb_case_url_title = 'Cosmetic Procedure'; // Adjust based on your actual dynamic data
+              let bb_current_case_page_count = ''; //caseSet.data.length; // Adjust according to your data
+              let default_and_seo_page_title = "Procedure Title"; // Set dynamically
+              let procedure_description = "Detailed description of the procedure."; // Set dynamically
+              let bb_gallery_page_title = "Gallery Page Title"; // Set dynamically
+              let case_page_title = "Case Page Title"; // Set dynamically
+              let bbrag_case_url = "/case-gallery"; // Set dynamically
+              let bb_pro_cat_page = "/category-page"; // Set dynamically
+              let targetLinkSelectorc = "/target-url/"; // Set dynamically
+              let caseIdentifierc = "case-id"; // Adjust accordingly
+
+              let schema = {
+                "@context": "https://schema.org",
+                "@type": "ImageGallery",
+                "name": `Before and After Gallery ${bb_case_url_title} : Patient ${bb_current_case_page_count}`,
+                "description": `Photo gallery of ${bb_case_url_title} results showing before and after photos from different angles.`,
+                "mainEntity": {
                   "@type": "MedicalProcedure",
                   "name": default_and_seo_page_title,
                   "description": procedure_description,
                   "procedureType": "CosmeticProcedure",
                   "medicalSpecialty": "PlasticSurgery"
-              },
-              "image": images_case,
-              "breadcrumb": {
+                },
+                "image": images_case,
+                "breadcrumb": {
                   "@type": "BreadcrumbList",
                   "itemListElement": [
-                      {
-                          "@type": "ListItem",
-                          "position": 1,
-                          "name": "Home",
-                          "item": "/"
-                      },
-                      {
-                          "@type": "ListItem",
-                          "position": 2,
-                          "name": bb_gallery_page_title,
-                          "item": `/`
-                      },
-                      {
-                          "@type": "ListItem",
-                          "position": 3,
-                          "name": `Before and After ${case_page_title} Gallery`,
-                          "item": bb_pro_cat_page
-                      },
-                      {
-                          "@type": "ListItem",
-                          "position": 4,
-                          "name": default_and_seo_page_title,
-                          "item": `/${bbrag_case_url}`
-                      }
+                    {
+                      "@type": "ListItem",
+                      "position": 1,
+                      "name": "Home",
+                      "item": "/"
+                    },
+                    {
+                      "@type": "ListItem",
+                      "position": 2,
+                      "name": bb_gallery_page_title,
+                      "item": `/`
+                    },
+                    {
+                      "@type": "ListItem",
+                      "position": 3,
+                      "name": `Before and After ${case_page_title} Gallery`,
+                      "item": bb_pro_cat_page
+                    },
+                    {
+                      "@type": "ListItem",
+                      "position": 4,
+                      "name": default_and_seo_page_title,
+                      "item": `/${bbrag_case_url}`
+                    }
                   ]
-              },
-              "url": `/${bbrag_case_url}`
-          };
+                },
+                "url": `/${bbrag_case_url}`
+              };
 
-          // Convert the schema object to a JSON string
-          let schemaJson = JSON.stringify(schema, null, 4);  // Pretty-print the schema
+              let schemaJson = JSON.stringify(schema, null, 4);
+              let schemaScript = document.createElement('script');
+              schemaScript.type = 'application/ld+json';
+              schemaScript.innerHTML = schemaJson;
+              document.head.appendChild(schemaScript);
+            }
+          } else {
+            console.error("Invalid response structure:", data);
+          }
+          if (data.data && data.data.filter_data) {
+            if (
+              document.querySelector(".bb-filter-content-inner") &&
+              document.querySelector(".bb-filter-content-inner")
+                .childElementCount === 0
+            ) {
+              let filterContent = document.querySelector(
+                ".bb-filter-content-inner"
+              );
+              let filter_data = JSON.parse(data.data.filter_data);
 
-          // Create the <script> tag for JSON-LD
-          let schemaScript = document.createElement('script');
-          schemaScript.type = 'application/ld+json';
-          schemaScript.innerHTML = schemaJson;
-
-          // Append the schema script to the <head> section
-          document.head.appendChild(schemaScript);
-          } 
-        } else {
-          console.error("Invalid response structure:", data);
-        }
-        if (data.data && data.data.filter_data) {
-          if (
-            document.querySelector(".bb-filter-content-inner") &&
-            document.querySelector(".bb-filter-content-inner")
-              .childElementCount === 0
-          ) {
-            let filterContent = document.querySelector(
-              ".bb-filter-content-inner"
-            );
-            let filter_data = JSON.parse(data.data.filter_data);
-
-            // Static filters (e.g., height, weight, etc.)
-            if (filter_data.data.staticFilter) {
-              for (let filterKey in filter_data.data.staticFilter) {
-                let filterGroup = filter_data.data.staticFilter[filterKey];
-                let filterHTML = `<div class="bb-filter-content-inner-wrapper">
+              if (filter_data.data.staticFilter) {
+                for (let filterKey in filter_data.data.staticFilter) {
+                  let filterGroup = filter_data.data.staticFilter[filterKey];
+                  let filterHTML = `<div class="bb-filter-content-inner-wrapper">
                                         <button class="accordion">${filterKey} <img src="${bb_plugin_data.heartdown}" alt="down"></button>
                                         <div class="panel">
                                             <div class="bb-filter-select-wrapper">
                                                 <div class="bb-input-box">`;
 
-                filterGroup.forEach((option) => {
-                  filterHTML += `<label class="bb-checkbox-container bb-static-filter" for="m-${filterKey}-${option.value}">
+                  filterGroup.forEach((option) => {
+                    filterHTML += `<label class="bb-checkbox-container bb-static-filter" for="m-${filterKey}-${option.value}">
                                         ${option.label}
                                         <input type="checkbox" id="m-${filterKey}-${option.value}" name="${filterKey}" data-key="${filterKey}" data-value="${option.value}" onchange="handleDynamicCheckboxChange('${filterKey}','${option.value}')">
                                         <span class="checkmark"></span>
                                       </label>`;
-                });
+                  });
 
-                filterHTML += `</div></div></div></div>`;
-                filterContent.innerHTML += filterHTML;
+                  filterHTML += `</div></div></div></div>`;
+                  filterContent.innerHTML += filterHTML;
+                }
               }
-            }
-            if (filter_data.data.dynamicFilter) {
-              //if(filter_data.data.dynamicFilter.length > 0){
-              var filterHTMLA = `<div class='advanced-filters'><span>Advanced Filters</span></div>`;
-              // }
-              for (let filterKey in filter_data.data.dynamicFilter) {
-                let filterGroup = filter_data.data.dynamicFilter[filterKey];
-                filterHTMLA += `<div class="bb-filter-content-inner-wrapper">
+              if (filter_data.data.dynamicFilter) {
+                var filterHTMLA = `<div class='advanced-filters'><span>Advanced Filters</span></div>`;
+                // }
+                for (let filterKey in filter_data.data.dynamicFilter) {
+                  let filterGroup = filter_data.data.dynamicFilter[filterKey];
+                  filterHTMLA += `<div class="bb-filter-content-inner-wrapper">
                                         <button class="accordion">${filterKey} <img src="${bb_plugin_data.heartdown}" alt="down"></button>
                                         <div class="panel">
                                             <div class="bb-filter-select-wrapper"><div class="bb-input-box">`;
 
-                filterGroup.forEach((option) => {
-                  let formattedKey = filterKey;
-                  let formattedOption = option;
-                  filterHTMLA += `<label class="bb-checkbox-container bb-dynamic-filter" for="${formattedKey}-${formattedOption}">
+                  filterGroup.forEach((option) => {
+                    let formattedKey = filterKey;
+                    let formattedOption = option;
+                    filterHTMLA += `<label class="bb-checkbox-container bb-dynamic-filter" for="${formattedKey}-${formattedOption}">
                                         ${option}
                                         <input type="checkbox" id="${formattedKey}-${formattedOption}" name="${formattedKey.replace(
-                    /\s+/g,
-                    ""
-                  )}" data-key="${formattedKey}" data-value="${formattedOption}" onchange="handleDynamicCheckboxChange('${formattedKey.replace(
-                    /\s+/g,
-                    ""
-                  )}','${formattedOption}')">
+                      /\s+/g,
+                      ""
+                    )}" data-key="${formattedKey}" data-value="${formattedOption}" onchange="handleDynamicCheckboxChange('${formattedKey.replace(
+                      /\s+/g,
+                      ""
+                    )}','${formattedOption}')">
                                         <span class="checkmark"></span>
                                       </label>`;
-                });
+                  });
 
-                filterHTMLA += `</div></div></div></div>`;
+                  filterHTMLA += `</div></div></div></div>`;
+                }
+                filterContent.innerHTML += filterHTMLA;
               }
-              filterContent.innerHTML += filterHTMLA;
-            }
-            filterContent.innerHTML += `<div  id='apply_filter'>
-                <button class="apply_bb_filter" onClick='applyFilterBB(${count}, "${secondPart}", "${elementId}", "${apiToken}", "${websitePropertyId}", "${forthPart}", "${thirdPart}")'>Apply</button> 
+              filterContent.innerHTML += `<div  id='apply_filter'>
+                <button class="apply_bb_filter" onClick='applyFilterBB(${count}, "${pageSlug}", "${elementId}", "${apiToken}", "${websitePropertyId}", "${caseIdentifier}", "${procedureSlug}")'>Apply</button> 
                 </div>`;
 
-            bb_advance_filter();
+              bb_advance_filter();
+            }
           }
+        } catch (err) {
+          console.error("Error parsing case_set JSON:", err);
         }
-      } catch (err) {
-        console.error("Error parsing case_set JSON:", err);
-      }
-    })
-    .catch((error) => {
-      console.error("Error during AJAX request:", error);
-    });
+      })
+      .catch((error) => {
+        console.error("Error during AJAX request:", error);
+      });
+
+  } catch (error) {
+    console.error("Error", error)
+
+  }
 }
 function handleDynamicCheckboxChange(key, value) {
   const checkboxes = document.querySelectorAll(`input[name=${key}]`);
 
   checkboxes.forEach((checkbox) => {
     checkbox.addEventListener("change", (event) => {
-      // Uncheck all checkboxes before checking the current one
       checkboxes.forEach((cb) => {
         if (cb !== event.target) {
           cb.checked = false;
@@ -675,59 +705,53 @@ function handleDynamicCheckboxChange(key, value) {
 
 function applyFilterBB(
   count,
-  secondPart,
+  pageSlug,
   elementId,
   apiToken,
   websitePropertyId,
-  forthPart,
-  thirdPart
+  caseIdentifier,
+  procedureSlug
 ) {
   document.querySelector(".bb-content-boxes").innerHTML = "";
   document.querySelector(
     ".apply_bb_filter"
   ).innerHTML = `<img id="apply_bb_filter" src="${bb_plugin_data.heartrunning}" alt="Loading...">`;
-  //document.querySelector(".apply_bb_filter").innerHTML = "";
-
   let dynamicFilterBB = document.querySelectorAll(
     '.bb-dynamic-filter input[type="checkbox"]:checked'
   );
   let staticFilterBB = document.querySelectorAll(
     '.bb-static-filter input[type="checkbox"]:checked'
   );
-  // Loop through each checkbox
   let staticFilterCombine = {};
   let staticFilter = "";
   let dynamicFilter = "";
-  // let dynamicFilterCombine = `"filters": {`;
   let dynamicFilterCombine = {};
 
   staticFilterBB.forEach((checkbox) => {
     let dataKey = checkbox.getAttribute("data-key");
     let dataValue = checkbox.getAttribute("data-value");
     staticFilter += `&${dataKey}=${dataValue}`;
-    dataValue=isNaN(parseInt(dataValue))?`"${dataValue}"`:parseInt(dataValue);
-    staticFilterCombine[dataKey]=dataValue;
+    dataValue = isNaN(parseInt(dataValue)) ? `"${dataValue}"` : parseInt(dataValue);
+    staticFilterCombine[dataKey] = dataValue;
   });
 
 
-  
+
   dynamicFilterBB.forEach((checkbox) => {
     let dataKey = checkbox.getAttribute("data-key");
     let dataValue = checkbox.getAttribute("data-value");
     dataKey = dataKey.replace(/\s+/g, "|||");
     dynamicFilter += `&${dataKey}=${dataValue}`;
-    dataValue=isNaN(parseInt(dataValue))?`${dataValue}`:parseInt(dataValue);
-    dynamicFilterCombine[dataKey]=dataValue;
-    // dynamicFilterCombine += `"${dataKey}":"${dataValue}",`;
+    dataValue = isNaN(parseInt(dataValue)) ? `${dataValue}` : parseInt(dataValue);
+    dynamicFilterCombine[dataKey] = dataValue;
   });
-  // dynamicFilterCombine += "}";
   let data = filter_and_paginate(
     count,
-    secondPart,
+    pageSlug,
     elementId,
-    apiToken, 
+    apiToken,
     websitePropertyId,
-    forthPart,
+    caseIdentifier,
     staticFilter,
     dynamicFilter,
     dynamicFilterCombine,
@@ -748,7 +772,7 @@ function applyFilterBB(
         let heartImage;
         if (data.data && data.data.case_set) {
           let caseSet = JSON.parse(data.data.case_set);
-          if (forthPart == "") {
+          if (caseIdentifier == "") {
             var bb_case_count = (count - 1) * 10;
             let contentBox = document.querySelector(".bb-content-boxes");
 
@@ -761,14 +785,14 @@ function applyFilterBB(
                   photoSet.originalBeforeLocation;
                 let imgAlt = photoSet.seoAltText || "Procedure Image";
                 let caseId = caseItem.id;
-                if(fav_data.includes(caseId)) {
+                if (fav_data.includes(caseId)) {
                   heartImage = bb_plugin_data.heartBordered;
-                }else {
+                } else {
                   heartImage = bb_plugin_data.heartRed;
                 }
                 let caseDetails = caseItem.details || "";
                 caseItem.patientCount = ++bb_case_count;
-                let procedureUrl = `/${secondPart}/${thirdPart}/${caseId}/`;
+                let procedureUrl = `/${pageSlug}/${procedureSlug}/${caseId}/`;
 
                 let newContentF = `
                             <div class="bb-content-box">
@@ -785,7 +809,7 @@ function applyFilterBB(
                                 </div>
                                 <div class="bb-content-box-inner">
                                     <div class="bb-content-box-inner-left">
-                                        <h5>${thirdPart} : Patient ${caseItem.patientCount}</h5>
+                                        <h5>${procedureSlug} : Patient ${caseItem.patientCount}</h5>
                                         <p>${caseDetails}</p> 
                                     </div>
                                     <div class="bb-content-box-inner-right">
@@ -850,48 +874,46 @@ function bb_advance_filter() {
 }
 function filter_and_paginate(
   count,
-  secondPart,
+  pageSlug,
   elementId,
   apiToken,
   websitePropertyId,
-  forthPart,
-  staticFilter, 
+  caseIdentifier,
+  staticFilter,
   dynamicFilter,
   dynamicFilterCombine,
   staticFilterCombine
 ) {
-  const data = { 
+  const data = {
     action: "bb_case_api",
     count: count,
-    pageSlug: secondPart,
+    pageSlug: pageSlug,
     procedureId: elementId,
     apiToken: apiToken,
     websitePropertyId: websitePropertyId,
-    caseId: forthPart,
+    caseId: caseIdentifier,
     staticFilter: staticFilter,
     dynamicFilter: dynamicFilter,
-    dynamicFilterCombine: Object.keys(dynamicFilterCombine).length?JSON.stringify(dynamicFilterCombine):0,
+    dynamicFilterCombine: Object.keys(dynamicFilterCombine).length ? JSON.stringify(dynamicFilterCombine) : 0,
     ...staticFilterCombine
   };
   return data;
 }
-// Function to generate pagination data
-function generatePagination(caseIds, currentCaseId) {
-  return caseIds.map((id, index) => ({
-    id,
-    caseNumber: index + 1, // Page numbers start from 1
-    isCurrent: id === currentCaseId,
+function generatePagination(caseIds, caseItem) {
+  return caseIds.map((item, index) => ({
+    id: item.seoSuffixUrl ? item.seoSuffixUrl : `bb-case-${item.id}`,
+    caseNumber: index + 1,
+    isCurrent: !!(item.seoSuffixUrl ? item.seoSuffixUrl == caseItem.caseDetails[0]?.seoSuffixUrl : item.id == caseItem.id),
   }));
 }
 
-function renderPagination(paginationData, caseId, targetHref) {
+function renderPagination(paginationData, caseId, targetLinkSelector) {
   const paginationList = document.getElementById(`pagination-list-${caseId}`);
   if (!paginationList || !paginationData.length) return;
 
   paginationList.innerHTML = "";
-  let baseUrl = window.location.origin + targetHref;
+  let baseUrl = window.location.origin + targetLinkSelector;
 
-  // Find the current page index
   const currentPageIndex = paginationData.findIndex(
     (item) => item.id === caseId
   );
@@ -900,7 +922,6 @@ function renderPagination(paginationData, caseId, targetHref) {
   const hasPrevious = currentPageIndex > 0;
   const hasNext = currentPageIndex < totalPages - 1;
 
-  // Previous button
   if (hasPrevious) {
     const prevPageId = paginationData[currentPageIndex - 1].id;
     const prevItem = document.createElement("li");
@@ -908,16 +929,13 @@ function renderPagination(paginationData, caseId, targetHref) {
     paginationList.appendChild(prevItem);
   }
 
-  // Define the pagination window (4 pages)
   let start = Math.max(0, currentPageIndex - 2);
   let end = Math.min(totalPages, start + 4);
 
-  // Adjust window if near start or end
   if (end - start < 4) {
     start = Math.max(0, end - 4);
   }
 
-  // Page numbers (show only 4)
   for (let i = start; i < end; i++) {
     const pageItem = paginationData[i];
     const pageUrl = `${baseUrl}${pageItem.id}`;
@@ -928,7 +946,6 @@ function renderPagination(paginationData, caseId, targetHref) {
     paginationList.appendChild(listItem);
   }
 
-  // Next button
   if (hasNext) {
     const nextPageId = paginationData[currentPageIndex + 1].id;
     const nextItem = document.createElement("li");
@@ -939,75 +956,6 @@ function renderPagination(paginationData, caseId, targetHref) {
 
 let filterBtn = document.querySelector(".bb-filter-heading");
 let filterContent = document.querySelector(".bb-filter-content");
-
-document.addEventListener("DOMContentLoaded", () => {
-  if (filterBtn) {
-    filterBtn.addEventListener("click", () => {
-      filterContent.classList.toggle("active");
-    });
-  }
-
-  const clickables = document.getElementsByClassName("toggle-on-click");
-
-  if (clickables.length >= 1) {
-    const clickablesArr = Array.from(clickables);
-    clickablesArr.forEach((item) => {
-      const allClasses = item.classList;
-      const toggleClasses = [];
-      allClasses.forEach((classname) => {
-        if (classname.startsWith("toggle-")) {
-          toggleClasses.push(classname.slice(7));
-        }
-      });
-
-      item.addEventListener("click", () => {
-        toggleClasses.forEach((classname) => {
-          const divToToggle = document.getElementsByClassName(classname)[0];
-          if (divToToggle) {
-            divToToggle.classList.toggle("isActive");
-          }
-        });
-        item.classList.toggle("isActive");
-      });
-    });
-  }
-
-  const clickables2 = document.getElementsByClassName(
-    "toggle-on-click-multiple"
-  );
-  const clickables2Close = document.getElementsByClassName(
-    "toggle-on-click-multiple-close"
-  );
-
-  if (clickables2.length >= 1) {
-    const clickablesArr = Array.from(clickables2);
-
-    const clickablesArrClose = Array.from(clickables2Close);
-    clickablesArrClose.forEach((item) => {
-      const allClasses = item.classList;
-      const toggleClasses = [];
-      allClasses.forEach((classname) => {
-        if (classname.startsWith("toggle-")) {
-          toggleClasses.push(classname.slice(7));
-        }
-      });
-
-      // Add click event listener to toggle the classes
-      item.addEventListener("click", () => {
-        toggleClasses.forEach((classname) => {
-          const divToToggle = document.getElementsByClassName(classname)[0];
-
-          if (divToToggle) {
-            divToToggle.classList.remove("isActive");
-          }
-        });
-        // Toggle "isActive" class on the clicked item
-        clickablesArr.forEach((item) => item.classList.remove("isActive"));
-        item.classList.toggle("isActive");
-      });
-    });
-  }
-});
 let bb_acc = Array.from(document.querySelectorAll(".bb-accordion"));
 
 function closeAllPanels() {
@@ -1037,7 +985,7 @@ jQuery(document).ready(function ($) {
   // SLIDER
   let bb_slider;
   if ($.fn.slick) {
-     bb_slider = $("body .bb-slider").slick({
+    bb_slider = $("body .bb-slider").slick({
       // 	   $('body .bb-slider').slick({
       infinite: true,
       slidesToShow: 3,
@@ -1292,30 +1240,24 @@ jQuery(document).ready(function ($) {
 
   // Function to update pagination buttons
   function updatePaginationButtons(currentPage, totalPages) {
-    // Hide/show Previous button based on current page
     $(".load-more-btn.prev").toggle(currentPage > 1);
 
-    // Hide/show Next button based on current page
     $(".load-more-btn.next").toggle(currentPage < totalPages);
 
-    // Hide/show page numbers based on total pages
     $(".page-number").toggle(totalPages > 1);
 
-    // Show current page and its neighbors
     $(".page-number").each(function () {
       var page = parseInt($(this).data("page"));
       $(this).toggle(
         page === currentPage ||
-          page === currentPage - 1 ||
-          page === currentPage + 1
+        page === currentPage - 1 ||
+        page === currentPage + 1
       );
     });
   }
 
-  // Initial setup
   updatePaginationButtons(currentPage, totalPages);
 
-  // Click event for Previous and Next buttons
   $(document).on("click", ".load-more-btn", function (e) {
     e.preventDefault();
 
@@ -1337,14 +1279,11 @@ jQuery(document).ready(function ($) {
       success: function (response) {
         $(".form-entries-table tbody").html(response);
 
-        // Highlight the current page number
         $(".page-number.active").removeClass("active");
         $('.page-number[data-page="' + nextPage + '"]').addClass("active");
 
-        // Update data-page attribute of buttons
         $(".load-more-btn").data("page", nextPage);
 
-        // Update pagination buttons visibility
         updatePaginationButtons(nextPage, totalPages);
       },
       complete: function () {
@@ -1361,7 +1300,6 @@ jQuery(document).ready(function ($) {
     });
   });
 
-  // Click event for page numbers
   $(document).on("click", ".page-number", function (e) {
     e.preventDefault();
 
@@ -1382,14 +1320,11 @@ jQuery(document).ready(function ($) {
       success: function (response) {
         $(".form-entries-table tbody").html(response);
 
-        // Highlight the current page number
         $(".page-number.active").removeClass("active");
         $this.addClass("active");
 
-        // Update data-page attribute of buttons
         $(".load-more-btn").data("page", currentPage);
 
-        // Update pagination buttons visibility
         updatePaginationButtons(currentPage, totalPages);
       },
       complete: function () {
@@ -1402,36 +1337,35 @@ jQuery(document).ready(function ($) {
     });
   });
 
-  // ajax request for button
+
 
   $(".bb-form").submit(function (event) {
-    // Prevent default form submission
+
     event.preventDefault();
 
-    // Get form data
+
     var formData = $(this).serialize();
 
-    // AJAX request
+
     $.ajax({
       type: "POST",
-      url: bb_plugin_data.ajaxurl, // WordPress AJAX URL
-      data: formData + "&action=handle_form_submission", // Add action parameter
+      url: bb_plugin_data.ajaxurl,
+      data: formData + "&action=handle_form_submission",
       beforeSend: function () {
         $(".bb-is-required-success").text("Submitting form...");
       },
       success: function (response) {
         var successMessage = response.data;
         $(".bb-is-required-success").text(successMessage);
-        // $(".bb-consultation-form").addClass("bb-display-none");
+
       },
       error: function (xhr, status, error) {
-        // Handle error
+
         $(".bb-is-required-success").text(error);
       },
     });
   });
 
-  // Check if any form exists in the bb-main area
   if ($(".bb-main .bb-form").length) {
     var $bb_form = $(".bb-main .bb-form");
     var $bb_inputs = $(".bb-main .bb-is-required");
@@ -1456,16 +1390,13 @@ jQuery(document).ready(function ($) {
     });
   }
 
-  // Toggle functionality for both sidebar toggle buttons
   $(".bb-sidebar-toggle").on("click", function () {
-    // Toggle the sidebar visibility
-    $(".bb-sidebar").toggleClass("active"); // Example to add a class
-    $(this).toggleClass("active"); // Toggle the active class for the button
+    $(".bb-sidebar").toggleClass("active");
+    $(this).toggleClass("active");
   });
 
-  // Intercept the form submission
   $("#bragbook_setting_page").on("submit", function (e) {
-    e.preventDefault(); // Prevent the default form submission
+    e.preventDefault();
     $(".bb-save-api-settings-status").text("");
     const dataToSend = [];
     const inputs = document.querySelectorAll(
@@ -1477,16 +1408,14 @@ jQuery(document).ready(function ($) {
         value: input.value,
       });
     });
-    // Collect form data
     var formData = $(this).serialize();
 
-    // Send AJAX request
     $.ajax({
-      url: bb_plugin_data.ajaxurl, // WordPress AJAX URL
+      url: bb_plugin_data.ajaxurl,
       type: "POST",
       data: {
-        action: "bb_save_bragbook_settings", // Action to trigger on server-side
-        form_data: formData, // Pass serialized form data
+        action: "bb_save_bragbook_settings",
+        form_data: formData,
         bb_page_keys: dataToSend,
       },
       beforeSend: function () {
@@ -1517,7 +1446,6 @@ jQuery(document).ready(function ($) {
       },
     });
   });
-  // Prevent page reload when clicking the submit button directly
   $("#bragbook_seeting_form")
     .find('input[type="submit"]')
     .on("click", function (e) {
@@ -1525,29 +1453,13 @@ jQuery(document).ready(function ($) {
       $("#bragbook_seeting_form").trigger("submit");
     });
 });
-function closeModal() {
-  var modal = document.querySelector(".bb-fav-modal");
-  if (modal) {
-    modal.classList.remove("is-open"); 
-      var opacity = 1;
-      opacity -= 0.05;
-      if (opacity <= 0) {
-        modal.style.opacity = 0;
-        modal.classList.remove("is-open");
-        return true;
-      }
-      modal.style.opacity = opacity;
-      
-  }
-}
-document.addEventListener('DOMContentLoaded', function () {
-  const modal = document.querySelector(".bb-fav-modal");
-  const modalInner = document.querySelector(".bb-fav-modal-inner");
-
-  // Check if modalInner exists
-  let form, caseIdInput, bbApiTokenInput, bbWebsiteIdInput;
-
-  if (modalInner) {
+setTimeout(() => {
+  const modalToggle = Array.from(
+    document.querySelectorAll(".bb-open-fav-modal")
+  );
+  modal = document.querySelector(".bb-fav-modal");
+  modalInner = document.querySelector(".bb-fav-modal-inner");
+  if (modalInner && modalInner.querySelector) {
     form = modalInner.querySelector("form");
     caseIdInput = modalInner.querySelector("input[name='case-id']");
     bbApiTokenInput = modalInner.querySelector("input[name='api-token']");
@@ -1560,25 +1472,39 @@ document.addEventListener('DOMContentLoaded', function () {
     if (parts.length === 2) return parts.pop().split(";").shift();
   }
 
-  // Function to open the modal
   function openModal(caseId, bbApiToken, bbWebsiteId) {
-    // Set the caseId value in the form if the inputs exist
-    if (caseIdInput) caseIdInput.value = caseId;
-    if (bbApiTokenInput) bbApiTokenInput.value = bbApiToken;
-    if (bbWebsiteIdInput) bbWebsiteIdInput.value = bbWebsiteId;
+    if (caseIdInput) {
+      caseIdInput.value = caseId;
+    }
+    if (bbApiTokenInput) {
+      bbApiTokenInput.value = bbApiToken;
+    }
+    if (bbWebsiteIdInput) {
+      bbWebsiteIdInput.value = bbWebsiteId;
+    }
 
     var encodedCookieValue = getCookie("wordpress_favorite_email");
     if (encodedCookieValue !== undefined) {
       var bb_favorite_email = decodeURIComponent(encodedCookieValue);
-      var bb_favorite_name = decodeURIComponent(getCookie("wordpress_favorite_name"));
-      var bb_favorite_phone = decodeURIComponent(getCookie("wordpress_favorite_phone"));
-      var bb_favorite_case_id = decodeURIComponent(getCookie("wordpress_favorite_case_id"));
-      var bb_favorite_api_token = decodeURIComponent(getCookie("wordpress_favorite_api_token"));
-      var bb_favorite_website_id = decodeURIComponent(getCookie("wordpress_favorite_website_id"));
+      var bb_favorite_name = getCookie("wordpress_favorite_name");
+      var bb_favorite_name = decodeURIComponent(bb_favorite_name);
+
+      var bb_favorite_phone = getCookie("wordpress_favorite_phone");
+      var bb_favorite_phone = decodeURIComponent(bb_favorite_phone);
+
+      var bb_favorite_case_id = getCookie("wordpress_favorite_case_id");
+      var bb_favorite_case_id = decodeURIComponent(bb_favorite_case_id);
+      var caseId = Number(caseId);
+
+      var bb_favorite_api_token = getCookie("wordpress_favorite_api_token");
+      var bb_favorite_api_token = decodeURIComponent(bb_favorite_api_token);
+
+      var bb_favorite_website_id = getCookie("wordpress_favorite_website_id");
+      var bb_favorite_website_id = decodeURIComponent(bb_favorite_website_id);
 
       var bb_fav_list_cookie = bb_favorite_case_id.split(",").map(Number);
       var bb_exist_list = new Set(bb_fav_list_cookie);
-      var bb_exist = bb_exist_list.has(Number(caseId));
+      var bb_exist = bb_exist_list.has(caseId);
 
       if (bb_exist) {
         alert("Already favorite!");
@@ -1599,147 +1525,132 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
-  // Function to close the modal
   function closeModal() {
     fadeOut(modal);
   }
 
-  // Add event listener to the close button (X)
-  const closeButton = modalInner?.querySelector(".bb-fav-modal-close-button");
-  if (closeButton) {
-    closeButton.addEventListener("click", function (e) {
-      e.stopPropagation(); // Prevent event from bubbling
-      closeModal();
+  if (modalToggle) {
+    modalToggle.forEach((toggle) => {
+      toggle.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const caseId = toggle.getAttribute("data-case-id");
+        const bbApiToken = toggle.getAttribute("data-bb_api_token");
+        const bbWebsiteId = toggle.getAttribute("data-bb_website_id");
+        openModal(caseId, bbApiToken, bbWebsiteId);
+      });
     });
-  }
 
-  // Event listener for modal toggles (open modal)
-  document.body.addEventListener("click", function (e) {
-    const target = e.target;
-
-    if (target && target.classList.contains("bb-open-fav-modal")) {
-      e.stopPropagation();
-      const caseId = target.getAttribute("data-case-id");
-      const bbApiToken = target.getAttribute("data-bb_api_token");
-      const bbWebsiteId = target.getAttribute("data-bb_website_id");
-      openModal(caseId, bbApiToken, bbWebsiteId);
-    }
-  });
-
-  // Close the modal when clicking outside the modal content
-  document.addEventListener("click", function (event) {
-    if (modal && modal.classList.contains("is-open") && !modalInner.contains(event.target)) {
-      closeModal();
-    }
-  });
-
-  // Form submission handler
-  if (form) {
-    form.addEventListener("submit", function (e) {
-      e.preventDefault();
-
-      // Ensure the inputs are defined before using
-      const caseId = caseIdInput ? caseIdInput.value : '';
-      const bbApiToken = bbApiTokenInput ? bbApiTokenInput.value : '';
-      const bbWebsiteId = bbWebsiteIdInput ? bbWebsiteIdInput.value : '';
-
-      var formData = new FormData(form);
-      var data = {
-        email: formData.get("email"),
-        phone: formData.get("number"),
-        name: formData.get("name"),
-        caseIds: [caseId],
-        bbApiTokens: [bbApiToken],
-        bbWebsiteIds: [bbWebsiteId],
-      };
-      bb_favorites_submission(data);
-    });
-  }
-
-  // Submission logic
-  function bb_favorites_submission(data) {
-    jQuery.ajax({
-      url: bb_plugin_data.ajaxurl,
-      type: "POST",
-      data: {
-        action: "bragbook_my_favorite",
-        email: data.email,
-        phone: data.phone,
-        name: data.name,
-        caseIds: data.caseIds,
-        bbApiTokens: data.bbApiTokens,
-        bbWebsiteIds: data.bbWebsiteIds,
-      },
-      success: function (response) {
-        if (response.success) {
-          var imgElement = jQuery(`img[data-case-id="${data.caseIds[0]}"]`);
-          if (imgElement.length) {
-            imgElement.each(function () {
-              jQuery(this).attr("src", bb_plugin_data.heartBordered);
-            });
-          }
-          var $span = jQuery("a.bb-sidebar_favorites span");
-          var text = $span.text();
-          var match = text.match(/\((\d+)\)/);
-          if (match) {
-            var currentValue = parseInt(match[1], 10);
-            var newValue = currentValue + 1;
-            $span.text(`(${newValue})`);
-          }
-          closeModal();
-        } else {
-          alert("Failed to save favorite.");
-          closeModal();
-        }
-      },
-      error: function (error) {
-        console.error("Error:", error);
+    document.addEventListener("click", (event) => {
+      if (
+        modal &&
+        modal.classList.contains("is-open") &&
+        !modalInner.contains(event.target)
+      ) {
         closeModal();
-      },
+      }
     });
-  }
 
-  // Fade functions
-  function fadeOut(element) {
-    var opacity = 1;
-    function decrease() {
-      opacity -= 0.05;
-      if (opacity <= 0) {
-        element.style.opacity = 0;
-        element.classList.remove("is-open");
-        return true;
-      }
-      element.style.opacity = opacity;
-      requestAnimationFrame(decrease);
+    function bb_favorites_submission(data) {
+      var caseId = data.caseIds;
+      jQuery.ajax({
+        url: bb_plugin_data.ajaxurl,
+        type: "POST",
+        data: {
+          action: "bragbook_my_favorite",
+          email: data.email,
+          phone: data.phone,
+          name: data.name,
+          caseIds: data.caseIds,
+          bbApiTokens: data.bbApiTokens,
+          bbWebsiteIds: data.bbWebsiteIds,
+        },
+        success: function (response) {
+          if (response.success) {
+            var imgElement = jQuery(`img[data-case-id="${caseId}"]`);
+            if (imgElement.length) {
+              imgElement.each(function () {
+                jQuery(this).attr("src", bb_plugin_data.heartBordered);
+              });
+            }
+            var $span = jQuery("a.bb-sidebar_favorites span");
+            var text = $span.text();
+            var match = text.match(/\((\d+)\)/);
+            if (match) {
+              var currentValue = parseInt(match[1], 10);
+
+              var newValue = currentValue + 1;
+
+              $span.text("(" + newValue + ")");
+            }
+            closeModal();
+          } else {
+            alert("Failed to save favorite.");
+            closeModal();
+          }
+        },
+        error: function (error) {
+          console.error("Error:", error);
+          closeModal();
+        },
+      });
     }
-    decrease();
-  }
+    if (modalInner && modalInner.querySelector) {
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
 
-  function fadeIn(element) {
-    var opacity = 0;
-    element.classList.add("is-open");
-    function increase() {
-      opacity += 0.05;
-      if (opacity >= 1) {
-        element.style.opacity = 1;
-        return true;
-      }
-      element.style.opacity = opacity;
-      requestAnimationFrame(increase);
+        const caseId = caseIdInput.value;
+        const bbApiToken = bbApiTokenInput.value;
+        const bbWebsiteId = bbWebsiteIdInput.value;
+        var formData = new FormData(form);
+        var data = {
+          email: formData.get("email"),
+          phone: formData.get("number"),
+          name: formData.get("name"),
+          caseIds: [caseId],
+          bbApiTokens: [bbApiToken],
+          bbWebsiteIds: [bbWebsiteId],
+        };
+        bb_favorites_submission(data);
+      });
     }
-    increase();
+
+    function fadeOut(element) {
+      let opacity = 1;
+      function decrease() {
+        opacity -= 0.05;
+        if (opacity <= 0) {
+          element.style.opacity = 0;
+          element.classList.remove("is-open");
+          return true;
+        }
+        element.style.opacity = opacity;
+        requestAnimationFrame(decrease);
+      }
+      decrease();
+    }
+
+    function fadeIn(element) {
+      var opacity = 0;
+      element.classList.add("is-open");
+
+      function increase() {
+        opacity += 0.05;
+        if (opacity >= 1) {
+          element.style.opacity = 1;
+          return true;
+        }
+        element.style.opacity = opacity;
+        requestAnimationFrame(increase);
+      }
+      increase();
+    }
   }
-});
-
-
+}, 2000);
 
 Array.from(document.querySelectorAll(".bb-filter-select")).forEach((filter) => {
-  if (filter) {
-    filter
-      .querySelector(".bb-filter-heading")
-      ?.addEventListener("click", () => filter?.classList.toggle("active"));
-  }
+  if (filter) filter.querySelector(".bb-filter-heading")?.addEventListener("click", () => filter?.classList.toggle("active"));
 });
+
 Array.from(document.querySelectorAll(".bb-filter-toggle")).forEach((filter) => {
   if (filter) {
     filter.addEventListener("click", () =>
@@ -1748,12 +1659,9 @@ Array.from(document.querySelectorAll(".bb-filter-toggle")).forEach((filter) => {
   }
 });
 
-//consultation form validation
 if (document.querySelector(".bb-main .bb-form")) {
   let bb_form = document.querySelector(".bb-main .bb-form");
-  let bb_inputs = Array.from(
-    document.querySelectorAll(".bb-main .bb-is-required")
-  );
+  let bb_inputs = Array.from(document.querySelectorAll(".bb-main .bb-is-required"));
   bb_form.addEventListener("submit", (e) => {
     let bb_is_required = true;
     bb_inputs.forEach((input) => {
@@ -1764,57 +1672,51 @@ if (document.querySelector(".bb-main .bb-form")) {
         input.nextElementSibling.style.display = "none";
       }
     });
-    if (!bb_is_required) {
-      e.preventDefault();
-    } else {
-      document.querySelector(".bb-is-required-success").style.display = "block";
-    }
+
+    if (!bb_is_required) e.preventDefault()
+    else document.querySelector(".bb-is-required-success").style.display = "block";
   });
 }
-setTimeout(function () {
-  modalInitBB();
-}, 8000);
-function modalInitBB() {
+
+setTimeout(() => {
   const bbrag_modal = document.getElementById("bbrag_modal");
   const bbrag_modalImage = document.getElementById("bbrag_modalImage");
   const bbrag_closeModal = document.querySelector(".bbrag_close");
   const bbrag_prevArrow = document.querySelector(".bbrag_prev");
   const bbrag_nextArrow = document.querySelector(".bbrag_next");
-  const bbrag_images = document.querySelectorAll(".bbrag_gallery_image");
+
   let bbrag_currentIndex = 0;
+  const bbrag_images = document.querySelectorAll(".bbrag_gallery_image");
+  function bbrag_openModal(index) {
+    bbrag_currentIndex = index;
+    bbrag_modal.style.display = "block";
+    bbrag_modalImage.src = bbrag_images[bbrag_currentIndex].src;
+  }
+
+  function bbrag_closeModalHandler() {
+    bbrag_modal.style.display = "none";
+  }
+
+  function bbrag_showNextImage() {
+    bbrag_currentIndex = (bbrag_currentIndex + 1) % bbrag_images.length;
+    bbrag_modalImage.src = bbrag_images[bbrag_currentIndex].src;
+  }
+
+  function bbrag_showPrevImage() {
+    bbrag_currentIndex =
+      (bbrag_currentIndex - 1 + bbrag_images.length) % bbrag_images.length;
+    bbrag_modalImage.src = bbrag_images[bbrag_currentIndex].src;
+  }
 
   bbrag_images.forEach((img, index) => {
-    img.addEventListener("click", () => {
-      bbrag_currentIndex = index;
-      bbrag_modal.style.display = "block";
-      bbrag_modalImage.src = bbrag_images[bbrag_currentIndex].src;
-    });
+    img.addEventListener("click", () => bbrag_openModal(index));
   });
 
-  if (bbrag_closeModal) {
-    bbrag_closeModal.addEventListener("click", () => {
-      bbrag_modal.style.display = "none";
-    });
-  }
+  if (bbrag_closeModal) bbrag_closeModal.addEventListener("click", bbrag_closeModalHandler);
 
-  if (bbrag_prevArrow) {
-    bbrag_prevArrow.addEventListener("click", () => {
-      bbrag_currentIndex =
-        (bbrag_currentIndex - 1 + bbrag_images.length) % bbrag_images.length;
-      bbrag_modalImage.src = bbrag_images[bbrag_currentIndex].src;
-    });
-  }
+  if (bbrag_prevArrow) bbrag_prevArrow.addEventListener("click", bbrag_showPrevImage);
 
-  if (bbrag_nextArrow) {
-    bbrag_nextArrow.addEventListener("click", () => {
-      bbrag_currentIndex = (bbrag_currentIndex + 1) % bbrag_images.length;
-      bbrag_modalImage.src = bbrag_images[bbrag_currentIndex].src;
-    });
-  }
+  if (bbrag_nextArrow) bbrag_nextArrow.addEventListener("click", bbrag_showNextImage);
 
-  window.addEventListener("click", (event) => {
-    if (event.target === bbrag_modal) {
-      bbrag_closeModalHandler();
-    }
-  });
-}
+  window.addEventListener("click", (event) => { if (event.target === bbrag_modal) bbrag_closeModalHandler() });
+}, 2000);
