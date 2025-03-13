@@ -88,6 +88,8 @@ document.addEventListener("click", (event) => {
   }
 });
 
+let linkText;
+
 function fetchCaseData(loadMoreCount) {
   try {
     let count = loadMoreCount;
@@ -110,7 +112,6 @@ function fetchCaseData(loadMoreCount) {
     const elementId = targetLinkElement?.id || "";
     const apiToken = targetLinkElement?.getAttribute("data-api-token");
     const websitePropertyId = targetLinkElement?.getAttribute("data-website-property-id");
-    let linkText;
     if (targetLinkElement) {
       linkText = Array.from(targetLinkElement.childNodes)
         .filter((node) => node.nodeType === Node.TEXT_NODE)
@@ -498,6 +499,9 @@ function fetchCaseData(loadMoreCount) {
                   let title_suffix = document.title.split(' - ')[1];
 
                   document.title = caseItem.caseDetails[0]?.seoPageTitle ? caseItem.caseDetails[0]?.seoPageTitle + (title_suffix ? (" - " + title_suffix) : "") : document.title
+                  linkText += "- Patient "
+                  if (seoSuffixUrl) linkText += caseItem.caseIds?.findIndex(item => item.seoSuffixUrl == seoSuffixUrl) + 1;
+                  else if (caseIdentifier) linkText += caseItem.caseIds?.findIndex(item => item.id == caseIdentifier) + 1;
                   let bb_right_data = `
                         <div class="bb-patient-row">
                             <h2>${caseItem.caseDetails[0]?.seoHeadline || linkText}</h2>
@@ -935,7 +939,6 @@ function renderPagination(paginationData, caseItem, targetLinkSelector) {
     const pageItem = paginationData[i];
     const pageUrl = `${baseUrl}${pageItem.id}`;
     const listItem = document.createElement("li");
-
     listItem.className = pageItem.id === caseSeoId ? "bb-single-case active" : "bb-single-case";
     listItem.innerHTML = `<a href="${pageUrl}">${pageItem.caseNumber}</a>`;
     paginationList.appendChild(listItem);
