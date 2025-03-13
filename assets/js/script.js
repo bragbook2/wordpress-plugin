@@ -102,7 +102,7 @@ function fetchCaseData(loadMoreCount) {
     const pageSlug = pathSegments[0] || "";
     const procedureSlug = pathSegments[1] || "";
     const caseIdentifier = pathSegments[2]?.includes("bb-case") ? pathSegments[2].split("-").pop() : "";
-    let seoSuffixUrl = caseIdentifier ? "" : pathSegments[2];
+    let seoSuffixUrl = caseIdentifier ? "" : pathSegments[2] || "";
 
     const targetLinkSelector = `/${pageSlug}/${procedureSlug}/`;
     const targetLinkElement = document.querySelector(`a[href="${targetLinkSelector}"]`);
@@ -176,8 +176,6 @@ function fetchCaseData(loadMoreCount) {
       currentPage: JSON.stringify(currentPage)
     };
 
-    console.log((requestData));
-
     fetch(bb_plugin_data.ajaxurl, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded", },
@@ -186,7 +184,6 @@ function fetchCaseData(loadMoreCount) {
       .then((response) => response.json())
       .then((data) => {
         console.log("Ressponse => ", data);
-
         try {
           let heartImage;
           let sidebarApi;
@@ -207,21 +204,20 @@ function fetchCaseData(loadMoreCount) {
           }
           if (data.data && data.data.case_set) {
             let caseSet = JSON.parse(data.data.case_set);
-            if (caseIdentifier == "") {
-              console.log("hasLoadMore::", caseSet.hasLoadMore);
-              if(!caseSet.hasLoadMore) document.getElementById("load-container").style.display="none"
+            if (caseIdentifier == "" && !seoSuffixUrl) {
+              if (isListsPage && !isFavoriteListPage) {
+                document.querySelector(".bb_ajax-load-more-btn").innerHTML = "Load More";
+                if (!(!!caseSet.hasLoadMore)) document.getElementById("load-container").style.display = "none"
+              }
+
               var bb_case_count = (count - 1) * 10;
               let contentBox = document.querySelector(".bb-content-boxes");
               document.querySelector("#bb_ajax-load-more-btn")?.remove();
-              if (procedureSlug !== "favorites") {
-                document.querySelector(".bb_ajax-load-more-btn").innerHTML =
-                  "Load More";
-              }
+
               const applyBBButton = document.querySelector(".apply_bb_filter");
               if (applyBBButton) applyBBButton.innerHTML = `Apply`;
               let images = [];
               if (caseSet.data) {
-
                 caseSet.data.forEach((caseItem, index) => {
                   if (caseItem.photoSets && caseItem.photoSets.length > 0) {
                     let photoSet = caseItem.photoSets[0];
@@ -233,9 +229,6 @@ function fetchCaseData(loadMoreCount) {
                     let caseItemId = caseItem.id;
                     let caseDetails = caseItem.details || "";
                     caseItem.patientCount = ++bb_case_count;
-
-                    console.log("caseItem::--", caseItem);
-
                     let caseId = "";
                     seoSuffixUrl = caseItem.caseDetails[0].seoSuffixUrl;
                     if (seoSuffixUrl) {
@@ -368,8 +361,6 @@ function fetchCaseData(loadMoreCount) {
                       let caseDetails = caseItem.cases[0].details || "";
                       caseItem.patientCount = ++bb_case_count;
 
-                      console.log("caseItem:", caseItem);
-
                       let caseId = "";
                       let seoSuffixUrl = caseItem.cases[0].caseDetails[0]?.seoSuffixUrl;
                       if (seoSuffixUrl) {
@@ -377,6 +368,7 @@ function fetchCaseData(loadMoreCount) {
                       } else {
                         caseId = "bb-case-" + caseItemId;
                       }
+
                       let procedureUrl = `/${pageSlug}/${slugName}/${caseId}/`;
 
                       heartImage = bb_plugin_data.heartBordered;
@@ -429,10 +421,9 @@ function fetchCaseData(loadMoreCount) {
               if (patienLeftBox) {
                 caseSet.data.forEach((caseItem) => {
                   let caseId = caseItem.id;
-                  if (caseId == caseIdentifier) {
+                  if (caseId == caseIdentifier || seoSuffixUrl == caseItem.caseDetails[0]?.seoSuffixUrl) {
                     if (caseItem.photoSets && caseItem.photoSets.length > 0) {
                       caseItem.photoSets.forEach((value, itemIndex) => {
-                        console.log('itemIndex: ', itemIndex);
                         let bb_new_image_value =
                           value.highResPostProcessedImageLocation ??
                           value.postProcessedImageLocation ??
@@ -502,20 +493,14 @@ function fetchCaseData(loadMoreCount) {
                   } else {
                     heartImage = bb_plugin_data.heartRed;
                   }
-                  console.log("Case Details::::: ", caseItem);
+                  console.log("Case Details =>", caseItem);
 
                   let title_suffix = document.title.split(' - ')[1];
 
-                  document.title = caseItem.caseDetails[0]?.seoPageTitle + " - " + title_suffix || document.title;
-
+                  document.title = caseItem.caseDetails[0]?.seoPageTitle ? caseItem.caseDetails[0]?.seoPageTitle + (title_suffix ? (" - " + title_suffix) : "") : document.title
                   let bb_right_data = `
                         <div class="bb-patient-row">
                             <h2>${caseItem.caseDetails[0]?.seoHeadline || linkText}</h2>
-                            <img class="bb-heart-icon bb-open-fav-modal" 
-                                data-case-id="${caseIdentifier}" 
-                                data-bb_api_token="${apiToken}" 
-                                data-bb_website_id="${websitePropertyId}" 
-                                src="${heartImage}" alt="heart">
                         </div>
                         <ul>
                             ${height}
@@ -532,26 +517,25 @@ function fetchCaseData(loadMoreCount) {
                           <ul id="pagination-list-${caseItem.id}" class="bb-pagination"></ul>
                         </div>
                     `;
-
                   patientRightBox.innerHTML += bb_right_data;
+
                   let paginationData = generatePagination(
                     caseItem.caseIds,
                     caseItem
                   );
-                  renderPagination(paginationData, caseItem.id, targetLinkSelector);
+                  renderPagination(paginationData, caseItem, targetLinkSelector);
                 });
               }
-              // Create schema object once after processing all cases
-              let bb_case_url_title = 'Cosmetic Procedure'; // Adjust based on your actual dynamic data
-              let bb_current_case_page_count = ''; //caseSet.data.length; // Adjust according to your data
-              let default_and_seo_page_title = "Procedure Title"; // Set dynamically
-              let procedure_description = "Detailed description of the procedure."; // Set dynamically
-              let bb_gallery_page_title = "Gallery Page Title"; // Set dynamically
-              let case_page_title = "Case Page Title"; // Set dynamically
-              let bbrag_case_url = "/case-gallery"; // Set dynamically
-              let bb_pro_cat_page = "/category-page"; // Set dynamically
-              let targetLinkSelectorc = "/target-url/"; // Set dynamically
-              let caseIdentifierc = "case-id"; // Adjust accordingly
+              let bb_case_url_title = 'Cosmetic Procedure';
+              let bb_current_case_page_count = '';
+              let default_and_seo_page_title = "Procedure Title";
+              let procedure_description = "Detailed description of the procedure.";
+              let bb_gallery_page_title = "Gallery Page Title";
+              let case_page_title = "Case Page Title";
+              let bbrag_case_url = "/case-gallery";
+              let bb_pro_cat_page = "/category-page";
+              let targetLinkSelectorc = "/target-url/";
+              let caseIdentifierc = "case-id";
 
               let schema = {
                 "@context": "https://schema.org",
@@ -676,6 +660,9 @@ function fetchCaseData(loadMoreCount) {
               bb_advance_filter();
             }
           }
+
+          initFavorite();
+
         } catch (err) {
           console.error("Error parsing case_set JSON:", err);
         }
@@ -775,6 +762,8 @@ function applyFilterBB(
           if (caseIdentifier == "") {
             var bb_case_count = (count - 1) * 10;
             let contentBox = document.querySelector(".bb-content-boxes");
+            document.querySelector(".bb_ajax-load-more-btn").innerHTML = "Load More";
+            if (!(!!caseSet.hasLoadMore)) document.getElementById("load-container").style.display = "none"
 
             caseSet.data.forEach((caseItem) => {
               if (caseItem.photoSets && caseItem.photoSets.length > 0) {
@@ -784,7 +773,14 @@ function applyFilterBB(
                   photoSet.postProcessedImageLocation ||
                   photoSet.originalBeforeLocation;
                 let imgAlt = photoSet.seoAltText || "Procedure Image";
-                let caseId = caseItem.id;
+                let caseId = "";
+                seoSuffixUrl = caseItem.caseDetails[0].seoSuffixUrl;
+                if (seoSuffixUrl) {
+                  caseId = seoSuffixUrl;
+                } else {
+                  caseId = "bb-case-" + caseItemId;
+                }
+
                 if (fav_data.includes(caseId)) {
                   heartImage = bb_plugin_data.heartBordered;
                 } else {
@@ -907,15 +903,16 @@ function generatePagination(caseIds, caseItem) {
   }));
 }
 
-function renderPagination(paginationData, caseId, targetLinkSelector) {
-  const paginationList = document.getElementById(`pagination-list-${caseId}`);
+function renderPagination(paginationData, caseItem, targetLinkSelector) {
+  let caseSeoId = caseItem.caseDetails[0]?.seoSuffixUrl ? caseItem.caseDetails[0]?.seoSuffixUrl : caseItem.id;
+  const paginationList = document.getElementById(`pagination-list-${caseItem.id}`);
   if (!paginationList || !paginationData.length) return;
 
   paginationList.innerHTML = "";
   let baseUrl = window.location.origin + targetLinkSelector;
 
   const currentPageIndex = paginationData.findIndex(
-    (item) => item.id === caseId
+    (item) => item.id === caseSeoId
   );
   const totalPages = paginationData.length;
 
@@ -932,16 +929,14 @@ function renderPagination(paginationData, caseId, targetLinkSelector) {
   let start = Math.max(0, currentPageIndex - 2);
   let end = Math.min(totalPages, start + 4);
 
-  if (end - start < 4) {
-    start = Math.max(0, end - 4);
-  }
+  if (end - start < 4) start = Math.max(0, end - 4);
 
   for (let i = start; i < end; i++) {
     const pageItem = paginationData[i];
     const pageUrl = `${baseUrl}${pageItem.id}`;
     const listItem = document.createElement("li");
-    listItem.className =
-      pageItem.id === caseId ? "bb-single-case active" : "bb-single-case";
+
+    listItem.className = pageItem.id === caseSeoId ? "bb-single-case active" : "bb-single-case";
     listItem.innerHTML = `<a href="${pageUrl}">${pageItem.caseNumber}</a>`;
     paginationList.appendChild(listItem);
   }
@@ -982,11 +977,9 @@ for (let i = 0; i < bb_acc.length; i++) {
 }
 
 jQuery(document).ready(function ($) {
-  // SLIDER
   let bb_slider;
   if ($.fn.slick) {
     bb_slider = $("body .bb-slider").slick({
-      // 	   $('body .bb-slider').slick({
       infinite: true,
       slidesToShow: 3,
       slidesToScroll: 1,
@@ -1082,8 +1075,6 @@ jQuery(document).ready(function ($) {
     var button = $(this);
     var offset = button.data("offset");
     var items_per_page = 10;
-
-    // Make the AJAX request
     $.ajax({
       url: bb_plugin_data.ajaxurl,
       method: "POST",
@@ -1122,7 +1113,6 @@ jQuery(document).ready(function ($) {
     $(".age-validation-modal").hide();
   });
 
-  // category active
   function getCatTitleFromUrl() {
     var catTitle = null;
     var path = window.location.pathname;
@@ -1156,7 +1146,7 @@ jQuery(document).ready(function ($) {
           .prev(".bb-accordion");
         accordionButton.addClass("active");
         accordionButton.next(".bb-panel").slideDown();
-        var panel = accordionButton.next(".bb-panel")[0]; // Get the DOM element
+        var panel = accordionButton.next(".bb-panel")[0];
         if (panel) {
           panel.style.maxHeight = panel.scrollHeight + "px";
         }
@@ -1166,12 +1156,9 @@ jQuery(document).ready(function ($) {
 
   var _catTitle = getCatTitleFromUrl();
   if (_catTitle) {
-    // activateAccordionAndPanel(_catTitle);
   }
 
-  // Function to check and highlight matching procedure_id
   function highlightMatchingIds() {
-    // Loop through each anchor tag
     var bb_c = 0;
     $(".bb-panel ul li a").each(function () {
       // Extract text excluding <span> content
@@ -1183,7 +1170,6 @@ jQuery(document).ready(function ($) {
         .text()
         .trim();
 
-      // Remove trailing hyphens
       bragbook_procedure_text = bragbook_procedure_text.replace(/-/g, " ");
       bragbook_procedure_text = bragbook_procedure_text.toLowerCase();
       var currentUrl = window.location.href;
@@ -1195,16 +1181,14 @@ jQuery(document).ready(function ($) {
       }
 
       if (bragbook_procedure_text === procedureNameFromUrl && bb_c <= 1) {
-        // Add style to highlight the id
         $(this).css("color", "#000");
         $(this).css("opacity", "1");
-        // Open the corresponding accordion panel
         var accordionButton = $(this)
           .closest(".bb-panel")
           .prev(".bb-accordion");
         accordionButton.addClass("active");
         accordionButton.next(".bb-panel").slideDown();
-        var panel = accordionButton.next(".bb-panel")[0]; // Get the DOM element
+        var panel = accordionButton.next(".bb-panel")[0];
         if (panel) {
           panel.style.maxHeight = panel.scrollHeight + "px";
         }
@@ -1212,33 +1196,23 @@ jQuery(document).ready(function ($) {
     });
   }
 
-  // // Helper function to extract procedure_id from URL
   function getProcedureNameFromUrl(url) {
-    // Parse the URL to get the pathname
     var pathname = new URL(url).pathname;
     var pathParts = pathname.split("/").filter(Boolean);
 
-    // Check if the second-to-last segment is the one we're interested in
     var procedureSegment =
       pathParts.length > 2
         ? pathParts[pathParts.length - 2]
         : pathParts[pathParts.length - 1];
-
-    // Replace dashes with spaces
     var cleanedText = procedureSegment
       ? procedureSegment.replace(/-/g, " ")
       : "";
 
     return cleanedText;
   }
-  // Call the function to highlight matching ids when the page loads
-  //highlightMatchingIds();
-
   var $pagination = $(".pagination");
   var currentPage = $pagination.data("current-page");
   var totalPages = $pagination.data("total-pages");
-
-  // Function to update pagination buttons
   function updatePaginationButtons(currentPage, totalPages) {
     $(".load-more-btn.prev").toggle(currentPage > 1);
 
@@ -1453,10 +1427,9 @@ jQuery(document).ready(function ($) {
       $("#bragbook_seeting_form").trigger("submit");
     });
 });
-setTimeout(() => {
-  const modalToggle = Array.from(
-    document.querySelectorAll(".bb-open-fav-modal")
-  );
+
+function initFavorite() {
+  const modalToggle = Array.from(document.querySelectorAll(".bb-open-fav-modal"));
   modal = document.querySelector(".bb-fav-modal");
   modalInner = document.querySelector(".bb-fav-modal-inner");
   if (modalInner && modalInner.querySelector) {
@@ -1645,7 +1618,7 @@ setTimeout(() => {
       increase();
     }
   }
-}, 2000);
+}
 
 Array.from(document.querySelectorAll(".bb-filter-select")).forEach((filter) => {
   if (filter) filter.querySelector(".bb-filter-heading")?.addEventListener("click", () => filter?.classList.toggle("active"));

@@ -96,9 +96,10 @@ class Ajax_Handler
 
             // }
            //var_dump($caseId);
-            if ($caseId !== "") {
+            if ($caseId !== "" || $seoSuffixUrl!== "") {
                 if ($page_slug == $combine_gallery_page_slug) {
-                    $url = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/combine/cases/{$caseId}";
+                    $caseId=$caseId?$caseId:'123';
+                    $url = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/combine/cases/$caseId?seoSuffixUrl=$seoSuffixUrl";
                     $response = wp_remote_post($url, array(
                         'method' => 'POST',
                         'body' => json_encode(array(

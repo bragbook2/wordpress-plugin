@@ -285,7 +285,15 @@ class Shortcode {
                                             ? $procedure_data->photoSets[0]->postProcessedImageLocation 
                                             : $procedure_data->photoSets[0]->originalBeforeLocation);
                                     ?>
-                                    <a href="<?php echo "/" . $bb_slug_link . "/" . $spro_title_bb . "/" . $procedure_data->id; ?>">
+                                    <?php 
+                                        $caseSeoSuffixUrl = "";
+                                        if($procedure_data->caseDetails[0] && $procedure_data->caseDetails[0]->seoSuffixUrl) {
+                                            $caseSeoSuffixUrl = $procedure_data->caseDetails[0]->seoSuffixUrl;
+                                        } else {
+                                            $caseSeoSuffixUrl = $procedure_data->id;
+                                        }
+                                    ?>
+                                    <a href="<?php echo "/" . $bb_slug_link . "/" . $spro_title_bb . "/" . $caseSeoSuffixUrl; ?>">
                                         <img class="bb-slide-thumnail" src="<?php echo $bb_new_image_procedure_data; ?>" 
                                         alt="<?php echo isset($procedure_data->photoSets[0]->seoAltText) ? $procedure_data->photoSets[0]->seoAltText : ''; ?>">
                                     </a>
