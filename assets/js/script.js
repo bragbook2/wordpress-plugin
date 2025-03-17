@@ -496,10 +496,7 @@ function fetchCaseData(loadMoreCount) {
                   }
                   console.log("Case Details =>", caseItem);
 
-                  let title_suffix = document.title.split(' - ')[1];
-
-                  document.title = caseItem.caseDetails[0]?.seoPageTitle ? caseItem.caseDetails[0]?.seoPageTitle + (title_suffix ? (" - " + title_suffix) : "") : document.title
-                  linkText += "- Patient "
+                 
                   if (seoSuffixUrl) linkText += caseItem.caseIds?.findIndex(item => item.seoSuffixUrl == seoSuffixUrl) + 1;
                   else if (caseIdentifier) linkText += caseItem.caseIds?.findIndex(item => item.id == caseIdentifier) + 1;
                   let bb_right_data = `
@@ -527,7 +524,7 @@ function fetchCaseData(loadMoreCount) {
                     caseItem.caseIds,
                     caseItem
                   );
-                  renderPagination(paginationData, caseItem, targetLinkSelector);
+                  renderPagination(paginationData, caseItem, targetLinkSelector, bb_right_data);
                 });
               }
               let bb_case_url_title = 'Cosmetic Procedure';
@@ -907,7 +904,7 @@ function generatePagination(caseIds, caseItem) {
   }));
 }
 
-function renderPagination(paginationData, caseItem, targetLinkSelector) {
+function renderPagination(paginationData, caseItem, targetLinkSelector, bb_right_data) {
   let caseSeoId = caseItem.caseDetails[0]?.seoSuffixUrl ? caseItem.caseDetails[0]?.seoSuffixUrl : caseItem.id;
   const paginationList = document.getElementById(`pagination-list-${caseItem.id}`);
   if (!paginationList || !paginationData.length) return;

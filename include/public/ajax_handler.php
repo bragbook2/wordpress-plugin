@@ -4,6 +4,7 @@ namespace mvpbrag;
 class Ajax_Handler
 {
 
+    public $seoData;
     public function __construct()
     {
 
@@ -25,6 +26,7 @@ class Ajax_Handler
 
         add_action('save_post', [$this, 'bb_update_slugs']);
         add_action('wp', [$this, 'bb_seo']);
+        $this->seoData = $this->get_custom_bragbook_title_and_description();
 
         add_action('wp_trash_post', [$this, 'bb_delete_default_page']);
         add_action('wp_footer', [$this, 'bb_footer_gallery_modal']);
@@ -123,6 +125,7 @@ class Ajax_Handler
 
                     if (get_transient($url) !== false) {
                         $data = get_transient($url);
+                        
                     } else {
                         $data = self::case_and_filter_api($url);
                     }
@@ -1945,6 +1948,7 @@ class Ajax_Handler
 
     public function get_custom_bragbook_title_and_description()
     {
+        $site_title = get_bloginfo('name');
         $brag_page_data = get_option('bragbook_landing_page_text');
         $explode_string = explode('[', $brag_page_data);
         if (isset($explode_string[1])) {
@@ -1969,91 +1973,113 @@ class Ajax_Handler
         $api_tokens = get_option('bragbook_api_token', []);
         $websiteproperty_ids = get_option('bragbook_websiteproperty_id', []);
         $gallery_slugs = get_option('bb_gallery_page_slug', []);
-
-        $all_results = [];
-        $combine_results = [];
-
-        foreach ($api_tokens as $index => $api_token) {
-            $websiteproperty_id = $websiteproperty_ids[$index] ?? '';
-            $page_slug_bb = $gallery_slugs[$index] ?? '';
-            if (($page_slug_bb == $parts[0]) || ($combine_gallery_page_slug == $parts[0])) {
-                if (empty($api_token) || empty($websiteproperty_id)) {
-                    continue;
-                }
-                $url = "https://bragbookv2.com/api/plugin/cases?apiToken={$api_token}&websitepropertyId={$websiteproperty_id}";
-                $data = get_transient($url);
-                $bb_api_data = json_decode($data, true);
-            }
-        }
-
-        if (isset($parts[1]) && !empty($parts[1])) {
-            $bbrag_procedure_title = $parts[1];
-            $bb_pro_title_all_seo = str_replace("-", " ", $bbrag_procedure_title);
-            $bbrag_procedure_id = get_option($bbrag_procedure_title . '_id');
-            if (!empty($bb_api_data) && is_array($bb_api_data)) {
-                $bb_count = 0;
-                $bb_seo_page_title = "";
-                $bb_seo_page_description = "";
-                foreach ($bb_api_data as $bb_data) {
-                    if (in_array($bbrag_procedure_id, $bb_data['procedureIds'])) {
-                        if (isset($bb_data['caseDetails'][0]) && !empty($bb_data['caseDetails'][0]['seoPageTitle']) && $bb_seo_page_title == "") {
-                            $bb_seo_title = $bb_seo_page_title = isset($bb_data['caseDetails'][0]) ? $bb_data['caseDetails'][0]['seoPageTitle'] : "";
-                        }
-                        if (isset($bb_data['caseDetails'][0]) && !empty($bb_data['caseDetails'][0]['seoPageDescription']) && $bb_seo_page_description == "") {
-                            $bb_seo_description = $bb_seo_page_description = isset($bb_data['caseDetails'][0]) ? $bb_data['caseDetails'][0]['seoPageDescription'] : "";
-                        }
-                        if (!empty($bb_seo_page_title) && !empty($bb_seo_page_description)) {
-                            break;
-                        }
-                    }
-
-                }
-
-            }
-
-        }
-
+       
         if (isset($parts[2]) && !empty($parts[2])) {
-            $bbrag_case_id = $parts[2];
-            $bbrag_case_id = get_option($bbrag_case_id);
-            $bbrag_procedure_id = get_option($bbrag_procedure_title . '_id');
+            foreach ($api_tokens as $index => $api_token) {
+                $websiteproperty_id = $websiteproperty_ids[$index] ?? '';
+
+                $page_slug_bb = $gallery_slugs[$index] ?? '';
+                if (($page_slug_bb == $parts[0]) || ($combine_gallery_page_slug == $parts[0])) {
+                    if (empty($api_token) || empty($websiteproperty_id)) {
+                        continue;
+                    }
+                    $bb_seo_page_title = "";
+                    $bb_seo_page_description = "";
+                    $caseId = null;
+                    $seoSuffixUrl = null;
+
+                    if (strpos($parts[2], 'bb-case') !== false) {
+                        // Use preg_match to extract the number after 'bb-case-'
+                        preg_match('/\d+/', $parts[2], $matches);
+                        $caseId = isset($matches[0]) ? (int)$matches[0] : 'Default string';
+                    } else {
+                        $seoSuffixUrl = $parts[2];
+                    }
+
+                    $procedureId = $this->getProcedureIDFromSidebar($api_token, $parts[1]);
+
+                    $url = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/cases?websitepropertyId={$websiteproperty_id}&apiToken={$api_token}&caseId={$caseId}&seoSuffixUrl={$seoSuffixUrl}&procedureId={$procedureId}";
+                    $data = get_transient($url);
+
+                    $bb_api_data = json_decode($data, true);
+                }
+
+            }
+
+            if (strpos($parts[2], 'bb-case') !== false) {
+                // Use preg_match to extract the number after 'bb-case-'
+                preg_match('/\d+/', $parts[2], $matches);
+                $bbrag_case_id = isset($matches[0]) ? (int)$matches[0] : 'Default string';
+            } else {
+                $bbrag_case_id = $parts[2];
+            }
+            
+
+            $bb_response = $bb_api_data['data'][0];
+            $bb_seo_case_title = "";
+            $bb_seo_case_description = "";
+            
             if (!empty($bb_api_data) && is_array($bb_api_data)) {
-                $bb_count = 0;
-                $bb_seo_case_title = "";
-                $bb_seo_case_description = "";
-                foreach ($bb_api_data as $bb_data) {
-                    if ($bb_data['id'] == $bbrag_case_id) {
-                        if (isset($bb_data['caseDetails'][0]) && !empty($bb_data['caseDetails'][0]['seoPageTitle']) && $bb_seo_case_title == "") {
-                            $bb_seo_title = $bb_seo_case_title = isset($bb_data['caseDetails'][0]) ? $bb_data['caseDetails'][0]['seoPageTitle'] : "";
-                        }
-                        if (isset($bb_data['caseDetails'][0]) && !empty($bb_data['caseDetails'][0]['seoPageDescription']) && $bb_seo_case_description == "") {
-                            $bb_seo_description = $bb_seo_case_description = isset($bb_data['caseDetails'][0]) ? $bb_data['caseDetails'][0]['seoPageDescription'] : "";
-                        }
-                        if (!empty($bb_seo_case_title) && !empty($bb_seo_case_description)) {
-                            break;
-                        }
+                if ($bbrag_case_id == $bb_response['id'] || $bbrag_case_id == $bb_response['caseDetails'][0]['seoSuffixUrl']) {
+                    if (isset($bb_response['caseDetails'][0]) && !empty($bb_response['caseDetails'][0]['seoPageTitle']) && $bb_seo_case_title == "") {
+                        $bb_seo_title = $bb_seo_case_title = isset($bb_response['caseDetails'][0]) ? $bb_response['caseDetails'][0]['seoPageTitle'] . " - " . $site_title : "";
+                    }
+                    if (isset($bb_response['caseDetails'][0]) && !empty($bb_response['caseDetails'][0]['seoPageDescription']) && $bb_seo_case_description == "") {
+                        $bb_seo_description = $bb_seo_case_description = isset($bb_response['caseDetails'][0]) ? $bb_response['caseDetails'][0]['seoPageDescription'] : "";
                     }
                 }
             }
         }
-
         if (count($parts) == 2) {
-            $bb_seo_title = $bb_pro_title_all_seo;
+            $bbrag_procedure_title = $parts[1];
+            $bb_pro_title_all_seo = ucwords(str_replace("-", " ", $bbrag_procedure_title));
+            $bb_seo_title = $bb_pro_title_all_seo . " - " . $site_title;
         }
-
         $bb_title_description_array = ['bb_title' => $bb_seo_title, 'bb_description' => $bb_seo_description];
+
         return $bb_title_description_array;
     }
 
+    public function getProcedureIDFromSidebar($api_token, $procedureSlug)
+    {
+        $bb_sidebar_url = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/sidebar?apiToken={$api_token}";
+        $sidebar_list = get_transient($bb_sidebar_url);
+
+        if (!$sidebar_list) {
+            $response = wp_remote_get($bb_sidebar_url);
+            if (is_wp_error($response)) {
+                return null;
+            }
+            $sidebar_list = wp_remote_retrieve_body($response);
+            set_transient($bb_sidebar_url, $sidebar_list, HOUR_IN_SECONDS); 
+        }
+
+        $sidebar = json_decode($sidebar_list);
+        $procedureId = null;
+        if (isset($sidebar) && isset($sidebar->data)) {
+            foreach ($sidebar->data as $category) {
+                foreach ($category->procedures as $procedure) {
+                    if ($procedure->slugName == $procedureSlug) {
+                        $procedureId = $procedure->id; 
+                        break 2; 
+                    }
+                }
+            }
+        }
+        return $procedureId;
+    }
+
+
     public function bb_get_custom_bragbook_title()
     {
-        $brag_book_title = $this->get_custom_bragbook_title_and_description();
+        // Get SEO data from constructor
+        $brag_book_title = $this->seoData;
         return $brag_book_title['bb_title'];
     }
 
     public function bb_get_custom_bragbook_description()
     {
-        $brag_book_description = $this->get_custom_bragbook_title_and_description();
+        $brag_book_description = $this->seoData;
         return $brag_book_description['bb_description'];
     }
 
@@ -2141,16 +2167,16 @@ class Ajax_Handler
         $combine_gallery_page_id = get_option('combine_gallery_page_id');
 
         if ((is_array($stored_pages_ids) && in_array($current_page_id, $stored_pages_ids)) || $current_page_id == $combine_gallery_page_id) {
-            if (get_option('bb_seo_plugin_selector') == 1) {
+             if (get_option('bb_seo_plugin_selector') == 1) {
                 add_filter('wpseo_canonical', array($this, 'bb_get_current_url'));
                 add_filter('wpseo_title', array($this, 'bb_get_custom_bragbook_title'));
                 add_filter('wpseo_metadesc', array($this, 'bb_get_custom_bragbook_description'));
-
                 add_filter('wpseo_canonical', array($this, 'bb_get_current_url'));
                 add_filter('wpseo_opengraph_title', array($this, 'bb_get_custom_bragbook_title'));
                 add_filter('wpseo_opengraph_desc', array($this, 'bb_get_custom_bragbook_description'));
                 add_filter('wpseo_opengraph_url', array($this, 'bb_get_current_url'));
-            } else {
+            } 
+             else {
                 if (get_option('bb_seo_plugin_selector') == 2) {
                     add_filter('aioseo_canonical_url', array($this, 'bb_get_current_url'));
                     add_filter('aioseo_title', array($this, 'bb_get_custom_bragbook_title'));
