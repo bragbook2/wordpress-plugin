@@ -340,11 +340,9 @@ function fetchCaseData(loadMoreCount) {
                 caseSet.favorites.forEach((caseItem) => {
                   if (caseItem.cases[0].photoSets && caseItem.cases[0].photoSets.length > 0 && sidebarApi) {
                     if (caseItem && caseItem.cases[0].procedureIds.length > 0) {
-                      const isCombine = sidebarApi[0].ids;
                       let slugName;
-                      if (isCombine) {
-                        const totalTokens = 2;
-                        for (let i = 0; i < totalTokens; i++) {
+                      if (sidebarApi[0].ids) {
+                        for (let i = 0; i < sidebarApi[0].ids.length; i++) {
                           if (slugName) break;
                           slugName = sidebarApi.find(p => p.ids[i] == caseItem.cases[0].procedureIds[0])?.slugName;
                         }
