@@ -212,7 +212,7 @@ class Ajax_Handler
 
             $case_fav = [];
             $sidebar_list = '';
-            if (isset($_COOKIE['wordpress_favorite_email'])) {
+            // if (isset($_COOKIE['wordpress_favorite_email'])) {
                 $cookieValue = $_COOKIE['wordpress_favorite_email'];
                 $decodedValue = urldecode($cookieValue);
                 $favorite_email_id = htmlspecialchars($decodedValue);
@@ -233,7 +233,9 @@ class Ajax_Handler
                     $websitePropertyId = $websiteproperty_ids[$index] ?? '';
                     $web_id[] = (int)$websitePropertyId;
                     $page_slug_bb = $gallery_slugs[$index] ?? '';
+                    
                     if($page_slug == $page_slug_bb){
+                        $pageSlugBB = $page_slug_bb;
                         $url_fav = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/favorites?apiToken={$apiToken}&websitepropertyId={$websitePropertyId}&email={$favorite_email_id}";
 
                         $ch = curl_init();
@@ -252,7 +254,17 @@ class Ajax_Handler
                         }
                         $bb_sidebar_url = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/sidebar?apiToken={$apiToken}";
 
-                        $sidebar_list = get_transient($bb_sidebar_url);
+                        $cacheKey = "$procedureSlug-single";
+                        $sidebar_list = get_transient($cacheKey);
+                        if (!$sidebar_list) {
+                            // If cache is empty, fetch data from API
+                            $response = wp_remote_get($bb_sidebar_url);
+                            if (is_wp_error($response)) {
+                                return null;
+                            }
+                            $sidebar_list = wp_remote_retrieve_body($response);
+                            set_transient($cacheKey, $sidebar_list, HOUR_IN_SECONDS);
+                        }
                         if ($_POST['favorites'] == 'favorites') {
                             $data = $favorite_data_brag_json;
                         }
@@ -306,11 +318,9 @@ class Ajax_Handler
                                 $case_fav[] = $caseItem->id;
                             }
                         }
-
                     }
                 }
-
-            }
+            // }
             if (!empty($sidebar_list)) {
                 $sidebar_list = json_encode($sidebar_list);
             } else {
@@ -331,10 +341,11 @@ class Ajax_Handler
                     'filter_data' => $filter_get,
                     'bragbook_favorite' => $case_fav,
                     'sidebar_api' => $sidebar_list,
-                    'info' => $info
+                    'info' => $info,
+                    'page_slug' => $page_slug,
+                    'page_slug_bb' => $pageSlugBB,
                 ]
             ];
-
             // Return the response as JSON
             wp_send_json($response);
         } else {
@@ -1335,11 +1346,11 @@ class Ajax_Handler
                 foreach ($api_tokens as $api_token_index => $api_token_value) {
                     $websiteproperty_id = $websiteproperty_ids[$api_token_index];
 
-                    $url = "https://www.bragbookv2.com/api/plugin/consultations?apiToken=" . $api_token_value . "&websitepropertyId=" . $websiteproperty_id;
+                    $url = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/consultations?apiToken=" . $api_token_value . "&websitepropertyId=" . $websiteproperty_id;
                     self::send_form_data_and_create_post($data, $url, $name, $description, $email, $phone);
                 }
             } else {
-                $url = "https://www.bragbookv2.com/api/plugin/consultations?apiToken=" . $api_tokens[$index] . "&websitepropertyId=" . $websiteproperty_ids[$index];
+                $url = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/consultations?apiToken=" . $api_tokens[$index] . "&websitepropertyId=" . $websiteproperty_ids[$index];
                 self::send_form_data_and_create_post($data, $url, $name, $description, $email, $phone);
             }
 
@@ -1973,47 +1984,78 @@ class Ajax_Handler
         $api_tokens = get_option('bragbook_api_token', []);
         $websiteproperty_ids = get_option('bragbook_websiteproperty_id', []);
         $gallery_slugs = get_option('bb_gallery_page_slug', []);
+
+        //Get caseId from URL if exists
+        $caseId = null;
+        $seoSuffixUrl = null;
        
         if (isset($parts[2]) && !empty($parts[2])) {
-            foreach ($api_tokens as $index => $api_token) {
-                $websiteproperty_id = $websiteproperty_ids[$index] ?? '';
-
-                $page_slug_bb = $gallery_slugs[$index] ?? '';
-                if (($page_slug_bb == $parts[0]) || ($combine_gallery_page_slug == $parts[0])) {
-                    if (empty($api_token) || empty($websiteproperty_id)) {
-                        continue;
-                    }
-                    $bb_seo_page_title = "";
-                    $bb_seo_page_description = "";
-                    $caseId = null;
-                    $seoSuffixUrl = null;
-
-                    if (strpos($parts[2], 'bb-case') !== false) {
-                        // Use preg_match to extract the number after 'bb-case-'
-                        preg_match('/\d+/', $parts[2], $matches);
-                        $caseId = isset($matches[0]) ? (int)$matches[0] : 'Default string';
-                    } else {
-                        $seoSuffixUrl = $parts[2];
-                    }
-
-                    $procedureId = $this->getProcedureIDFromSidebar($api_token, $parts[1]);
-
-                    $url = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/cases?websitepropertyId={$websiteproperty_id}&apiToken={$api_token}&caseId={$caseId}&seoSuffixUrl={$seoSuffixUrl}&procedureId={$procedureId}";
-                    $data = get_transient($url);
-
-                    $bb_api_data = json_decode($data, true);
-                }
-
-            }
-
             if (strpos($parts[2], 'bb-case') !== false) {
                 // Use preg_match to extract the number after 'bb-case-'
                 preg_match('/\d+/', $parts[2], $matches);
-                $bbrag_case_id = isset($matches[0]) ? (int)$matches[0] : 'Default string';
+                $caseId = isset($matches[0]) ? (int) $matches[0] : 'Default string';
+            } else {
+                $seoSuffixUrl = $parts[2];
+            }
+            // Get case data for combine pages
+            if ($combine_gallery_page_slug == $parts[0]) {
+                // get procedureIds from sidebar API
+                $bb_sidebar_url = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/combine/sidebar";
+                $procedureIds = $this->getProcedureIDFromSidebar(array_values($api_tokens), $parts[1], $bb_sidebar_url, true);
+
+                $caseId = $caseId ? $caseId : '123';
+                $url = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/combine/cases/$caseId?seoSuffixUrl=$seoSuffixUrl";
+
+                $json_body = json_encode(array(
+                    'apiTokens' => array_values($api_tokens),
+                    'procedureIds' => $procedureIds,
+                    'websitePropertyIds' => array_map('intval', array_values($websiteproperty_ids)),
+                ));
+
+                $response = wp_remote_post($url, array(
+                    'method' => 'POST',
+                    'body' => $json_body,
+                    'headers' => array(
+                        'Content-Type' => 'application/json',
+                    ),
+                ));
+                
+                if (is_wp_error($response)) {
+                    wp_send_json_error(array('message' => $response->get_error_message()));
+                }
+                
+                $data = wp_remote_retrieve_body($response);
+                
+                $bb_api_data = json_decode($data, true);
+        
+            } else {
+                // Get case data for single page
+                foreach ($api_tokens as $index => $api_token) {
+                    $websiteproperty_id = $websiteproperty_ids[$index] ?? '';
+                    $page_slug_bb = $gallery_slugs[$index] ?? '';
+    
+                    if (($page_slug_bb == $parts[0]) || ($combine_gallery_page_slug == $parts[0])) {
+                        if (empty($api_token) || empty($websiteproperty_id)) {
+                            continue;
+                        }
+                        // get procedureIds from sidebar API
+                        $bb_sidebar_url = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/sidebar?apiToken={$api_token}";
+                        $procedureId = $this->getProcedureIDFromSidebar($api_token, $parts[1], $bb_sidebar_url, false);
+                        $url = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/cases?websitepropertyId={$websiteproperty_id}&apiToken={$api_token}&caseId={$caseId}&seoSuffixUrl={$seoSuffixUrl}&procedureId={$procedureId}";
+                        $data = get_transient($url);
+    
+                        $bb_api_data = json_decode($data, true);
+                    }
+                }
+            }
+
+            if (strpos($parts[2], 'bb-case') !== false) {
+                // Use preg_match to extract the caseID after 'bb-case-'
+                preg_match('/\d+/', $parts[2], $matches);
+                $bbrag_case_id = isset($matches[0]) ? (int)$matches[0] : '';
             } else {
                 $bbrag_case_id = $parts[2];
             }
-            
 
             $bb_response = $bb_api_data['data'][0];
             $bb_seo_case_title = "";
@@ -2040,12 +2082,77 @@ class Ajax_Handler
         return $bb_title_description_array;
     }
 
-    public function getProcedureIDFromSidebar($api_token, $procedureSlug)
+    public function getProcedureIDFromSidebar($api_tokens, $procedureSlug, $bb_sidebar_url, $iscombine) {
+        if($iscombine) {
+            $cacheKey = "$procedureSlug-combine";
+            // Get sidebar data from cache
+            // $sidebar_list = get_transient($cacheKey);
+            $sidebar_list = '';
+            if (!$sidebar_list) {
+                $response = wp_remote_post($bb_sidebar_url, array(
+                    'method' => 'POST',
+                    'body' => json_encode(array(
+                        'apiTokens' => $api_tokens
+                    )),
+                    'headers' => array(
+                        'Content-Type' => 'application/json',
+                    ),
+                ));
+                
+                if (is_wp_error($response)) {
+                    return null;
+                }
+                $sidebar_list = wp_remote_retrieve_body($response);
+                set_transient($cacheKey, $sidebar_list, HOUR_IN_SECONDS); 
+                $sidebar = json_decode($sidebar_list);
+
+                $procedureIds = [];
+                if (isset($sidebar) && isset($sidebar->data)) {
+                    foreach ($sidebar->data as $category) {
+                        foreach ($category->procedures as $procedure) {
+                            if ($procedure->slugName == $procedureSlug) {
+                                $procedureIds = $procedure->ids; 
+                            }
+                        }
+                    }
+                }
+            }
+        } else {
+            $cacheKey = "$procedureSlug-single";
+            $sidebar_list = get_transient($cacheKey);
+            if (!$sidebar_list) {
+                // If cache is empty, fetch data from API
+                $response = wp_remote_get($bb_sidebar_url);
+                if (is_wp_error($response)) {
+                    return null;
+                }
+                $sidebar_list = wp_remote_retrieve_body($response);
+                set_transient($cacheKey, $sidebar_list, HOUR_IN_SECONDS);
+            }
+    
+            $sidebar = json_decode($sidebar_list);
+            $procedureIds = null;
+            if (isset($sidebar) && isset($sidebar->data)) {
+                foreach ($sidebar->data as $category) {
+                    foreach ($category->procedures as $procedure) {
+                        if ($procedure->slugName == $procedureSlug) {
+                            $procedureIds = $procedure->id; 
+                            break 2; 
+                        }
+                    }
+                }
+            }
+        }
+        return $procedureIds;
+    }
+
+    public function getSingleProcedureIDFromSidebar($api_token, $procedureSlug)
     {
         $bb_sidebar_url = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/sidebar?apiToken={$api_token}";
         $sidebar_list = get_transient($bb_sidebar_url);
 
         if (!$sidebar_list) {
+            // If cache is empty, fetch data from API
             $response = wp_remote_get($bb_sidebar_url);
             if (is_wp_error($response)) {
                 return null;

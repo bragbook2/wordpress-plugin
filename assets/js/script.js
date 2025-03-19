@@ -192,6 +192,7 @@ function fetchCaseData(loadMoreCount) {
             try {
               const parsedSidebarApi = JSON.parse(JSON.parse(data.data.sidebar_api));
               sidebarApi = parsedSidebarApi.data?.flatMap(item => item.procedures) || [];
+              displayProcedureTitle(sidebarApi, procedureSlug);
             } catch (error) {
               console.error("Error parsing sidebar_api:", error);
               sidebarApi = [];
@@ -207,8 +208,8 @@ function fetchCaseData(loadMoreCount) {
             let caseSet = JSON.parse(data.data.case_set);
             if (caseIdentifier == "" && !seoSuffixUrl) {
               if (isListsPage && !isFavoriteListPage) {
-                document.querySelector(".bb_ajax-load-more-btn").innerHTML = "Load More";
-                if (!(!!caseSet.hasLoadMore)) document.getElementById("load-container").style.display = "none"
+                if (document.querySelector(".bb_ajax-load-more-btn")) document.querySelector(".bb_ajax-load-more-btn").innerHTML = "Load More";
+                if (document.getElementById("load-container") && !(!!caseSet.hasLoadMore)) document.getElementById("load-container").style.display = "none"
               }
 
               var bb_case_count = (count - 1) * 10;
@@ -340,9 +341,11 @@ function fetchCaseData(loadMoreCount) {
                 caseSet.favorites.forEach((caseItem) => {
                   if (caseItem.cases[0].photoSets && caseItem.cases[0].photoSets.length > 0 && sidebarApi) {
                     if (caseItem && caseItem.cases[0].procedureIds.length > 0) {
+                      const isCombine = sidebarApi[0]?.ids;
                       let slugName;
-                      if (sidebarApi[0].ids) {
-                        for (let i = 0; i < sidebarApi[0].ids.length; i++) {
+                      if (isCombine) {
+                        const totalTokens = 2;
+                        for (let i = 0; i < totalTokens; i++) {
                           if (slugName) break;
                           slugName = sidebarApi.find(p => p.ids[i] == caseItem.cases[0].procedureIds[0])?.slugName;
                         }
@@ -974,6 +977,12 @@ for (let i = 0; i < bb_acc.length; i++) {
   });
 }
 
+function displayProcedureTitle(sidebarData, procedureSlug) {
+  const title = sidebarData.find(procedure => procedure.slugName == procedureSlug)?.name;
+  if (document.getElementById("procedure-title")) document.getElementById("procedure-title").innerHTML = title + " Before & After Gallery";
+}
+
+
 jQuery(document).ready(function ($) {
   let bb_slider;
   if ($.fn.slick) {
@@ -1311,13 +1320,69 @@ jQuery(document).ready(function ($) {
 
 
 
+  function verifyFormData(form) {
+    let isValid = true;
+    let formDataObject = {};
+    let requiredFields = form.querySelectorAll(".bb-is-required");
+
+    requiredFields.forEach(field => {
+      let fieldName = field.name;
+      let fieldValue = field.value.trim();
+      let errorMsg = field.nextElementSibling;
+      formDataObject[fieldName] = fieldValue;
+      if (!fieldValue) {
+        errorMsg.style.display = "block";
+        errorMsg.style.color = "#CD2F32";
+
+        isValid = false;
+      } else {
+        errorMsg.style.display = "none";
+      }
+    });
+
+    if (formDataObject["email"]) {
+      let emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      let emailField = form.querySelector("input[name='email']");
+      let emailError = emailField.nextElementSibling;
+
+      if (!emailPattern.test(formDataObject["email"])) {
+        emailError.textContent = "Please enter a valid email";
+        emailError.style.display = "block";
+        emailError.style.color = "#CD2F32";
+
+        isValid = false;
+      } else {
+        emailError.style.display = "none";
+      }
+    }
+    if (formDataObject["phone"]) {
+      let phonePattern = /^\d+$/;
+      let phoneField = form.querySelector("input[name='phone']");
+      let phoneError = phoneField.nextElementSibling;
+
+      if (!phonePattern.test(formDataObject["phone"])) {
+        phoneError.textContent = "Please enter a valid phone number";
+        phoneError.style.display = "block";
+        phoneError.style.color = "#CD2F32";
+        isValid = false;
+      } else {
+        phoneError.style.display = "none";
+      }
+    }
+
+    return isValid;
+  }
+
+
   $(".bb-form").submit(function (event) {
 
     event.preventDefault();
+    verifyFormData(this);
+
+    if (!verifyFormData(this)) return;
 
 
     var formData = $(this).serialize();
-
 
     $.ajax({
       type: "POST",
@@ -1338,29 +1403,7 @@ jQuery(document).ready(function ($) {
     });
   });
 
-  if ($(".bb-main .bb-form").length) {
-    var $bb_form = $(".bb-main .bb-form");
-    var $bb_inputs = $(".bb-main .bb-is-required");
 
-    $bb_form.on("submit", function (e) {
-      var bb_is_required = true;
-
-      $bb_inputs.each(function () {
-        if ($(this).val() === "") {
-          bb_is_required = false;
-          $(this).next().show();
-        } else {
-          $(this).next().hide();
-        }
-      });
-
-      if (!bb_is_required) {
-        e.preventDefault();
-      } else {
-        $(".bb-is-required-success").show();
-      }
-    });
-  }
 
   $(".bb-sidebar-toggle").on("click", function () {
     $(".bb-sidebar").toggleClass("active");
@@ -1430,6 +1473,7 @@ function initFavorite() {
   const modalToggle = Array.from(document.querySelectorAll(".bb-open-fav-modal"));
   modal = document.querySelector(".bb-fav-modal");
   modalInner = document.querySelector(".bb-fav-modal-inner");
+  modalCloseIcon = document.querySelector(".bb-fav-modal-close-button");
   if (modalInner && modalInner.querySelector) {
     form = modalInner.querySelector("form");
     caseIdInput = modalInner.querySelector("input[name='case-id']");
@@ -1495,6 +1539,8 @@ function initFavorite() {
       fadeIn(modal);
     }
   }
+
+  if (modalCloseIcon) modalCloseIcon.addEventListener("click", closeModal);
 
   function closeModal() {
     fadeOut(modal);

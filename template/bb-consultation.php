@@ -16,11 +16,11 @@ Template Name: Consultation Page Template
         </div>
         <form class="bb-form bb-consultation-form" method="post" action="">
             <input class="bb-is-required" name="name" type="text" placeholder="Name*">
-            <span class="bb-is-required-msg">Name field is required</span>
+            <span class="bb-is-required-msg">Name is required</span>
             <input class="bb-is-required" name="email" type="email" placeholder="Email*">
-            <span class="bb-is-required-msg">Email field is required</span>
+            <span class="bb-is-required-msg">Email is required</span>
             <input class="bb-is-required" name="phone" type="number" placeholder="Phone*">
-            <span class="bb-is-required-msg">Number field is required</span>
+            <span class="bb-is-required-msg">Number is required</span>
             <textarea rows="6" name="description" placeholder="How can we help?"></textarea>
             <button type="submit" name="submit">Submit</button>
         </form>

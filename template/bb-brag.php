@@ -83,7 +83,7 @@ if ($bbrag_case_url == "/".$parts[0]."/consultation/") {
                             <img src="<?php echo BB_PLUGIN_DIR_PATH; ?>assets/images/search-svgrepo-com.svg" class="bb-search-icon" alt="search">
                             <ul id="mobile-search-suggestions" class="search-suggestions"></ul>
                         </form>
-                        <h1><span><?php // echo empty($procedure_title) ? $category_title_ : $procedure_title; ?></span> Before & After Gallery</h1>
+                        <h1 id="procedure-title"><span><?php //echo empty($procedure_title) ? $category_title_ : $procedure_title; ?></span></h1>
                     </div>
                     <script>
                         // document.addEventListener("DOMContentLoaded", function() {
@@ -181,7 +181,7 @@ if ($bbrag_case_url == "/".$parts[0]."/consultation/") {
             </div>
             <div class="bb-fav-modal">
                 <div class="bb-fav-modal-inner"> 
-                    <p class="bb-fav-modal-close-button" onClick="closeModal()">X</p>
+                    <p class="bb-fav-modal-close-button">X</p>
                     <img class="bb-thumbnail" src="<?php echo BB_PLUGIN_DIR_PATH; ?>assets/images/myfavs-logo.svg" alt="logo">
                     <h3>You are Loving these!</h3>
                     <p>To improve the communication between us, keep hearting cases that speak to you. During our
