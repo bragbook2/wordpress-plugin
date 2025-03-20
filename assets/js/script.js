@@ -8,15 +8,16 @@ document.addEventListener("DOMContentLoaded", () => {
   handleMultipleClickToggles();
 });
 
-function handleLoadMoreButton() {
+function handleLoadMoreButton(show) {
   const loadMoreContainer = document.querySelector(".ajax-load-more");
-  if (!loadMoreContainer) return;
-
   const loadMoreButton = loadMoreContainer.querySelector(".bb_ajax-load-more-btn");
-  if (!loadMoreButton) return;
-
+  if (!loadMoreContainer || !loadMoreButton) {
+    console.error("Load more container not found");
+    return;
+  }
   const currentOffset = parseInt(loadMoreButton.getAttribute("data-offset"), 10);
-  if (currentOffset === 1) loadMoreButton.style.display = "none";
+  if (!show || currentOffset === 1) loadMoreContainer.style.display = "none";
+  if (show) loadMoreContainer.style.display = "flex";
 }
 
 function handleFilterToggle() {
@@ -206,16 +207,11 @@ function fetchCaseData(loadMoreCount) {
           }
           if (data.data && data.data.case_set) {
             let caseSet = JSON.parse(data.data.case_set);
-            if (caseIdentifier == "" && !seoSuffixUrl) {
-              if (isListsPage && !isFavoriteListPage) {
-                if (document.querySelector(".bb_ajax-load-more-btn")) document.querySelector(".bb_ajax-load-more-btn").innerHTML = "Load More";
-                if (document.getElementById("load-container") && !(!!caseSet.hasLoadMore)) document.getElementById("load-container").style.display = "none"
-              }
 
+            if (caseIdentifier == "" && !seoSuffixUrl) {
+              if (isListsPage && !isFavoriteListPage) handleLoadMoreButton(caseSet.hasLoadMore);
               var bb_case_count = (count - 1) * 10;
               let contentBox = document.querySelector(".bb-content-boxes");
-              document.querySelector("#bb_ajax-load-more-btn")?.remove();
-
               const applyBBButton = document.querySelector(".apply_bb_filter");
               if (applyBBButton) applyBBButton.innerHTML = `Apply`;
               let images = [];
@@ -497,7 +493,7 @@ function fetchCaseData(loadMoreCount) {
                   }
                   console.log("Case Details =>", caseItem);
 
-                 
+
                   if (seoSuffixUrl) linkText += caseItem.caseIds?.findIndex(item => item.seoSuffixUrl == seoSuffixUrl) + 1;
                   else if (caseIdentifier) linkText += caseItem.caseIds?.findIndex(item => item.id == caseIdentifier) + 1;
                   let bb_right_data = `
@@ -764,9 +760,7 @@ function applyFilterBB(
           if (caseIdentifier == "") {
             var bb_case_count = (count - 1) * 10;
             let contentBox = document.querySelector(".bb-content-boxes");
-            document.querySelector(".bb_ajax-load-more-btn").innerHTML = "Load More";
-            if (!(!!caseSet.hasLoadMore)) document.getElementById("load-container").style.display = "none"
-
+            handleLoadMoreButton(caseSet.hasLoadMore);
             caseSet.data.forEach((caseItem) => {
               if (caseItem.photoSets && caseItem.photoSets.length > 0) {
                 let photoSet = caseItem.photoSets[0];
@@ -979,9 +973,8 @@ for (let i = 0; i < bb_acc.length; i++) {
 
 function displayProcedureTitle(sidebarData, procedureSlug) {
   const title = sidebarData.find(procedure => procedure.slugName == procedureSlug)?.name;
-  if (document.getElementById("procedure-title")) document.getElementById("procedure-title").innerHTML = title + " Before & After Gallery";
+  if (document.getElementById("procedure-title")) document.getElementById("procedure-title").innerHTML = `${title ? title : ""} Before & After Gallery`;
 }
-
 
 jQuery(document).ready(function ($) {
   let bb_slider;
@@ -1382,7 +1375,7 @@ jQuery(document).ready(function ($) {
     if (!verifyFormData(this)) return;
 
 
-    var formData = $(this).serialize();
+    const formData = $(this).serialize();
 
     $.ajax({
       type: "POST",
@@ -1471,11 +1464,15 @@ jQuery(document).ready(function ($) {
 
 function initFavorite() {
   const modalToggle = Array.from(document.querySelectorAll(".bb-open-fav-modal"));
-  modal = document.querySelector(".bb-fav-modal");
-  modalInner = document.querySelector(".bb-fav-modal-inner");
-  modalCloseIcon = document.querySelector(".bb-fav-modal-close-button");
+  let modal = document.querySelector(".bb-fav-modal");
+  let modalInner = document.querySelector(".bb-fav-modal-inner");
+  let modalCloseIcon = document.querySelector(".bb-fav-modal-close-button");
+  let favoriteForm;
+  let caseIdInput;
+  let bbApiTokenInput;
+  let bbWebsiteIdInput;
   if (modalInner && modalInner.querySelector) {
-    form = modalInner.querySelector("form");
+    favoriteForm = modalInner.querySelector("form");
     caseIdInput = modalInner.querySelector("input[name='case-id']");
     bbApiTokenInput = modalInner.querySelector("input[name='api-token']");
     bbWebsiteIdInput = modalInner.querySelector("input[name='website-id']");
@@ -1498,7 +1495,7 @@ function initFavorite() {
       bbWebsiteIdInput.value = bbWebsiteId;
     }
 
-    var encodedCookieValue = getCookie("wordpress_favorite_email");
+    const encodedCookieValue = getCookie("wordpress_favorite_email");
     if (encodedCookieValue !== undefined) {
       var bb_favorite_email = decodeURIComponent(encodedCookieValue);
       var bb_favorite_name = getCookie("wordpress_favorite_name");
@@ -1611,25 +1608,28 @@ function initFavorite() {
         },
       });
     }
-    if (modalInner && modalInner.querySelector) {
-      form.addEventListener("submit", (e) => {
-        e.preventDefault();
 
+    if (modalInner && modalInner.querySelector) {
+      favoriteForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
         const caseId = caseIdInput.value;
         const bbApiToken = bbApiTokenInput.value;
         const bbWebsiteId = bbWebsiteIdInput.value;
-        var formData = new FormData(form);
-        var data = {
-          email: formData.get("email"),
-          phone: formData.get("number"),
-          name: formData.get("name"),
+        const data = {
+          name: event.target[0].value,
+          email: event.target[1].value,
+          phone: event.target[2].value,
           caseIds: [caseId],
           bbApiTokens: [bbApiToken],
           bbWebsiteIds: [bbWebsiteId],
         };
+        console.log("data:", data);
         bb_favorites_submission(data);
       });
     }
+
 
     function fadeOut(element) {
       let opacity = 1;

@@ -171,12 +171,12 @@ if ($bbrag_case_url == "/".$parts[0]."/consultation/") {
                         <button class="bb_ajax-load-more-btn" data-offset="2">Load More</button>
                     </div>
                    
-
+<!-- 
                     <script>
                         setTimeout(() => {
                             document.getElementById("load-container").style.display = "flex";
                         }, 3000); // 3000ms = 3 seconds
-                    </script>
+                    </script> -->
                 </div>
             </div>
             <div class="bb-fav-modal">
