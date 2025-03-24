@@ -10,14 +10,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
 function handleLoadMoreButton(show) {
   const loadMoreContainer = document.querySelector(".ajax-load-more");
-  const loadMoreButton = loadMoreContainer.querySelector(".bb_ajax-load-more-btn");
-  if (!loadMoreContainer || !loadMoreButton) {
-    console.error("Load more container not found");
-    return;
+  if(loadMoreContainer){
+    const loadMoreButton = loadMoreContainer.querySelector(".bb_ajax-load-more-btn");
+    if (!loadMoreContainer || !loadMoreButton) {
+      console.error("Load more container not found");
+      return;
+    }
+    const currentOffset = parseInt(loadMoreButton.getAttribute("data-offset"), 10);
+    if (!show || currentOffset === 1) loadMoreContainer.style.display = "none";
+    if (show) loadMoreContainer.style.display = "flex";
   }
-  const currentOffset = parseInt(loadMoreButton.getAttribute("data-offset"), 10);
-  if (!show || currentOffset === 1) loadMoreContainer.style.display = "none";
-  if (show) loadMoreContainer.style.display = "flex";
 }
 
 function handleFilterToggle() {
@@ -207,7 +209,6 @@ function fetchCaseData(loadMoreCount) {
           }
           if (data.data && data.data.case_set) {
             let caseSet = JSON.parse(data.data.case_set);
-
             if (caseIdentifier == "" && !seoSuffixUrl) {
               if (isListsPage && !isFavoriteListPage) handleLoadMoreButton(caseSet.hasLoadMore);
               var bb_case_count = (count - 1) * 10;
@@ -251,12 +252,11 @@ function fetchCaseData(loadMoreCount) {
 
                     let proceduralName = "";
                     if (caseItem.caseDetails[0].seoHeadline) {
-                      proceduralName = caseItem.caseDetails[0].seoHeadline
+                      proceduralName = caseItem.caseDetails[0].seoHeadline;
                     } else {
                       let titleWithoutDashes = procedureSlug.replace(/-/g, ' ');
                       proceduralName = titleWithoutDashes + ': Patient ' + caseItem.patientCount;
                     }
-
                     images.push(imageObj);
                     let newContent = `
                               <div class="bb-content-box">
@@ -426,7 +426,6 @@ function fetchCaseData(loadMoreCount) {
                           value.highResPostProcessedImageLocation ??
                           value.postProcessedImageLocation ??
                           value.originalBeforeLocation;
-
                         let imgElement = document.createElement("img");
                         imgElement.className =
                           "bbrag_gallery_image testing-image";
@@ -500,7 +499,7 @@ function fetchCaseData(loadMoreCount) {
                         <div class="bb-patient-row">
                             <h2>${caseItem.caseDetails[0]?.seoHeadline || linkText}</h2>
                         </div>
-                        <ul>
+                        <ul class="bb-demographics">
                             ${height}
                             ${width}
                             ${race}
@@ -510,7 +509,7 @@ function fetchCaseData(loadMoreCount) {
                             ${timeframe2}
                             ${revisionSurgery}
                         </ul>
-                        <p>${patientDetail}</p>
+                        <div class="bb-case-description">${patientDetail}</div>
                          <div class="bb-patient-slides">
                           <ul id="pagination-list-${caseItem.id}" class="bb-pagination"></ul>
                         </div>

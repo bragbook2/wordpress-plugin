@@ -2593,3 +2593,10 @@ p.bb-fav-modal-close-button {
     font-size: 14px;
     font-weight: 700;
 }
+
+.bb-case-description {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-top: 20px;
+}
