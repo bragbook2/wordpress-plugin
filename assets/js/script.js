@@ -492,12 +492,16 @@ function fetchCaseData(loadMoreCount) {
                   }
                   console.log("Case Details =>", caseItem);
 
-
                   if (seoSuffixUrl) linkText += caseItem.caseIds?.findIndex(item => item.seoSuffixUrl == seoSuffixUrl) + 1;
                   else if (caseIdentifier) linkText += caseItem.caseIds?.findIndex(item => item.id == caseIdentifier) + 1;
                   let bb_right_data = `
                         <div class="bb-patient-row">
                             <h2>${caseItem.caseDetails[0]?.seoHeadline || linkText}</h2>
+                               <img class="bb-heart-icon bb-open-fav-modal" 
+                                data-case-id="${caseItem.id}" 
+                                data-bb_api_token="${apiToken}" 
+                                data-bb_website_id="${websitePropertyId}" 
+                                src="${heartImage}" alt="heart">
                         </div>
                         <ul class="bb-demographics">
                             ${height}

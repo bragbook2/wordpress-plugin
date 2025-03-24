@@ -1988,7 +1988,29 @@ class Ajax_Handler
         //Get caseId from URL if exists
         $caseId = null;
         $seoSuffixUrl = null;
-       
+        $procedureName = null;
+        $procedureTotalCase = null;
+
+        if(isset($parts[1]) && empty($parts[2])){
+            if($combine_gallery_page_slug == $parts[0]){
+                $bb_sidebar_url = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/combine/sidebar";
+                $procedureIdsName = $this->getProcedureIDFromSidebar(array_values($api_tokens), $parts[1], $bb_sidebar_url, true);
+                $procedureTotalCase = $procedureIdsName["procedureTotalCase"];
+            } else {
+                foreach ($api_tokens as $index => $api_token) {
+                    $websiteproperty_id = $websiteproperty_ids[$index] ?? '';
+                    $page_slug_bb = $gallery_slugs[$index] ?? '';
+                    if (($page_slug_bb == $parts[0]) || ($combine_gallery_page_slug == $parts[0])) {
+                        if (empty($api_token) || empty($websiteproperty_id)) {
+                            continue;
+                        }
+                        $bb_sidebar_url = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/sidebar?apiToken={$api_token}";
+                        $procedureIdsName = $this->getProcedureIDFromSidebar($api_token, $parts[1], $bb_sidebar_url, false);
+                        $procedureTotalCase = $procedureIdsName["procedureTotalCase"];
+                    }
+                }
+            }
+        }
         if (isset($parts[2]) && !empty($parts[2])) {
             if (strpos($parts[2], 'bb-case') !== false) {
                 // Use preg_match to extract the number after 'bb-case-'
@@ -2001,8 +2023,9 @@ class Ajax_Handler
             if ($combine_gallery_page_slug == $parts[0]) {
                 // get procedureIds from sidebar API
                 $bb_sidebar_url = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/combine/sidebar";
-                $procedureIds = $this->getProcedureIDFromSidebar(array_values($api_tokens), $parts[1], $bb_sidebar_url, true);
-
+                $procedureIdsName = $this->getProcedureIDFromSidebar(array_values($api_tokens), $parts[1], $bb_sidebar_url, true);
+                $procedureIds = $procedureIdsName["bb_procedure_id"];
+                $procedureName = $procedureIdsName["bb_procedure_name"];
                 $caseId = $caseId ? $caseId : '123';
                 $url = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/combine/cases/$caseId?seoSuffixUrl=$seoSuffixUrl";
 
@@ -2040,7 +2063,9 @@ class Ajax_Handler
                         }
                         // get procedureIds from sidebar API
                         $bb_sidebar_url = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/sidebar?apiToken={$api_token}";
-                        $procedureId = $this->getProcedureIDFromSidebar($api_token, $parts[1], $bb_sidebar_url, false);
+                        $procedureIdsName = $this->getProcedureIDFromSidebar($api_token, $parts[1], $bb_sidebar_url, false);
+                        $procedureId = $procedureIdsName["bb_procedure_id"];
+                        $procedureName = $procedureIdsName["bb_procedure_name"];
                         $url = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/cases?websitepropertyId={$websiteproperty_id}&apiToken={$api_token}&caseId={$caseId}&seoSuffixUrl={$seoSuffixUrl}&procedureId={$procedureId}";
                         $data = get_transient($url);
     
@@ -2048,7 +2073,6 @@ class Ajax_Handler
                     }
                 }
             }
-
             if (strpos($parts[2], 'bb-case') !== false) {
                 // Use preg_match to extract the caseID after 'bb-case-'
                 preg_match('/\d+/', $parts[2], $matches);
@@ -2065,6 +2089,8 @@ class Ajax_Handler
                 if ($bbrag_case_id == $bb_response['id'] || $bbrag_case_id == $bb_response['caseDetails'][0]['seoSuffixUrl']) {
                     if (isset($bb_response['caseDetails'][0]) && !empty($bb_response['caseDetails'][0]['seoPageTitle']) && $bb_seo_case_title == "") {
                         $bb_seo_title = $bb_seo_case_title = isset($bb_response['caseDetails'][0]) ? $bb_response['caseDetails'][0]['seoPageTitle'] . " - " . $site_title : "";
+                    } else {
+                        $bb_seo_title = "Before and After " . $procedureName . " - " . $site_title;
                     }
                     if (isset($bb_response['caseDetails'][0]) && !empty($bb_response['caseDetails'][0]['seoPageDescription']) && $bb_seo_case_description == "") {
                         $bb_seo_description = $bb_seo_case_description = isset($bb_response['caseDetails'][0]) ? $bb_response['caseDetails'][0]['seoPageDescription'] : "";
@@ -2072,17 +2098,18 @@ class Ajax_Handler
                 }
             }
         }
-        if (count($parts) == 2) {
+        if (count($parts) == 2 && $parts[1] != "favorites") {
             $bbrag_procedure_title = $parts[1];
             $bb_pro_title_all_seo = ucwords(str_replace("-", " ", $bbrag_procedure_title));
-            $bb_seo_title = $bb_pro_title_all_seo . " - " . $site_title;
+            $bb_seo_title = "Before and After " . $bb_pro_title_all_seo . " " . $procedureTotalCase . " - " . $site_title;
         }
         $bb_title_description_array = ['bb_title' => $bb_seo_title, 'bb_description' => $bb_seo_description];
-
         return $bb_title_description_array;
     }
 
     public function getProcedureIDFromSidebar($api_tokens, $procedureSlug, $bb_sidebar_url, $iscombine) {
+        $procedureName = [];
+        $bbprocedureTotalCase = [];
         if($iscombine) {
             $cacheKey = "$procedureSlug-combine";
             // Get sidebar data from cache
@@ -2105,13 +2132,14 @@ class Ajax_Handler
                 $sidebar_list = wp_remote_retrieve_body($response);
                 set_transient($cacheKey, $sidebar_list, HOUR_IN_SECONDS); 
                 $sidebar = json_decode($sidebar_list);
-
                 $procedureIds = [];
                 if (isset($sidebar) && isset($sidebar->data)) {
                     foreach ($sidebar->data as $category) {
                         foreach ($category->procedures as $procedure) {
                             if ($procedure->slugName == $procedureSlug) {
                                 $procedureIds = $procedure->ids; 
+                                $procedureName = $procedure->name;
+                                $bbprocedureTotalCase = $procedure->totalCase;  
                             }
                         }
                     }
@@ -2137,13 +2165,16 @@ class Ajax_Handler
                     foreach ($category->procedures as $procedure) {
                         if ($procedure->slugName == $procedureSlug) {
                             $procedureIds = $procedure->id; 
+                            $procedureName = $procedure->name; 
+                            $bbprocedureTotalCase = $procedure->totalCase; 
                             break 2; 
                         }
                     }
                 }
             }
         }
-        return $procedureIds;
+        $bb_procedure_id_name_array = ['bb_procedure_id' => $procedureIds, 'bb_procedure_name' => $procedureName, 'procedureTotalCase' => $bbprocedureTotalCase];
+        return $bb_procedure_id_name_array;
     }
 
     public function getSingleProcedureIDFromSidebar($api_token, $procedureSlug)

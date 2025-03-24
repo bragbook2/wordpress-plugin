@@ -419,6 +419,35 @@ if ($bbrag_case_url == "/".$parts[0]."/consultation/") {
                 </div>
               
             </div>
+            
+            <div class="bb-fav-modal">
+                <div class="bb-fav-modal-inner"> 
+                    <p class="bb-fav-modal-close-button">X</p>
+                    <img class="bb-thumbnail" src="<?php echo BB_PLUGIN_DIR_PATH; ?>assets/images/myfavs-logo.svg" alt="logo">
+                    <h3>You are Loving these!</h3>
+                    <p>To improve the communication between us, keep hearting cases that speak to you. During our
+                        consultation, we'll review this collection together so we can discuss your specific goals and
+                        concerns.</p>
+                    <form method="post">
+                        <div class="bb-input-group">
+                            <label for="name">Name</label>
+                            <input placeholder="Name" type="text" name="name">
+                        </div>
+                        <div class="bb-input-group">
+                            <label for="email">Email Address</label>
+                            <input placeholder="Email" type="email" name="email">
+                        </div>
+                        <div class="bb-input-group">
+                            <label for="number">Phone</label>
+                            <input placeholder="Phone" type="number" name="number">
+                        </div>
+                        <input type="hidden" name="case-id">
+                        <input type="hidden" name="api-token">
+                        <input type="hidden" name="website-id">
+                        <button type="submit">Submit</button>
+                    </form>
+                </div>
+            </div>
         </main>
     </div>
     
