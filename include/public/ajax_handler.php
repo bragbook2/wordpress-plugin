@@ -2098,7 +2098,10 @@ class Ajax_Handler
                 }
             }
         }
-        if (count($parts) == 2 && $parts[1] != "favorites") {
+        if (count($parts) == 2) {
+            if($parts[1] == "favorites" || $parts[1] == "consultation"){
+                $procedureTotalCase = null;
+            }
             $bbrag_procedure_title = $parts[1];
             $bb_pro_title_all_seo = ucwords(str_replace("-", " ", $bbrag_procedure_title));
             $bb_seo_title = "Before and After " . $bb_pro_title_all_seo . " " . $procedureTotalCase . " - " . $site_title;

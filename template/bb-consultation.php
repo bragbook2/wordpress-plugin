@@ -14,17 +14,17 @@ Template Name: Consultation Page Template
             </button>
             <h2><span>Consultation Request</span></h2>
         </div>
-        <form class="bb-form bb-consultation-form" method="post" action="">
+        <form class="bb-form bb-consultation-form" id="bb-consultation-form" method="post" action="">
             <input class="bb-is-required" name="name" type="text" placeholder="Name*">
             <span class="bb-is-required-msg">Name is required</span>
             <input class="bb-is-required" name="email" type="email" placeholder="Email*">
             <span class="bb-is-required-msg">Email is required</span>
-            <input class="bb-is-required" name="phone" type="number" placeholder="Phone*">
+            <input class="bb-is-required" name="phone" type="tel" placeholder="Phone*">
             <span class="bb-is-required-msg">Number is required</span>
             <textarea rows="6" name="description" placeholder="How can we help?"></textarea>
-            <button type="submit" name="submit">Submit</button>
+            <button type="submit" id="bb-consultation-form-submit" name="submit">Submit</button>
         </form>
-        <span class="bb-is-required-success"></span>
+        <div class="bb-is-required-success"></div>
     </div>
     <div class="bb-bottom-bar">
         <img src="<?php echo BB_PLUGIN_DIR_PATH; ?>assets/images/fav-logo.svg" alt="logo">

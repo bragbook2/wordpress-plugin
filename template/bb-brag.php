@@ -190,15 +190,18 @@ if ($bbrag_case_url == "/".$parts[0]."/consultation/") {
                     <form method="post">
                         <div class="bb-input-group">
                             <label for="name">Name</label>
-                            <input placeholder="Name" type="text" name="name">
+                            <input class="bb-is-required" placeholder="Name" type="text" name="name">
+                            <span class="bb-is-required-msg">Name is required</span>
                         </div>
                         <div class="bb-input-group">
                             <label for="email">Email Address</label>
-                            <input placeholder="Email" type="email" name="email">
+                            <input class="bb-is-required" placeholder="Email" type="email" name="email">
+                            <span class="bb-is-required-msg">Email is required</span>
                         </div>
                         <div class="bb-input-group">
                             <label for="number">Phone</label>
-                            <input placeholder="Phone" type="number" name="number">
+                            <input class="bb-is-required" placeholder="Phone" type="tel" name="phone">
+                            <span class="bb-is-required-msg">Phone is required</span>
                         </div>
                         <input type="hidden" name="case-id">
                         <input type="hidden" name="api-token">
@@ -431,15 +434,18 @@ if ($bbrag_case_url == "/".$parts[0]."/consultation/") {
                     <form method="post">
                         <div class="bb-input-group">
                             <label for="name">Name</label>
-                            <input placeholder="Name" type="text" name="name">
+                            <input class="bb-is-required" placeholder="Name" type="text" name="name">
+                            <span class="bb-is-required-msg">Name is required</span>
                         </div>
                         <div class="bb-input-group">
                             <label for="email">Email Address</label>
-                            <input placeholder="Email" type="email" name="email">
+                            <input class="bb-is-required" placeholder="Email" type="email" name="email">
+                            <span class="bb-is-required-msg">Email is required</span>
                         </div>
                         <div class="bb-input-group">
                             <label for="number">Phone</label>
-                            <input placeholder="Phone" type="number" name="number">
+                            <input class="bb-is-required" placeholder="Phone" type="tel" name="phone">
+                            <span class="bb-is-required-msg">Phone is required</span>
                         </div>
                         <input type="hidden" name="case-id">
                         <input type="hidden" name="api-token">

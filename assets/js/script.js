@@ -6,11 +6,12 @@ document.addEventListener("DOMContentLoaded", () => {
   handleFilterToggle();
   handleSingleClickToggles();
   handleMultipleClickToggles();
+  handleConsultationForm();
 });
 
 function handleLoadMoreButton(show) {
   const loadMoreContainer = document.querySelector(".ajax-load-more");
-  if(loadMoreContainer){
+  if (loadMoreContainer) {
     const loadMoreButton = loadMoreContainer.querySelector(".bb_ajax-load-more-btn");
     if (!loadMoreContainer || !loadMoreButton) {
       console.error("Load more container not found");
@@ -979,6 +980,98 @@ function displayProcedureTitle(sidebarData, procedureSlug) {
   if (document.getElementById("procedure-title")) document.getElementById("procedure-title").innerHTML = `${title ? title : ""} Before & After Gallery`;
 }
 
+
+function verifyFormData(form) {
+  let isValid = true;
+  let formDataObject = {};
+  let requiredFields = form.querySelectorAll(".bb-is-required");
+
+  requiredFields.forEach(field => {
+    let fieldName = field.name;
+    let fieldValue = field.value.trim();
+    let errorMsg = field.nextElementSibling;
+    formDataObject[fieldName] = fieldValue;
+    if (!fieldValue) {
+      errorMsg.style.display = "block";
+      errorMsg.style.color = "#CD2F32";
+
+      isValid = false;
+    } else {
+      errorMsg.style.display = "none";
+    }
+  });
+
+  if (formDataObject["email"]) {
+    let emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    let emailField = form.querySelector("input[name='email']");
+    let emailError = emailField.nextElementSibling;
+
+    if (!emailPattern.test(formDataObject["email"])) {
+      emailError.textContent = "Please enter a valid email";
+      emailError.style.display = "block";
+      emailError.style.color = "#CD2F32";
+
+      isValid = false;
+    } else {
+      emailError.style.display = "none";
+    }
+  }
+  if (formDataObject["phone"]) {
+    let phonePattern = /^\d+$/;
+    let phoneField = form.querySelector("input[name='phone']");
+    let phoneError = phoneField.nextElementSibling;
+
+    if (!phonePattern.test(formDataObject["phone"])) {
+      phoneError.textContent = "Please enter a valid phone number";
+      phoneError.style.display = "block";
+      phoneError.style.color = "#CD2F32";
+      isValid = false;
+    } else {
+      phoneError.style.display = "none";
+    }
+  }
+
+  return isValid;
+}
+
+
+function handleConsultationForm() {
+  const consultationFormSubmitBtn = document.getElementById("bb-consultation-form-submit");
+  const consultationForm = document.getElementById("bb-consultation-form");
+  const successMessageElement = document.querySelector(".bb-is-required-success");
+
+  if (!consultationFormSubmitBtn || !consultationForm) return;
+
+  consultationFormSubmitBtn.addEventListener("click", async (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (!verifyFormData(consultationForm)) return;
+
+    const formData = new FormData(consultationForm);
+    formData.append("action", "handle_form_submission");
+
+    successMessageElement.textContent = "Submitting form...";
+    successMessageElement.style.display = "block";
+
+    try {
+      const response = await fetch(bb_plugin_data.ajaxurl, {
+        method: "POST",
+        body: formData,
+      });
+
+      const result = await response.json();
+      if (result.success) successMessageElement.textContent = "Thank you, your submission has been received, someone will follow up with your shortly.";
+      else successMessageElement.textContent = "Submission failed.";
+      consultationForm.style.display = "none";
+      successMessageElement.style.fontSize = "1.5em";
+    } catch (error) {
+      console.error("AJAX Error:", error);
+      successMessageElement.textContent = "An error occurred. Please try again.";
+    }
+  });
+}
+
 jQuery(document).ready(function ($) {
   let bb_slider;
   if ($.fn.slick) {
@@ -1314,93 +1407,6 @@ jQuery(document).ready(function ($) {
     });
   });
 
-
-
-  function verifyFormData(form) {
-    let isValid = true;
-    let formDataObject = {};
-    let requiredFields = form.querySelectorAll(".bb-is-required");
-
-    requiredFields.forEach(field => {
-      let fieldName = field.name;
-      let fieldValue = field.value.trim();
-      let errorMsg = field.nextElementSibling;
-      formDataObject[fieldName] = fieldValue;
-      if (!fieldValue) {
-        errorMsg.style.display = "block";
-        errorMsg.style.color = "#CD2F32";
-
-        isValid = false;
-      } else {
-        errorMsg.style.display = "none";
-      }
-    });
-
-    if (formDataObject["email"]) {
-      let emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      let emailField = form.querySelector("input[name='email']");
-      let emailError = emailField.nextElementSibling;
-
-      if (!emailPattern.test(formDataObject["email"])) {
-        emailError.textContent = "Please enter a valid email";
-        emailError.style.display = "block";
-        emailError.style.color = "#CD2F32";
-
-        isValid = false;
-      } else {
-        emailError.style.display = "none";
-      }
-    }
-    if (formDataObject["phone"]) {
-      let phonePattern = /^\d+$/;
-      let phoneField = form.querySelector("input[name='phone']");
-      let phoneError = phoneField.nextElementSibling;
-
-      if (!phonePattern.test(formDataObject["phone"])) {
-        phoneError.textContent = "Please enter a valid phone number";
-        phoneError.style.display = "block";
-        phoneError.style.color = "#CD2F32";
-        isValid = false;
-      } else {
-        phoneError.style.display = "none";
-      }
-    }
-
-    return isValid;
-  }
-
-
-  $(".bb-form").submit(function (event) {
-
-    event.preventDefault();
-    verifyFormData(this);
-
-    if (!verifyFormData(this)) return;
-
-
-    const formData = $(this).serialize();
-
-    $.ajax({
-      type: "POST",
-      url: bb_plugin_data.ajaxurl,
-      data: formData + "&action=handle_form_submission",
-      beforeSend: function () {
-        $(".bb-is-required-success").text("Submitting form...");
-      },
-      success: function (response) {
-        var successMessage = response.data;
-        $(".bb-is-required-success").text(successMessage);
-
-      },
-      error: function (xhr, status, error) {
-
-        $(".bb-is-required-success").text(error);
-      },
-    });
-  });
-
-
-
   $(".bb-sidebar-toggle").on("click", function () {
     $(".bb-sidebar").toggleClass("active");
     $(this).toggleClass("active");
@@ -1488,56 +1494,51 @@ function initFavorite() {
   }
 
   function openModal(caseId, bbApiToken, bbWebsiteId) {
-    if (caseIdInput) {
-      caseIdInput.value = caseId;
-    }
-    if (bbApiTokenInput) {
-      bbApiTokenInput.value = bbApiToken;
-    }
-    if (bbWebsiteIdInput) {
-      bbWebsiteIdInput.value = bbWebsiteId;
-    }
+    if (caseIdInput) caseIdInput.value = caseId;
+    if (bbApiTokenInput) bbApiTokenInput.value = bbApiToken;
+    if (bbWebsiteIdInput) bbWebsiteIdInput.value = bbWebsiteId;
 
     const encodedCookieValue = getCookie("wordpress_favorite_email");
-    if (encodedCookieValue !== undefined) {
-      var bb_favorite_email = decodeURIComponent(encodedCookieValue);
-      var bb_favorite_name = getCookie("wordpress_favorite_name");
-      var bb_favorite_name = decodeURIComponent(bb_favorite_name);
-
-      var bb_favorite_phone = getCookie("wordpress_favorite_phone");
-      var bb_favorite_phone = decodeURIComponent(bb_favorite_phone);
-
-      var bb_favorite_case_id = getCookie("wordpress_favorite_case_id");
-      var bb_favorite_case_id = decodeURIComponent(bb_favorite_case_id);
-      var caseId = Number(caseId);
-
-      var bb_favorite_api_token = getCookie("wordpress_favorite_api_token");
-      var bb_favorite_api_token = decodeURIComponent(bb_favorite_api_token);
-
-      var bb_favorite_website_id = getCookie("wordpress_favorite_website_id");
-      var bb_favorite_website_id = decodeURIComponent(bb_favorite_website_id);
-
-      var bb_fav_list_cookie = bb_favorite_case_id.split(",").map(Number);
-      var bb_exist_list = new Set(bb_fav_list_cookie);
-      var bb_exist = bb_exist_list.has(caseId);
-
-      if (bb_exist) {
-        alert("Already favorite!");
-        return false;
-      } else {
-        var data_cookie = {
-          email: bb_favorite_email,
-          phone: bb_favorite_phone,
-          name: bb_favorite_name,
-          caseIds: [caseId],
-          bbApiTokens: [bbApiToken],
-          bbWebsiteIds: [bbWebsiteId],
-        };
-        bb_favorites_submission(data_cookie);
-      }
-    } else {
+    if (!encodedCookieValue) {
       fadeIn(modal);
+      return;
     }
+
+
+    let bb_favorite_email = decodeURIComponent(encodedCookieValue);
+    let bb_favorite_name = getCookie("wordpress_favorite_name");
+    bb_favorite_name = decodeURIComponent(bb_favorite_name);
+
+    let bb_favorite_phone = getCookie("wordpress_favorite_phone");
+    bb_favorite_phone = decodeURIComponent(bb_favorite_phone);
+
+    let bb_favorite_case_id = getCookie("wordpress_favorite_case_id");
+    bb_favorite_case_id = decodeURIComponent(bb_favorite_case_id);
+
+    let bb_favorite_api_token = getCookie("wordpress_favorite_api_token");
+    bb_favorite_api_token = decodeURIComponent(bb_favorite_api_token);
+
+    let bb_favorite_website_id = getCookie("wordpress_favorite_website_id");
+    bb_favorite_website_id = decodeURIComponent(bb_favorite_website_id);
+
+    const bb_fav_list_cookie = bb_favorite_case_id.split(",").map(Number);
+    const bb_exist_list = new Set(bb_fav_list_cookie);
+    const bb_exist = bb_exist_list.has(Number(caseId));
+
+    if (bb_exist) {
+      alert("Already favorite!");
+      return false;
+    }
+
+    const data_cookie = {
+      email: bb_favorite_email,
+      phone: bb_favorite_phone,
+      name: bb_favorite_name,
+      caseIds: [caseId],
+      bbApiTokens: [bbApiToken],
+      bbWebsiteIds: [bbWebsiteId],
+    };
+    bb_favorites_submission(data_cookie);
   }
 
   if (modalCloseIcon) modalCloseIcon.addEventListener("click", closeModal);
@@ -1617,14 +1618,15 @@ function initFavorite() {
         event.preventDefault();
         event.stopPropagation();
         event.stopImmediatePropagation();
-        const caseId = caseIdInput.value;
+        const caseIdInp = caseIdInput.value;
         const bbApiToken = bbApiTokenInput.value;
         const bbWebsiteId = bbWebsiteIdInput.value;
+        if (!verifyFormData(favoriteForm)) return;
         const data = {
           name: event.target[0].value,
           email: event.target[1].value,
           phone: event.target[2].value,
-          caseIds: [caseId],
+          caseIds: [caseIdInp],
           bbApiTokens: [bbApiToken],
           bbWebsiteIds: [bbWebsiteId],
         };
