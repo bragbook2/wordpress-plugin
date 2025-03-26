@@ -94,15 +94,17 @@ document.addEventListener("click", (event) => {
 
 let linkText;
 
+const pathSegments = window.location.pathname.split("/").filter(Boolean);
+const isCarouselPage = pathSegments.length === 1;
+const isListsPage = pathSegments.length === 2;
+const isViewMoreDetailPage = pathSegments.length === 3;
+const isFavoriteListPage = pathSegments[1] === "favorites" && pathSegments.length === 2;
+
 function fetchCaseData(loadMoreCount) {
   try {
     let count = loadMoreCount;
-    const pathSegments = window.location.pathname.split("/").filter(Boolean);
 
-    const isCarouselPage = pathSegments.length === 1;
-    const isListsPage = pathSegments.length === 2;
-    const isViewMoreDetailPage = pathSegments.length === 3;
-    const isFavoriteListPage = pathSegments[1] === "favorites" && pathSegments.length === 2;
+
     const currentPage = { isCarouselPage, isListsPage, isViewMoreDetailPage, isFavoriteListPage }
 
     const pageSlug = pathSegments[0] || "";
@@ -341,8 +343,7 @@ function fetchCaseData(loadMoreCount) {
                       const isCombine = sidebarApi[0]?.ids;
                       let slugName;
                       if (isCombine) {
-                        const totalTokens = 2;
-                        for (let i = 0; i < totalTokens; i++) {
+                        for (let i = 0; i < sidebarApi[0].ids.length; i++) {
                           if (slugName) break;
                           slugName = sidebarApi.find(p => p.ids[i] == caseItem.cases[0].procedureIds[0])?.slugName;
                         }
@@ -379,7 +380,7 @@ function fetchCaseData(loadMoreCount) {
                                             <img src="${imgSrc}" alt="${imgAlt}">
                                         </a>
                                         <img class="bb-heart-icon bb-open-fav-modal" 
-                                            data-case-id="${caseId}"
+                                            data-case-id="${caseItemId}"
                                             data-bb_api_token="${apiToken}" 
                                             data-bb_website_id="${websitePropertyId}" 
                                             src="${heartImage}" 
@@ -392,7 +393,7 @@ function fetchCaseData(loadMoreCount) {
                                         </div>
                                         <div class="bb-content-box-inner-right">
                                             <img class="bb-open-fav-modal" 
-                                                data-case-id="${caseId}" 
+                                                data-case-id="${caseItemId}" 
                                                 data-bb_api_token="${apiToken}" 
                                                 data-bb_website_id="${websitePropertyId}" 
                                                 src="${heartImage}" 
@@ -1524,7 +1525,6 @@ function initFavorite() {
     const bb_fav_list_cookie = bb_favorite_case_id.split(",").map(Number);
     const bb_exist_list = new Set(bb_fav_list_cookie);
     const bb_exist = bb_exist_list.has(Number(caseId));
-
     if (bb_exist) {
       alert("Already favorite!");
       return false;
@@ -1547,126 +1547,133 @@ function initFavorite() {
     fadeOut(modal);
   }
 
-  if (modalToggle) {
-    modalToggle.forEach((toggle) => {
-      toggle.addEventListener("click", (e) => {
-        e.stopPropagation();
-        const caseId = toggle.getAttribute("data-case-id");
-        const bbApiToken = toggle.getAttribute("data-bb_api_token");
-        const bbWebsiteId = toggle.getAttribute("data-bb_website_id");
-        openModal(caseId, bbApiToken, bbWebsiteId);
-      });
-    });
-
-    document.addEventListener("click", (event) => {
-      if (
-        modal &&
-        modal.classList.contains("is-open") &&
-        !modalInner.contains(event.target)
-      ) {
-        closeModal();
-      }
-    });
-
-    function bb_favorites_submission(data) {
-      var caseId = data.caseIds;
-      jQuery.ajax({
-        url: bb_plugin_data.ajaxurl,
-        type: "POST",
-        data: {
-          action: "bragbook_my_favorite",
-          email: data.email,
-          phone: data.phone,
-          name: data.name,
-          caseIds: data.caseIds,
-          bbApiTokens: data.bbApiTokens,
-          bbWebsiteIds: data.bbWebsiteIds,
-        },
-        success: function (response) {
-          if (response.success) {
-            var imgElement = jQuery(`img[data-case-id="${caseId}"]`);
-            if (imgElement.length) {
-              imgElement.each(function () {
-                jQuery(this).attr("src", bb_plugin_data.heartBordered);
-              });
-            }
-            var $span = jQuery("a.bb-sidebar_favorites span");
-            var text = $span.text();
-            var match = text.match(/\((\d+)\)/);
-            if (match) {
-              var currentValue = parseInt(match[1], 10);
-
-              var newValue = currentValue + 1;
-
-              $span.text("(" + newValue + ")");
-            }
-            closeModal();
-          } else {
-            alert("Failed to save favorite.");
-            closeModal();
-          }
-        },
-        error: function (error) {
-          console.error("Error:", error);
-          closeModal();
-        },
-      });
-    }
-
-    if (modalInner && modalInner.querySelector) {
-      favoriteForm.addEventListener("submit", (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        event.stopImmediatePropagation();
-        const caseIdInp = caseIdInput.value;
-        const bbApiToken = bbApiTokenInput.value;
-        const bbWebsiteId = bbWebsiteIdInput.value;
-        if (!verifyFormData(favoriteForm)) return;
-        const data = {
-          name: event.target[0].value,
-          email: event.target[1].value,
-          phone: event.target[2].value,
-          caseIds: [caseIdInp],
-          bbApiTokens: [bbApiToken],
-          bbWebsiteIds: [bbWebsiteId],
-        };
-        console.log("data:", data);
-        bb_favorites_submission(data);
-      });
-    }
-
-
-    function fadeOut(element) {
-      let opacity = 1;
-      function decrease() {
-        opacity -= 0.05;
-        if (opacity <= 0) {
-          element.style.opacity = 0;
-          element.classList.remove("is-open");
-          return true;
-        }
-        element.style.opacity = opacity;
-        requestAnimationFrame(decrease);
-      }
-      decrease();
-    }
-
-    function fadeIn(element) {
-      var opacity = 0;
-      element.classList.add("is-open");
-
-      function increase() {
-        opacity += 0.05;
-        if (opacity >= 1) {
-          element.style.opacity = 1;
-          return true;
-        }
-        element.style.opacity = opacity;
-        requestAnimationFrame(increase);
-      }
-      increase();
-    }
+  if (!modalToggle) {
+    console.log("Modal toggle not found");
+    return;
   }
+
+  modalToggle.forEach((toggle) => {
+    toggle.addEventListener("click", (e) => {
+      if (isFavoriteListPage) {
+        alert("Already favorite!");
+        return;
+      }
+      e.stopPropagation();
+      const caseId = toggle.getAttribute("data-case-id");
+      const bbApiToken = toggle.getAttribute("data-bb_api_token");
+      const bbWebsiteId = toggle.getAttribute("data-bb_website_id");
+      openModal(caseId, bbApiToken, bbWebsiteId);
+    });
+  });
+
+  document.addEventListener("click", (event) => {
+    if (
+      modal &&
+      modal.classList.contains("is-open") &&
+      !modalInner.contains(event.target)
+    ) {
+      closeModal();
+    }
+  });
+
+  function bb_favorites_submission(data) {
+    var caseId = data.caseIds;
+    jQuery.ajax({
+      url: bb_plugin_data.ajaxurl,
+      type: "POST",
+      data: {
+        action: "bragbook_my_favorite",
+        email: data.email,
+        phone: data.phone,
+        name: data.name,
+        caseIds: data.caseIds,
+        bbApiTokens: data.bbApiTokens,
+        bbWebsiteIds: data.bbWebsiteIds,
+      },
+      success: function (response) {
+        if (response.success) {
+          var imgElement = jQuery(`img[data-case-id="${caseId}"]`);
+          if (imgElement.length) {
+            imgElement.each(function () {
+              jQuery(this).attr("src", bb_plugin_data.heartBordered);
+            });
+          }
+          var $span = jQuery("a.bb-sidebar_favorites span");
+          var text = $span.text();
+          var match = text.match(/\((\d+)\)/);
+          if (match) {
+            var currentValue = parseInt(match[1], 10);
+
+            var newValue = currentValue + 1;
+            $span.text("(" + newValue + ")");
+          }
+          closeModal();
+        } else {
+          alert("Failed to save favorite.");
+          closeModal();
+        }
+      },
+      error: function (error) {
+        console.error("Error:", error);
+        closeModal();
+      },
+    });
+  }
+
+  if (modalInner && modalInner.querySelector) {
+    favoriteForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+      const caseIdInp = caseIdInput.value;
+      const bbApiToken = bbApiTokenInput.value;
+      const bbWebsiteId = bbWebsiteIdInput.value;
+      if (!verifyFormData(favoriteForm)) return;
+      const data = {
+        name: event.target[0].value,
+        email: event.target[1].value,
+        phone: event.target[2].value,
+        caseIds: [caseIdInp],
+        bbApiTokens: [bbApiToken],
+        bbWebsiteIds: [bbWebsiteId],
+      };
+      console.log("data:", data);
+      bb_favorites_submission(data);
+    });
+  }
+
+
+  function fadeOut(element) {
+    let opacity = 1;
+    function decrease() {
+      opacity -= 0.05;
+      if (opacity <= 0) {
+        element.style.opacity = 0;
+        element.classList.remove("is-open");
+        return true;
+      }
+      element.style.opacity = opacity;
+      requestAnimationFrame(decrease);
+    }
+    decrease();
+  }
+
+  function fadeIn(element) {
+    var opacity = 0;
+    element.classList.add("is-open");
+
+    function increase() {
+      opacity += 0.05;
+      if (opacity >= 1) {
+        element.style.opacity = 1;
+        return true;
+      }
+      element.style.opacity = opacity;
+      requestAnimationFrame(increase);
+    }
+    increase();
+  }
+
 }
 
 Array.from(document.querySelectorAll(".bb-filter-select")).forEach((filter) => {

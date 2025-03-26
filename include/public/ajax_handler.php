@@ -2068,6 +2068,13 @@ class Ajax_Handler
                         $procedureName = $procedureIdsName["bb_procedure_name"];
                         $url = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/cases?websitepropertyId={$websiteproperty_id}&apiToken={$api_token}&caseId={$caseId}&seoSuffixUrl={$seoSuffixUrl}&procedureId={$procedureId}";
                         $data = get_transient($url);
+
+						if ( false === $data ) {
+							$response = wp_remote_get( $url );
+							if ( is_wp_error( $response ) ) return;
+							$data = wp_remote_retrieve_body( $response );
+							set_transient( md5( $url ), $data, 3600 );
+						}
     
                         $bb_api_data = json_decode($data, true);
                     }
@@ -2082,15 +2089,23 @@ class Ajax_Handler
             }
 
             $bb_response = $bb_api_data['data'][0];
+            $bb_case_ids =  $bb_api_data['data'][0]['caseIds'];
             $bb_seo_case_title = "";
             $bb_seo_case_description = "";
-            
+            $bb_case_number = null;
+            foreach ($bb_case_ids as $key => $bb_case_item) {
+                if (($bb_case_item['id'] == $bbrag_case_id && strpos($parts[2], 'bb-case') !== false) || 
+                    ($bb_case_item['seoSuffixUrl'] == $bbrag_case_id && strpos($parts[2], 'bb-case') === false)) {
+                    $bb_case_number = ++$key;
+                    break;
+                }
+            }
             if (!empty($bb_api_data) && is_array($bb_api_data)) {
                 if ($bbrag_case_id == $bb_response['id'] || $bbrag_case_id == $bb_response['caseDetails'][0]['seoSuffixUrl']) {
                     if (isset($bb_response['caseDetails'][0]) && !empty($bb_response['caseDetails'][0]['seoPageTitle']) && $bb_seo_case_title == "") {
                         $bb_seo_title = $bb_seo_case_title = isset($bb_response['caseDetails'][0]) ? $bb_response['caseDetails'][0]['seoPageTitle'] . " - " . $site_title : "";
                     } else {
-                        $bb_seo_title = "Before and After " . $procedureName . " - " . $site_title;
+                        $bb_seo_title = "Before and After " . $procedureName . ": Patient " . $bb_case_number . " - " . $site_title;
                     }
                     if (isset($bb_response['caseDetails'][0]) && !empty($bb_response['caseDetails'][0]['seoPageDescription']) && $bb_seo_case_description == "") {
                         $bb_seo_description = $bb_seo_case_description = isset($bb_response['caseDetails'][0]) ? $bb_response['caseDetails'][0]['seoPageDescription'] : "";
@@ -2104,7 +2119,7 @@ class Ajax_Handler
             }
             $bbrag_procedure_title = $parts[1];
             $bb_pro_title_all_seo = ucwords(str_replace("-", " ", $bbrag_procedure_title));
-            $bb_seo_title = "Before and After " . $bb_pro_title_all_seo . " " . $procedureTotalCase . " - " . $site_title;
+            $bb_seo_title = "Before and After " . $bb_pro_title_all_seo . " Gallery, " . $procedureTotalCase . " Cases - " . $site_title;
         }
         $bb_title_description_array = ['bb_title' => $bb_seo_title, 'bb_description' => $bb_seo_description];
         return $bb_title_description_array;
