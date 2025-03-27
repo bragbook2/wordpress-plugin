@@ -1938,7 +1938,7 @@ class Ajax_Handler
             setcookie('wordpress_favorite_name', $name, $expireTime, $cookie_path);
             setcookie('wordpress_favorite_phone', $phone, $expireTime, $cookie_path);
 
-            wp_send_json_success($data->success);
+            wp_send_json_success($data);
         } else {
             wp_send_json_error(array('message' => 'Failed to save favorite.'));
         }

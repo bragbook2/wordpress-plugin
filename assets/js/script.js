@@ -1,4 +1,16 @@
 let loadMoreCount = 1;
+const filterBtn = document.querySelector(".bb-filter-heading");
+const filterContent = document.querySelector(".bb-filter-content");
+const accordion = Array.from(document.querySelectorAll(".bb-accordion"));
+
+const pathSegments = window.location.pathname.split("/").filter(Boolean);
+const isCarouselPage = pathSegments.length === 1;
+const isListsPage = pathSegments.length === 2;
+const isViewMoreDetailPage = pathSegments.length === 3;
+const isFavoriteListPage = pathSegments[1] === "favorites" && pathSegments.length === 2;
+
+let linkText;
+
 
 document.addEventListener("DOMContentLoaded", () => {
   fetchCaseData(loadMoreCount);
@@ -24,11 +36,7 @@ function handleLoadMoreButton(show) {
 }
 
 function handleFilterToggle() {
-  if (filterBtn) {
-    filterBtn.addEventListener("click", () => {
-      filterContent.classList.toggle("active");
-    });
-  }
+  if (filterBtn) filterBtn.addEventListener("click", () => filterContent.classList.toggle("active"));
 }
 
 function handleSingleClickToggles() {
@@ -78,7 +86,7 @@ function removeActiveClass(classname) {
   if (element) element.classList.remove("isActive");
 }
 
-
+// ============================ Event Listener ===========================================
 document.addEventListener("click", (event) => {
   const loadMoreContainer = event.target.closest(".ajax-load-more");
   if (!loadMoreContainer) return;
@@ -92,21 +100,11 @@ document.addEventListener("click", (event) => {
   }
 });
 
-let linkText;
 
-const pathSegments = window.location.pathname.split("/").filter(Boolean);
-const isCarouselPage = pathSegments.length === 1;
-const isListsPage = pathSegments.length === 2;
-const isViewMoreDetailPage = pathSegments.length === 3;
-const isFavoriteListPage = pathSegments[1] === "favorites" && pathSegments.length === 2;
-
+// ============================ Fetch Data ===========================================
 function fetchCaseData(loadMoreCount) {
   try {
     let count = loadMoreCount;
-
-
-    const currentPage = { isCarouselPage, isListsPage, isViewMoreDetailPage, isFavoriteListPage }
-
     const pageSlug = pathSegments[0] || "";
     const procedureSlug = pathSegments[1] || "";
     const caseIdentifier = pathSegments[2]?.includes("bb-case") ? pathSegments[2].split("-").pop() : "";
@@ -180,20 +178,19 @@ function fetchCaseData(loadMoreCount) {
       dynamicFilter: dynamicFilterQuery,
       dynamicFilterCombine: Object.keys(dynamicFilterData).length ? JSON.stringify(dynamicFilterData) : 0,
       ...staticFilterData,
-      currentPage: JSON.stringify(currentPage)
     };
 
     fetch(bb_plugin_data.ajaxurl, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded", },
       body: new URLSearchParams(requestData).toString(),
-    })
-      .then((response) => response.json())
+    }).then((response) => response.json())
       .then((data) => {
         console.log("Ressponse => ", data);
         try {
           let heartImage;
           let sidebarApi;
+          let fav_data;
           if (data.data.sidebar_api) {
             try {
               const parsedSidebarApi = JSON.parse(JSON.parse(data.data.sidebar_api));
@@ -206,7 +203,7 @@ function fetchCaseData(loadMoreCount) {
           }
 
           if (data.data.bragbook_favorite.length > 0) {
-            var fav_data = data.data.bragbook_favorite;
+            fav_data = data.data.bragbook_favorite;
             let element_fav_count = document.getElementById("bb_favorite_caseIds_count");
             element_fav_count.textContent = "(" + `${fav_data.length}` + ")";
           }
@@ -419,8 +416,18 @@ function fetchCaseData(loadMoreCount) {
               document.querySelector("#bb_f_gif_sidebar")?.remove();
               let patienLeftBox = document.querySelector(".bb-patient-left");
               if (patienLeftBox) {
+                let bbPatientNo = null;
                 caseSet.data.forEach((caseItem) => {
+                  if (seoSuffixUrl) bbPatientNo = (caseItem.caseIds?.findIndex(item => item.seoSuffixUrl == seoSuffixUrl) + 1);
+                  else if (caseIdentifier) bbPatientNo = (caseItem.caseIds?.findIndex(item => item.id == caseIdentifier) + 1);
                   let caseId = caseItem.id;
+                  let proceduralName = "";
+                  if (caseItem.caseDetails[0].seoHeadline) {
+                    proceduralName = caseItem.caseDetails[0].seoHeadline;
+                  } else {
+                    let titleWithoutDashes = procedureSlug.replace(/-/g, ' ');
+                    proceduralName = titleWithoutDashes + ': Patient ' + bbPatientNo;
+                  }
                   if (caseId == caseIdentifier || seoSuffixUrl == caseItem.caseDetails[0]?.seoSuffixUrl) {
                     if (caseItem.photoSets && caseItem.photoSets.length > 0) {
                       caseItem.photoSets.forEach((value, itemIndex) => {
@@ -432,7 +439,7 @@ function fetchCaseData(loadMoreCount) {
                         imgElement.className =
                           "bbrag_gallery_image testing-image";
                         imgElement.src = bb_new_image_value;
-                        imgElement.alt = value.seoAltText + " - angle " + (itemIndex + 1) ?? "Procedure Image";
+                        imgElement.alt = (value.seoAltText ?? "Before and after " + proceduralName) + " - angle " + (itemIndex + 1);
                         patienLeftBox.appendChild(imgElement);
                         let imageObjc = {
                           "@type": "ImageObject",
@@ -600,7 +607,7 @@ function fetchCaseData(loadMoreCount) {
               document.querySelector(".bb-filter-content-inner")
                 .childElementCount === 0
             ) {
-              let filterContent = document.querySelector(
+              const filterContentInner = document.querySelector(
                 ".bb-filter-content-inner"
               );
               let filter_data = JSON.parse(data.data.filter_data);
@@ -623,7 +630,7 @@ function fetchCaseData(loadMoreCount) {
                   });
 
                   filterHTML += `</div></div></div></div>`;
-                  filterContent.innerHTML += filterHTML;
+                  filterContentInner.innerHTML += filterHTML;
                 }
               }
               if (filter_data.data.dynamicFilter) {
@@ -654,9 +661,9 @@ function fetchCaseData(loadMoreCount) {
 
                   filterHTMLA += `</div></div></div></div>`;
                 }
-                filterContent.innerHTML += filterHTMLA;
+                filterContentInner.innerHTML += filterHTMLA;
               }
-              filterContent.innerHTML += `<div  id='apply_filter'>
+              filterContentInner.innerHTML += `<div  id='apply_filter'>
                 <button class="apply_bb_filter" onClick='applyFilterBB(${count}, "${pageSlug}", "${elementId}", "${apiToken}", "${websitePropertyId}", "${caseIdentifier}", "${procedureSlug}")'>Apply</button> 
                 </div>`;
 
@@ -676,9 +683,9 @@ function fetchCaseData(loadMoreCount) {
 
   } catch (error) {
     console.error("Error", error)
-
   }
 }
+
 function handleDynamicCheckboxChange(key, value) {
   const checkboxes = document.querySelectorAll(`input[name=${key}]`);
 
@@ -758,7 +765,7 @@ function applyFilterBB(
     .then((response) => response.json())
     .then((data) => {
       try {
-        var fav_data = data.data.bragbook_favorite;
+        const fav_data = data.data.bragbook_favorite;
         let heartImage;
         if (data.data && data.data.case_set) {
           let caseSet = JSON.parse(data.data.case_set);
@@ -949,20 +956,18 @@ function renderPagination(paginationData, caseItem, targetLinkSelector, bb_right
   }
 }
 
-let filterBtn = document.querySelector(".bb-filter-heading");
-let filterContent = document.querySelector(".bb-filter-content");
-let bb_acc = Array.from(document.querySelectorAll(".bb-accordion"));
+
 
 function closeAllPanels() {
-  for (let i = 0; i < bb_acc.length; i++) {
-    bb_acc[i].classList.remove("active");
-    let panel = bb_acc[i].nextElementSibling;
+  for (let i = 0; i < accordion.length; i++) {
+    accordion[i].classList.remove("active");
+    let panel = accordion[i].nextElementSibling;
     panel.style.maxHeight = null;
   }
 }
 
-for (let i = 0; i < bb_acc.length; i++) {
-  bb_acc[i].addEventListener("click", function () {
+for (let i = 0; i < accordion.length; i++) {
+  accordion[i].addEventListener("click", function () {
     if (!this.classList.contains("active")) {
       closeAllPanels();
     }
@@ -1592,20 +1597,22 @@ function initFavorite() {
       },
       success: function (response) {
         if (response.success) {
-          var imgElement = jQuery(`img[data-case-id="${caseId}"]`);
-          if (imgElement.length) {
-            imgElement.each(function () {
-              jQuery(this).attr("src", bb_plugin_data.heartBordered);
+          const imgElements = document.querySelectorAll(`img[data-case-id="${caseId}"]`);
+          if (imgElements.length) {
+            imgElements.forEach(function (imgElement) {
+              imgElement.src = bb_plugin_data.heartBordered;
             });
           }
-          var $span = jQuery("a.bb-sidebar_favorites span");
-          var text = $span.text();
-          var match = text.match(/\((\d+)\)/);
-          if (match) {
-            var currentValue = parseInt(match[1], 10);
 
-            var newValue = currentValue + 1;
-            $span.text("(" + newValue + ")");
+          const spanElement = document.querySelector("a.bb-sidebar_favorites span");
+          if (spanElement) {
+            const text = spanElement.textContent;
+            const match = text.match(/\((\d+)\)/);
+
+            if (match) {
+              spanElement.style.display = "inline";
+              spanElement.textContent = `(${response.data.totalFavorites})`;
+            }
           }
           closeModal();
         } else {

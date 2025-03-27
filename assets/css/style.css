@@ -404,6 +404,7 @@ button.bb-sidebar-toggle.bb-sidebar-head-toggle img {
 
 .bb-sidebar_favorites span {
     color: #bbbbbb;
+    display:none;
 }
 
 .bb-main .bb-accordion::after {
@@ -427,7 +428,7 @@ button.bb-sidebar-toggle.bb-sidebar-head-toggle img {
 .bb-main .bb-panel {
     max-height: 0;
     overflow: hidden;
-    transition: max-height 0.2s ease-out;
+    transition: max-height 0.5s ease-out;
 }
 
 .bb-main .bb-panel ul {
