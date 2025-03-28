@@ -11,7 +11,6 @@ const isFavoriteListPage = pathSegments[1] === "favorites" && pathSegments.lengt
 
 let linkText;
 
-
 document.addEventListener("DOMContentLoaded", () => {
   fetchCaseData(loadMoreCount);
   handleLoadMoreButton();
@@ -100,7 +99,6 @@ document.addEventListener("click", (event) => {
   }
 });
 
-
 // ============================ Fetch Data ===========================================
 function fetchCaseData(loadMoreCount) {
   try {
@@ -187,6 +185,8 @@ function fetchCaseData(loadMoreCount) {
     }).then((response) => response.json())
       .then((data) => {
         console.log("Ressponse => ", data);
+        const myFavoriteCountSpan = document.getElementById("bb_favorite_caseIds_count");
+        myFavoriteCountSpan ? myFavoriteCountSpan.style.display = 'inline' : '';
         try {
           let heartImage;
           let sidebarApi;
@@ -667,7 +667,7 @@ function fetchCaseData(loadMoreCount) {
                 <button class="apply_bb_filter" onClick='applyFilterBB(${count}, "${pageSlug}", "${elementId}", "${apiToken}", "${websitePropertyId}", "${caseIdentifier}", "${procedureSlug}")'>Apply</button> 
                 </div>`;
 
-              bb_advance_filter();
+              handleAdvanceFilter();
             }
           }
 
@@ -686,207 +686,109 @@ function fetchCaseData(loadMoreCount) {
   }
 }
 
-function handleDynamicCheckboxChange(key, value) {
-  const checkboxes = document.querySelectorAll(`input[name=${key}]`);
-
-  checkboxes.forEach((checkbox) => {
-    checkbox.addEventListener("change", (event) => {
-      checkboxes.forEach((cb) => {
-        if (cb !== event.target) {
-          cb.checked = false;
-        }
-      });
-    });
-  });
-}
-
-function applyFilterBB(
-  count,
-  pageSlug,
-  elementId,
-  apiToken,
-  websitePropertyId,
-  caseIdentifier,
-  procedureSlug
-) {
-  document.querySelector(".bb-content-boxes").innerHTML = "";
-  document.querySelector(
-    ".apply_bb_filter"
-  ).innerHTML = `<img id="apply_bb_filter" src="${bb_plugin_data.heartrunning}" alt="Loading...">`;
-  let dynamicFilterBB = document.querySelectorAll(
-    '.bb-dynamic-filter input[type="checkbox"]:checked'
-  );
-  let staticFilterBB = document.querySelectorAll(
-    '.bb-static-filter input[type="checkbox"]:checked'
-  );
-  let staticFilterCombine = {};
-  let staticFilter = "";
-  let dynamicFilter = "";
-  let dynamicFilterCombine = {};
-
-  staticFilterBB.forEach((checkbox) => {
-    let dataKey = checkbox.getAttribute("data-key");
-    let dataValue = checkbox.getAttribute("data-value");
-    staticFilter += `&${dataKey}=${dataValue}`;
-    dataValue = isNaN(parseInt(dataValue)) ? `"${dataValue}"` : parseInt(dataValue);
-    staticFilterCombine[dataKey] = dataValue;
-  });
-
-
-
-  dynamicFilterBB.forEach((checkbox) => {
-    let dataKey = checkbox.getAttribute("data-key");
-    let dataValue = checkbox.getAttribute("data-value");
-    dataKey = dataKey.replace(/\s+/g, "|||");
-    dynamicFilter += `&${dataKey}=${dataValue}`;
-    dataValue = isNaN(parseInt(dataValue)) ? `${dataValue}` : parseInt(dataValue);
-    dynamicFilterCombine[dataKey] = dataValue;
-  });
-  let data = filter_and_paginate(
+function createFilterData(count, pageSlug, elementId, apiToken, websitePropertyId, caseIdentifier, staticFilterCombine, dynamicFilterCombine) {
+  return {
+    action: "bb_case_api",
     count,
     pageSlug,
-    elementId,
+    procedureId: elementId,
     apiToken,
     websitePropertyId,
-    caseIdentifier,
-    staticFilter,
-    dynamicFilter,
-    dynamicFilterCombine,
-    staticFilterCombine
-  );
+    caseId: caseIdentifier,
+    staticFilter: Object.entries(staticFilterCombine).map(([k, v]) => `&${k}=${v}`).join(""),
+    dynamicFilter: Object.entries(dynamicFilterCombine).map(([k, v]) => `&${k}=${v}`).join(""),
+    dynamicFilterCombine: Object.keys(dynamicFilterCombine).length ? JSON.stringify(dynamicFilterCombine) : 0,
+    ...staticFilterCombine
+  };
+}
+
+function applyFilterBB(count, pageSlug, elementId, apiToken, websitePropertyId, caseIdentifier, procedureSlug) {
+  const contentBox = document.querySelector(".bb-content-boxes");
+  // const applyFilterBtn = document.querySelector(".apply_bb_filter");
+
+  contentBox.innerHTML = "";
+  // applyFilterBtn.innerHTML = `<img id="apply_bb_filter" src="${bb_plugin_data.heartrunning}" alt="Loading...">`;
+
+  const getCheckedFilters = (selector) => {
+    return [...document.querySelectorAll(selector)].reduce((acc, checkbox) => {
+      const key = checkbox.getAttribute("data-key").replace(/\s+/g, "|||");
+      const value = isNaN(parseInt(checkbox.getAttribute("data-value")))
+        ? checkbox.getAttribute("data-value")
+        : parseInt(checkbox.getAttribute("data-value"));
+      acc[key] = value;
+      return acc;
+    }, {});
+  };
+
+  const staticFilterCombine = getCheckedFilters(".bb-static-filter input[type='checkbox']:checked");
+  const dynamicFilterCombine = getCheckedFilters(".bb-dynamic-filter input[type='checkbox']:checked");
+
+  const data = createFilterData(count, pageSlug, elementId, apiToken, websitePropertyId, caseIdentifier, staticFilterCombine, dynamicFilterCombine);
+
 
   fetch(bb_plugin_data.ajaxurl, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams(data).toString(),
   })
     .then((response) => response.json())
-    .then((data) => {
-      try {
-        const fav_data = data.data.bragbook_favorite;
-        let heartImage;
-        if (data.data && data.data.case_set) {
-          let caseSet = JSON.parse(data.data.case_set);
-          if (caseIdentifier == "") {
-            var bb_case_count = (count - 1) * 10;
-            let contentBox = document.querySelector(".bb-content-boxes");
-            handleLoadMoreButton(caseSet.hasLoadMore);
-            caseSet.data.forEach((caseItem) => {
-              if (caseItem.photoSets && caseItem.photoSets.length > 0) {
-                let photoSet = caseItem.photoSets[0];
-                let imgSrc =
-                  photoSet.highResPostProcessedImageLocation ||
-                  photoSet.postProcessedImageLocation ||
-                  photoSet.originalBeforeLocation;
-                let imgAlt = photoSet.seoAltText || "Procedure Image";
-                let caseId = "";
-                seoSuffixUrl = caseItem.caseDetails[0].seoSuffixUrl;
-                if (seoSuffixUrl) {
-                  caseId = seoSuffixUrl;
-                } else {
-                  caseId = "bb-case-" + caseItemId;
-                }
+    .then(({ data }) => {
+      if (!data?.case_set) return console.error("Invalid response structure:", data);
 
-                if (fav_data.includes(caseId)) {
-                  heartImage = bb_plugin_data.heartBordered;
-                } else {
-                  heartImage = bb_plugin_data.heartRed;
-                }
-                let caseDetails = caseItem.details || "";
-                caseItem.patientCount = ++bb_case_count;
-                let procedureUrl = `/${pageSlug}/${procedureSlug}/${caseId}/`;
+      const caseSet = JSON.parse(data.case_set);
+      handleLoadMoreButton(caseSet.hasLoadMore);
 
-                let newContentF = `
-                            <div class="bb-content-box">
-                                <div class="bb-content-thumbnail">
-                                    <a href="${procedureUrl}">
-                                        <img src="${imgSrc}" alt="${imgAlt}">
-                                    </a>
-                                    <img class="bb-heart-icon bb-open-fav-modal" 
-                                        data-case-id="${caseId}"
-                                        data-bb_api_token="${apiToken}" 
-                                        data-bb_website_id="${websitePropertyId}" 
-                                        src="${heartImage}" 
-                                        alt="heart">
-                                </div>
-                                <div class="bb-content-box-inner">
-                                    <div class="bb-content-box-inner-left">
-                                        <h5>${procedureSlug} : Patient ${caseItem.patientCount}</h5>
-                                        <p>${caseDetails}</p> 
-                                    </div>
-                                    <div class="bb-content-box-inner-right">
-                                        <img class="bb-open-fav-modal" 
-                                            data-case-id="${caseId}" 
-                                            data-bb_api_token="${apiToken}" 
-                                            data-bb_website_id="${websitePropertyId}" 
-                                            src="${heartImage}" 
-                                            alt="heart">
-                                    </div>
-                                </div>
-                                <div class="bb-content-box-cta">
-                                    <a class="view-more-btn" href="${procedureUrl}">
-                                        View More
-                                    </a>
-                                </div>
-                            </div>
-                        `;
+      let bb_case_count = (count - 1) * 10;
+      contentBox.innerHTML = caseSet.data.map(({ photoSets, caseDetails, details = "" }) => {
+        if (!photoSets?.length) return "";
 
-                contentBox.innerHTML += newContentF;
-              }
-            });
-          }
-        } else {
-          console.error("Invalid response structure:", data);
-        }
-      } catch (err) {
-        console.error("Error parsing case_set JSON:", err);
-      }
-    });
-  document.querySelector(".apply_bb_filter").innerHTML = `Apply`;
+        const { highResPostProcessedImageLocation, postProcessedImageLocation, originalBeforeLocation, seoAltText } = photoSets[0];
+        const imgSrc = highResPostProcessedImageLocation || postProcessedImageLocation || originalBeforeLocation;
+        const imgAlt = seoAltText || "Procedure Image";
+
+        const caseId = caseDetails[0]?.seoSuffixUrl || `bb-case-${bb_case_count++}`;
+        const procedureUrl = `/${pageSlug}/${procedureSlug}/${caseId}/`;
+        const heartImage = data.bragbook_favorite.includes(caseId) ? bb_plugin_data.heartBordered : bb_plugin_data.heartRed;
+
+        return `
+          <div class="bb-content-box">
+            <div class="bb-content-thumbnail">
+              <a href="${procedureUrl}"><img src="${imgSrc}" alt="${imgAlt}"></a>
+              <img class="bb-heart-icon bb-open-fav-modal" data-case-id="${caseId}" data-bb_api_token="${apiToken}" data-bb_website_id="${websitePropertyId}" src="${heartImage}" alt="heart">
+            </div>
+            <div class="bb-content-box-inner">
+              <h5>${procedureSlug} : Patient ${bb_case_count}</h5>
+              <p>${details}</p> 
+            </div>
+            <div class="bb-content-box-cta">
+              <a class="view-more-btn" href="${procedureUrl}">View More</a>
+            </div>
+          </div>
+        `;
+      }).join("");
+    })
+    .catch((err) => console.error("Error fetching data:", err));
+  // .finally(() => applyFilterBtn.innerHTML = "Apply");
 }
-function bb_advance_filter() {
-  let filterAccInner = document.querySelectorAll(
-    ".bb-filter-content-inner-wrapper .accordion"
-  );
 
-  for (let i = 0; i < filterAccInner.length; i++) {
-    filterAccInner[i].addEventListener("click", function () {
+function handleAdvanceFilter() {
+  document.querySelectorAll(".bb-filter-content-inner-wrapper .accordion")
+    .forEach(acc => acc.addEventListener("click", function () {
       this.classList.toggle("active");
-      var panel = this.nextElementSibling;
-      if (panel.style.maxHeight) {
-        panel.style.maxHeight = null;
-      } else {
-        panel.style.maxHeight = panel.scrollHeight + "px";
-      }
-    });
-  }
-  const checkboxes = document.querySelectorAll(
-    '.bb-checkbox-container input[type="checkbox"]'
-  );
-  const clearButton = document.getElementById("clearButton");
-  clearButton.addEventListener("click", function () {
-    checkboxes.forEach((checkbox) => {
-      checkbox.checked = false;
-    });
-    const contentBoxes = document.querySelectorAll(".bb-content-box");
-    contentBoxes.forEach((box) => {
-      box.style.display = "block";
-    });
+      const panel = this.nextElementSibling;
+      panel.style.maxHeight = panel.style.maxHeight ? null : panel.scrollHeight + "px";
+    }));
+
+  document.getElementById("clearButton")?.addEventListener("click", () => {
+    document.querySelectorAll('.bb-checkbox-container input[type="checkbox"]')
+      .forEach(checkbox => checkbox.checked = false);
+
+    document.querySelectorAll(".bb-content-box").forEach(box => box.style.display = "block");
   });
 }
-function filter_and_paginate(
-  count,
-  pageSlug,
-  elementId,
-  apiToken,
-  websitePropertyId,
-  caseIdentifier,
-  staticFilter,
-  dynamicFilter,
-  dynamicFilterCombine,
-  staticFilterCombine
+
+function handleFilterAndPaginate(count, pageSlug, elementId, apiToken, websitePropertyId,
+  caseIdentifier, staticFilter, dynamicFilter, dynamicFilterCombine, staticFilterCombine
 ) {
   const data = {
     action: "bb_case_api",
