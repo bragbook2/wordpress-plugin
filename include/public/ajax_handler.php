@@ -2121,7 +2121,7 @@ class Ajax_Handler
             $bb_pro_title_all_seo = ucwords(str_replace("-", " ", $bbrag_procedure_title));
             $bb_seo_title = "Before and After " . $bb_pro_title_all_seo . " Gallery, " . $procedureTotalCase . " Cases - " . $site_title;
         }
-        $bb_title_description_array = ['bb_title' => $bb_seo_title, 'bb_description' => $bb_seo_description];
+        $bb_title_description_array = ['bb_title' => $bb_seo_title, 'bb_description' => $bb_seo_description, 'bb_procedure_name' => $procedureName];
         return $bb_title_description_array;
     }
 
@@ -2239,6 +2239,69 @@ class Ajax_Handler
         return $brag_book_description['bb_description'];
     }
 
+    public function bb_add_custom_schema() {
+
+        $bbrag_case_url = strtok($_SERVER["REQUEST_URI"], '?');
+        $bbragbook_case_url = trim($bbrag_case_url, '/');
+        $parts = explode('/', $bbragbook_case_url);
+        $formattedString = ucwords(str_replace("-", " ", $parts[0]));      
+
+        $brag_book_schema_detail = $this->seoData;
+
+        if (isset($parts[2]) && !empty($parts[2])) {
+            $breadcrumb = [
+                [
+                    "@type" => "ListItem",
+                    "position" => 1,
+                    "name" => "Home",
+                    "item" => home_url()
+                ],
+                [
+                    "@type" => "ListItem",
+                    "position" => 2,
+                    "name" => $formattedString,
+                    "item" => "/" . $parts[0]
+                ],
+                [
+                    "@type" => "ListItem",
+                    "position" => 3,
+                    "name" => $brag_book_schema_detail['bb_title'],
+                    "item" => $this->bb_get_current_url()
+                ]
+            ];
+
+            $schema_data = [
+                "@context" => "https://schema.org",
+                "@graph" => [
+                    [
+                        "@type" => "BreadcrumbList",
+                        "itemListElement" => $breadcrumb
+                    ],
+                    [
+                        "@type" => "Website",
+                        "name" => $brag_book_schema_detail['bb_title'],
+                        "url" => $this->bb_get_current_url(),
+                        "description" => $brag_book_schema_detail['bb_description'],
+                        "bodyLocation" => $brag_book_schema_detail['bb_procedure_name'],
+                        "procedureType" => "Surgical",
+                        "recognizingAuthority" => [
+                            "@type" => "MedicalOrganization",
+                            "name" => "American Society of Plastic Surgeons",
+                            "url" => "https://www.plasticsurgery.org/"
+                        ],
+                            "study" => [
+                            "@type" => "MedicalStudy",
+                            "name" => $brag_book_schema_detail['bb_title'] . " Case Study",
+                            "url" => $this->bb_get_current_url()
+                        ],
+                    ]
+                ]
+            ];
+
+            echo '<script type="application/ld+json">' . json_encode($schema_data, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) . '</script>';
+        }
+    }
+
     public function bb_print_custom_bragbook_description()
     {
         echo '<meta name="description" content="' . $this->bb_get_custom_bragbook_description() . '">';
@@ -2348,6 +2411,7 @@ class Ajax_Handler
                     remove_action('wp_head', 'rel_canonical');
                     remove_action('wp_head', 'wp_shortlink_wp_head', 10, 0);
                     add_action('wp_head', array($this, 'bb_print_canonical'));
+                    add_action('wp_head', array($this, 'bb_add_custom_schema'), 1);
                 }
             }
         }

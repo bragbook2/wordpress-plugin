@@ -428,7 +428,6 @@ button.bb-sidebar-toggle.bb-sidebar-head-toggle img {
 .bb-main .bb-panel {
     max-height: 0;
     overflow: hidden;
-    transition: max-height 0.5s ease-out;
 }
 
 .bb-main .bb-panel ul {
