@@ -488,7 +488,7 @@ button.bb-sidebar-toggle.bb-sidebar-head-toggle img {
 .bb-main .bb-sidebar-btn {
   text-transform: uppercase;
   padding: 10px 20px;
-  font-size: 20px;
+  font-size: 15px;
   line-height: 1;
   font-family: "Manrope", sans-serif;
   font-weight: 500;
@@ -940,6 +940,10 @@ button.bb-sidebar-toggle.bb-sidebar-head-toggle img {
   width: 100%;
   color: #000000 !important;
   margin-top: 1em;
+}
+
+.bb-content-box-inner-right {
+  margin-left: 10px;
 }
 
 .bb-content-box-inner-right img {
@@ -2099,6 +2103,10 @@ p.bb-fav-modal-close-button {
     font-size: 18px;
     padding: 15px;
   }
+
+  .bb-main .bb-filter-attic h2 {
+    font-size: 38px;
+  }
 }
 
 .bb-category-shortcode-main {
@@ -2158,6 +2166,7 @@ p.bb-fav-modal-close-button {
     display: block;
     position: absolute;
     z-index: 11;
+    font-size: 0;
   }
 
   .bb-main .bb-sidebar {
@@ -2204,6 +2213,7 @@ p.bb-fav-modal-close-button {
   .bb-main {
     flex-direction: column;
     padding-inline: 0;
+    padding-top: 30px;
   }
 
   .bb-main .bb-sidebar {
@@ -2226,7 +2236,7 @@ p.bb-fav-modal-close-button {
     height: 100vh;
     width: 100vw !important;
     top: 0;
-    padding-top: 75px;
+    padding-top: 95px;
   }
 
   .bb-main>* {
@@ -2260,7 +2270,7 @@ p.bb-fav-modal-close-button {
   }
 
   .bb-main .bb-content-area>h2 {
-    font-size: 45px;
+    font-size: 28px;
     line-height: 1.1;
   }
 
@@ -2355,7 +2365,7 @@ p.bb-fav-modal-close-button {
   }
 
   .bb-main .bb-filter-attic h2 {
-    font-size: 50px;
+    font-size: 25px;
   }
 
   .bb-content-box-inner-left {
@@ -2424,6 +2434,7 @@ p.bb-fav-modal-close-button {
 
   .bb-filter-attic-borderless {
     border-bottom: none;
+    align-items: center;
   }
 
   .bb-content-thumbnail {
@@ -2572,4 +2583,76 @@ p.bb-fav-modal-close-button {
   flex-direction: column;
   gap: 20px;
   margin-top: 20px;
+}
+
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgb(0 0 0 / 91%);
+  backdrop-filter: blur(5px);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+  z-index: 999;
+}
+
+.popup h3 span {
+  text-transform: uppercase;
+}
+
+.popup h3 {
+  font-size: 28px;
+  margin-bottom: 20px;
+}
+
+.popup p {
+  margin-bottom: 15px;
+  font-size: 18px;
+}
+
+.popup {
+  background: white;
+  padding: 20px;
+  text-align: center;
+  width: 70%;
+}
+
+.popup-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+
+.popup button {
+  margin-top: 10px;
+  padding: 5px 10px;
+  border: none;
+  background: #363636;
+  color: white;
+  cursor: pointer;
+  text-transform: uppercase;
+  width: 200px;
+}
+
+.popup-overlay.show {
+  visibility: visible;
+  opacity: 1;
+}
+
+@media (max-width: 768px) {
+  .popup {
+    width: 90%;
+  }
+
+  .popup-btn {
+    gap: 0;
+    flex-direction: column;
+  }
 }

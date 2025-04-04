@@ -17,6 +17,9 @@ if (!defined('BB_PLUGIN_DIR_PATH')) {
 if (!defined('BB_PLUGIN_DIR_MAIN_PATH')) {
     define('BB_PLUGIN_DIR_MAIN_PATH', plugin_dir_path(__FILE__));
 }
+if (!defined('HOUR_IN_SECONDS')) {
+    define('HOUR_IN_SECONDS', 3600);
+}
 
 require_once BB_PLUGIN_DIR_MAIN_PATH . 'include/admin/class-activator.php';
 require_once BB_PLUGIN_DIR_MAIN_PATH . 'include/admin/class-shortcode.php';

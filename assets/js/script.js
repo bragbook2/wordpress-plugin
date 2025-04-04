@@ -191,6 +191,7 @@ function fetchCaseData(loadMoreCount) {
           let heartImage;
           let sidebarApi;
           let fav_data;
+          let is_nude;
           if (data.data.sidebar_api) {
             try {
               const parsedSidebarApi = JSON.parse(JSON.parse(data.data.sidebar_api));
@@ -218,6 +219,10 @@ function fetchCaseData(loadMoreCount) {
               let images = [];
               if (caseSet.data) {
                 caseSet.data.forEach((caseItem, index) => {
+                  if(caseItem.photoSets[0].isNude){
+                    is_nude = caseItem.photoSets[0].isNude;
+                  }
+                  console.log(caseItem.photoSets[0].isNude);
                   if (caseItem.photoSets && caseItem.photoSets.length > 0) {
                     let photoSet = caseItem.photoSets[0];
                     let imgSrc =
@@ -296,6 +301,7 @@ function fetchCaseData(loadMoreCount) {
                     contentBox.innerHTML += newContent;
                   }
                 });
+                if(is_nude) document.getElementById('popup').style.display = 'flex';
                 let schema = {
                   "@context": "https://schema.org",
                   "@type": "ImageGallery",
@@ -500,7 +506,7 @@ function fetchCaseData(loadMoreCount) {
                     heartImage = bb_plugin_data.heartRed;
                   }
                   console.log("Case Details =>", caseItem);
-
+                  linkText += "Patient ";
                   if (seoSuffixUrl) linkText += caseItem.caseIds?.findIndex(item => item.seoSuffixUrl == seoSuffixUrl) + 1;
                   else if (caseIdentifier) linkText += caseItem.caseIds?.findIndex(item => item.id == caseIdentifier) + 1;
                   let bb_right_data = `
@@ -1658,3 +1664,30 @@ setTimeout(() => {
 
   window.addEventListener("click", (event) => { if (event.target === bbrag_modal) bbrag_closeModalHandler() });
 }, 2000);
+
+document.addEventListener("DOMContentLoaded", function () {
+  document.getElementById('popup').style.visibility = 'visible';
+  document.getElementById('popup').style.opacity = '1';
+});
+
+function closePopup() {
+  document.getElementById('popup').style.visibility = 'hidden';
+  document.getElementById('popup').style.opacity = '0';
+}
+
+function leavePopup() {
+  let currentUrl = window.location.href;
+  let baseUrl = currentUrl.substring(0, currentUrl.lastIndexOf('/', currentUrl.lastIndexOf('/') - 1));
+  window.location.href = baseUrl;
+}
+
+
+document.addEventListener("DOMContentLoaded", function () {
+  const header = document.querySelector("header");
+  const banner = document.querySelector(".bb-main");
+
+  if (window.getComputedStyle(header).position === "fixed") {
+      const headerHeight = header.offsetHeight;
+      banner.style.paddingTop = `${headerHeight + 30}px`;
+  }
+});

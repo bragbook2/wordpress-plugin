@@ -121,7 +121,7 @@ if($combine_gallery_page_slug == $parts_page_name[0]) {
             <img src="<?php echo BB_PLUGIN_DIR_PATH; ?>assets/images/caret-right-sm.svg" alt="toggle sidebar">
         </button>
         <form class="search-container">
-            <input type="text" id="search-bar">
+            <input type="text" id="search-bar" placeholder="Search Procedures">
             <img src="<?php echo BB_PLUGIN_DIR_PATH?>assets/images/search-svgrepo-com.svg" class="bb-search-icon" alt="search">
             <ul id="search-suggestions" class="search-suggestions"></ul>
         </form>

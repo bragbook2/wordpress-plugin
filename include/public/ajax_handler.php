@@ -36,6 +36,7 @@ class Ajax_Handler
         add_action('wp_ajax_bb_fetch_favorite_data', [$this, 'bb_fetch_favorite_data']);
         add_action('wp_ajax_nopriv_bb_fetch_favorite_data', [$this, 'bb_fetch_favorite_data']);
         add_action('wp_ajax_bb_generate_pagination', [$this, 'bb_generate_pagination']);
+        add_action('wp_footer', [$this, 'bb_nudity_warning']);
         add_action('wp_ajax_nopriv_bb_generate_pagination', [$this, 'bb_generate_pagination']);
         add_action('wp_ajax_bb_case_api', [$this, 'handle_bb_case_api']);
         add_action('wp_ajax_nopriv_bb_case_api', [$this, 'handle_bb_case_api']);
@@ -2237,6 +2238,22 @@ class Ajax_Handler
     {
         $brag_book_description = $this->seoData;
         return $brag_book_description['bb_description'];
+    }
+
+    public function bb_nudity_warning() 
+    { 
+        ?>
+        <div class="popup-overlay" id="popup">
+            <div class="popup">
+                <h3><span>WARNING:</span> These galleries contain nudity.</h3>
+                <p> if you are offended by such material or are under 18 years of age, please do not proceed</p>
+                <div class="popup-btn">
+                <button onclick="closePopup()">proceed</button>
+                <button onclick="leavePopup()">do not proceed</button>
+                </div>
+            </div>
+        </div>
+    <?php 
     }
 
     public function bb_add_custom_schema() {

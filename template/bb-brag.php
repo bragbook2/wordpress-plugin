@@ -75,11 +75,11 @@ if ($bbrag_case_url == "/".$parts[0]."/consultation/") {
         
                 <div class="bb-filter-attic bb-filter-attic-borderless">
                     <button type="button" class="bb-sidebar-toggle">
-                        <img src="<?php echo BB_PLUGIN_DIR_PATH; ?>assets/images/caret-right-sm.svg" alt="toggle sidebar">
+                        <img src="<?php echo BB_PLUGIN_DIR_PATH; ?>assets/images/menu-icon.svg"  style="padding:3px;"  alt="toggle sidebar">
                     </button>
                     <div class="bb-search-container-outer">
                         <form class="search-container mobile-search-container">
-                            <input type="text" id="mobile-search-bar">
+                            <input type="text" id="mobile-search-bar" placeholder="Search Procedures" >
                             <img src="<?php echo BB_PLUGIN_DIR_PATH; ?>assets/images/search-svgrepo-com.svg" class="bb-search-icon" alt="search">
                             <ul id="mobile-search-suggestions" class="search-suggestions"></ul>
                         </form>
@@ -397,11 +397,11 @@ if ($bbrag_case_url == "/".$parts[0]."/consultation/") {
             <div class="bb-content-area">
                 <div class="bb-filter-attic bb-filter-attic-borderless">
                     <button type="button" class="bb-sidebar-toggle">
-                        <img src="<?php echo BB_PLUGIN_DIR_PATH; ?>assets/images/caret-right-sm.svg" alt="toggle sidebar">
+                        <img src="<?php echo BB_PLUGIN_DIR_PATH; ?>assets/images/menu-icon.svg"  style="padding:3px;"  alt="toggle sidebar">
                     </button>
                     <div class="bb-search-container-outer">
                         <form class="search-container mobile-search-container">
-                            <input type="text" id="mobile-search-bar">
+                            <input type="text" id="mobile-search-bar" placeholder="Search Procedures">
                             <img src="<?php echo BB_PLUGIN_DIR_PATH; ?>assets/images/search-svgrepo-com.svg" class="bb-search-icon" alt="search">
                             <ul id="mobile-search-suggestions" class="search-suggestions"></ul>
                         </form>
@@ -543,11 +543,11 @@ if ($bbrag_case_url == "/".$parts[0]."/consultation/") {
             <div class="bb-content-area">
                 <div class="bb-filter-attic bb-filter-attic-borderless">
                     <button type="button" class="bb-sidebar-toggle">
-                        <img src="<?php echo BB_PLUGIN_DIR_PATH; ?>assets/images/caret-right-sm.svg" alt="toggle sidebar">
+                        <img src="<?php echo BB_PLUGIN_DIR_PATH; ?>assets/images/menu-icon.svg" style="padding:3px;" alt="toggle sidebar">
                     </button>
                     <div class="bb-search-container-outer">
                         <form class="search-container mobile-search-container">
-                            <input type="text" id="mobile-search-bar">
+                            <input type="text" id="mobile-search-bar" placeholder="Search Procedures">
                             <img src="<?php echo BB_PLUGIN_DIR_PATH; ?>assets/images/search-svgrepo-com.svg" class="bb-search-icon" alt="search">
                             <ul id="mobile-search-suggestions" class="search-suggestions"></ul>
                         </form>
