@@ -2254,6 +2254,7 @@ p.bb-fav-modal-close-button {
     text-align: center;
     color: #000;
     margin-bottom: 45px;
+    margin-top: 20px;
   }
 
   .bb-main .search-container {
@@ -2284,8 +2285,8 @@ p.bb-fav-modal-close-button {
 
   .bb-main .bb-slider {
     padding-inline: 0px;
-    padding-bottom: 70px;
-    margin-bottom: 40px;
+    padding-bottom: 45px;
+    margin-bottom: 0px;
   }
 
   .bb-main .bb-slider .bb-slide {
@@ -2483,7 +2484,7 @@ p.bb-fav-modal-close-button {
   }
 
   .bb-fav-modal-inner {
-    padding: 45px 20px 45px 20px;
+    padding: 20px 20px 20px 20px;
   }
 
   .bb-fav-modal .bb-thumbnail {
@@ -2500,7 +2501,7 @@ p.bb-fav-modal-close-button {
   }
 
   .bb-fav-modal form {
-    padding-top: 20px;
+    padding-top: 0px;
   }
 
   .bb-fav-modal form input {
@@ -2516,7 +2517,7 @@ p.bb-fav-modal-close-button {
   .bb-fav-modal form button {
     padding: 12px;
     border-radius: 8px;
-    margin-top: 40px;
+    margin-top: 20px;
     font-size: 16px;
   }
 
@@ -2591,7 +2592,7 @@ p.bb-fav-modal-close-button {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgb(0 0 0 / 91%);
+  background: rgb(0 0 0 / 94%);
   backdrop-filter: blur(5px);
   display: none;
   justify-content: center;

@@ -277,11 +277,11 @@ function bb_mvp_brag_shortcode($parts_page_name, $combine_gallery_page_slug) {
             if (empty($api_token) || empty($websiteproperty_id)) {
                 continue;
             }
-            $cat_url = "https://bragbookv2.com/api/plugin/categories?apiToken={$api_token}&websitepropertyId={$websiteproperty_id}";
+            $cat_url = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/categories?apiToken={$api_token}&websitepropertyId={$websiteproperty_id}";
             $category_list = bb_get_grabbook_category_feed($cat_url); 
             $cat_set = json_decode($category_list, true) ?? []; 
 
-            $url = "https://bragbookv2.com/api/plugin/cases?apiToken={$api_token}&websitepropertyId={$websiteproperty_id}";
+            $url = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/cases?apiToken={$api_token}&websitepropertyId={$websiteproperty_id}";
             $data = bb_get_grabbook_api($url);
             $api_data = json_decode($data, true) ?? []; 
 

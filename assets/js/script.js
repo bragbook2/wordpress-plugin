@@ -191,11 +191,12 @@ function fetchCaseData(loadMoreCount) {
           let heartImage;
           let sidebarApi;
           let fav_data;
-          let is_nude;
           if (data.data.sidebar_api) {
             try {
               const parsedSidebarApi = JSON.parse(JSON.parse(data.data.sidebar_api));
               sidebarApi = parsedSidebarApi.data?.flatMap(item => item.procedures) || [];
+              const currentProcedure = sidebarApi.find(pro => pro.slugName === procedureSlug);
+              if (currentProcedure && currentProcedure.nudity && isListsPage) document.getElementById('popup').style.display = 'flex';
               displayProcedureTitle(sidebarApi, procedureSlug);
             } catch (error) {
               console.error("Error parsing sidebar_api:", error);
@@ -219,10 +220,6 @@ function fetchCaseData(loadMoreCount) {
               let images = [];
               if (caseSet.data) {
                 caseSet.data.forEach((caseItem, index) => {
-                  if(caseItem.photoSets[0].isNude){
-                    is_nude = caseItem.photoSets[0].isNude;
-                  }
-                  console.log(caseItem.photoSets[0].isNude);
                   if (caseItem.photoSets && caseItem.photoSets.length > 0) {
                     let photoSet = caseItem.photoSets[0];
                     let imgSrc =
@@ -301,7 +298,7 @@ function fetchCaseData(loadMoreCount) {
                     contentBox.innerHTML += newContent;
                   }
                 });
-                if(is_nude) document.getElementById('popup').style.display = 'flex';
+
                 let schema = {
                   "@context": "https://schema.org",
                   "@type": "ImageGallery",
@@ -1681,13 +1678,12 @@ function leavePopup() {
   window.location.href = baseUrl;
 }
 
-
 document.addEventListener("DOMContentLoaded", function () {
   const header = document.querySelector("header");
   const banner = document.querySelector(".bb-main");
 
   if (window.getComputedStyle(header).position === "fixed") {
-      const headerHeight = header.offsetHeight;
-      banner.style.paddingTop = `${headerHeight + 30}px`;
+    const headerHeight = header.offsetHeight;
+    banner.style.paddingTop = `${headerHeight + 30}px`;
   }
 });
