@@ -1,9 +1,9 @@
 <?php
 /*
-Plugin Name: BRAG book new api
+Plugin Name: BRAG Book Gallery
 Plugin URI: https://github.com/bragbook/BRAGbook/releases/latest
 Description: Installs necessary components to display your BRAG book before and after gallery.
-Version: 2.0
+Version: 2.1.0
 Author: Candace Crowe Design
 Author URI: https://www.bragbookgallery.com/
 License: A "Slug" license name e.g. GPL2
