@@ -260,57 +260,57 @@ if (count($parts) >= 4) {
                     </div>
                 </div>
                 <?php
-                $bb_current_case_page_count = get_option('bb_current_case_page_count_f');
-                $schema = [
-                    "@context" => "https://schema.org",
-                    "@type" => "ImageGallery",
-                    "name" => "Before and After Gallery $bb_case_url_title : Patient $bb_current_case_page_count",
-                    "description" => "Photo gallery of $bb_case_url_title results showing before and after photos from different angles.",
-                    'mainEntity' => [
-                        '@type' => 'MedicalProcedure',
-                        'name' => $default_and_seo_page_title,
-                        'description' => $procedure_description,
-                        'procedureType' => 'CosmeticProcedure',
-                        'medicalSpecialty' => 'PlasticSurgery',
+                // $bb_current_case_page_count = get_option('bb_current_case_page_count_f');
+                // $schema = [
+                //     "@context" => "https://schema.org",
+                //     "@type" => "ImageGallery",
+                //     "name" => "Before and After Gallery $bb_case_url_title : Patient $bb_current_case_page_count",
+                //     "description" => "Photo gallery of $bb_case_url_title results showing before and after photos from different angles.",
+                //     'mainEntity' => [
+                //         '@type' => 'MedicalProcedure',
+                //         'name' => $default_and_seo_page_title,
+                //         'description' => $procedure_description,
+                //         'procedureType' => 'CosmeticProcedure',
+                //         'medicalSpecialty' => 'PlasticSurgery',
                         
-                    ],
-                    'image' => $images,
-                    'breadcrumb' => array(
-                        '@type' => 'BreadcrumbList',
-                        'itemListElement' => array(
-                            array(
-                                '@type' => 'ListItem',
-                                'position' => 1,
-                                'name' => 'Home',
-                                'item' => home_url()
-                            ),
-                            array(
-                                '@type' => 'ListItem',
-                                'position' => 2,
-                                'name' => $bb_gallery_page_title,
-                                'item' => home_url() . '/' . $parts[0] . '/'
-                            ),
-                            array(
-                                '@type' => 'ListItem',
-                                'position' => 3,
-                                'name' => 'Before and After ' . $case_page_title . ' Gallary',
-                                'item' =>  $bb_pro_cat_page
-                            ),
-                            array(
-                                '@type' => 'ListItem',
-                                'position' => 4,
-                                'name' => $default_and_seo_page_title,
-                                'item' =>  home_url() . $bbrag_case_url
-                            )
-                        )
-                    ),
-                    'url' =>  home_url() . $bbrag_case_url
-                ];
-                $schema_json = json_encode($schema, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
+                //     ],
+                //     'image' => $images,
+                //     'breadcrumb' => array(
+                //         '@type' => 'BreadcrumbList',
+                //         'itemListElement' => array(
+                //             array(
+                //                 '@type' => 'ListItem',
+                //                 'position' => 1,
+                //                 'name' => 'Home',
+                //                 'item' => home_url()
+                //             ),
+                //             array(
+                //                 '@type' => 'ListItem',
+                //                 'position' => 2,
+                //                 'name' => $bb_gallery_page_title,
+                //                 'item' => home_url() . '/' . $parts[0] . '/'
+                //             ),
+                //             array(
+                //                 '@type' => 'ListItem',
+                //                 'position' => 3,
+                //                 'name' => 'Before and After ' . $case_page_title . ' Gallary',
+                //                 'item' =>  $bb_pro_cat_page
+                //             ),
+                //             array(
+                //                 '@type' => 'ListItem',
+                //                 'position' => 4,
+                //                 'name' => $default_and_seo_page_title,
+                //                 'item' =>  home_url() . $bbrag_case_url
+                //             )
+                //         )
+                //     ),
+                //     'url' =>  home_url() . $bbrag_case_url
+                // ];
+                // $schema_json = json_encode($schema, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
                 ?>
-                <script type="application/ld+json">
-                    <?php echo $schema_json; ?>
-                </script>
+                <!-- <script type="application/ld+json">
+                    <?php //echo $schema_json; ?>
+                </script> -->
             </div>            
         <?php
         } else { 

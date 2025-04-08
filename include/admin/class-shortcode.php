@@ -290,7 +290,7 @@ class Shortcode {
                                         if($procedure_data->caseDetails[0] && $procedure_data->caseDetails[0]->seoSuffixUrl) {
                                             $caseSeoSuffixUrl = $procedure_data->caseDetails[0]->seoSuffixUrl;
                                         } else {
-                                            $caseSeoSuffixUrl = $procedure_data->id;
+                                            $caseSeoSuffixUrl = 'bb-case-' . $procedure_data->id;
                                         }
                                     ?>
                                     <a href="<?php echo "/" . $bb_slug_link . "/" . $spro_title_bb . "/" . $caseSeoSuffixUrl; ?>">
@@ -765,10 +765,15 @@ class Shortcode {
                         $photoSet = $caseItem['photoSets'][0]; // Get the first photo set
                         $imgSrc = $photoSet['highResPostProcessedImageLocation'] ?? $photoSet['postProcessedImageLocation'] ?? $photoSet['originalBeforeLocation'];
                         $imgAlt = $photoSet['seoAltText'] ?? 'Procedure Image';
-                        $caseId = $caseItem['id'];
+                        $caseSeoSuffixUrl = "";
+                        if($caseItem["caseDetails"][0] && $caseItem["caseDetails"][0]["seoSuffixUrl"]) {
+                            $caseSeoSuffixUrl = $caseItem["caseDetails"][0]["seoSuffixUrl"];
+                        } else {
+                            $caseSeoSuffixUrl = 'bb-case-' . $caseItem['id'];
+                        }
                         $caseDetails = $caseItem['details'] ?? '';
                         $patientCount = ++$bb_case_count;
-                        $procedureUrl = "/$secondPart/$thirdPart/$caseId/";
+                        $procedureUrl = "/$secondPart/$thirdPart/$caseSeoSuffixUrl/";
 
                         $newContent = "
                             <div class='bb-content-box'>

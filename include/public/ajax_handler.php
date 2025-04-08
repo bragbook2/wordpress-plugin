@@ -2256,68 +2256,68 @@ class Ajax_Handler
     <?php 
     }
 
-    public function bb_add_custom_schema() {
+    // public function bb_add_custom_schema() {
 
-        $bbrag_case_url = strtok($_SERVER["REQUEST_URI"], '?');
-        $bbragbook_case_url = trim($bbrag_case_url, '/');
-        $parts = explode('/', $bbragbook_case_url);
-        $formattedString = ucwords(str_replace("-", " ", $parts[0]));      
+    //     $bbrag_case_url = strtok($_SERVER["REQUEST_URI"], '?');
+    //     $bbragbook_case_url = trim($bbrag_case_url, '/');
+    //     $parts = explode('/', $bbragbook_case_url);
+    //     $formattedString = ucwords(str_replace("-", " ", $parts[0]));      
 
-        $brag_book_schema_detail = $this->seoData;
+    //     $brag_book_schema_detail = $this->seoData;
 
-        if (isset($parts[2]) && !empty($parts[2])) {
-            $breadcrumb = [
-                [
-                    "@type" => "ListItem",
-                    "position" => 1,
-                    "name" => "Home",
-                    "item" => home_url()
-                ],
-                [
-                    "@type" => "ListItem",
-                    "position" => 2,
-                    "name" => $formattedString,
-                    "item" => "/" . $parts[0]
-                ],
-                [
-                    "@type" => "ListItem",
-                    "position" => 3,
-                    "name" => $brag_book_schema_detail['bb_title'],
-                    "item" => $this->bb_get_current_url()
-                ]
-            ];
+    //     if (isset($parts[2]) && !empty($parts[2])) {
+    //         $breadcrumb = [
+    //             [
+    //                 "@type" => "ListItem",
+    //                 "position" => 1,
+    //                 "name" => "Home",
+    //                 "item" => home_url()
+    //             ],
+    //             [
+    //                 "@type" => "ListItem",
+    //                 "position" => 2,
+    //                 "name" => $formattedString,
+    //                 "item" => "/" . $parts[0]
+    //             ],
+    //             [
+    //                 "@type" => "ListItem",
+    //                 "position" => 3,
+    //                 "name" => $brag_book_schema_detail['bb_title'],
+    //                 "item" => $this->bb_get_current_url()
+    //             ]
+    //         ];
 
-            $schema_data = [
-                "@context" => "https://schema.org",
-                "@graph" => [
-                    [
-                        "@type" => "BreadcrumbList",
-                        "itemListElement" => $breadcrumb
-                    ],
-                    [
-                        "@type" => "Website",
-                        "name" => $brag_book_schema_detail['bb_title'],
-                        "url" => $this->bb_get_current_url(),
-                        "description" => $brag_book_schema_detail['bb_description'],
-                        "bodyLocation" => $brag_book_schema_detail['bb_procedure_name'],
-                        "procedureType" => "Surgical",
-                        "recognizingAuthority" => [
-                            "@type" => "MedicalOrganization",
-                            "name" => "American Society of Plastic Surgeons",
-                            "url" => "https://www.plasticsurgery.org/"
-                        ],
-                            "study" => [
-                            "@type" => "MedicalStudy",
-                            "name" => $brag_book_schema_detail['bb_title'] . " Case Study",
-                            "url" => $this->bb_get_current_url()
-                        ],
-                    ]
-                ]
-            ];
+    //         $schema_data = [
+    //             "@context" => "https://schema.org",
+    //             "@graph" => [
+    //                 [
+    //                     "@type" => "BreadcrumbList",
+    //                     "itemListElement" => $breadcrumb
+    //                 ],
+    //                 [
+    //                     "@type" => "Website",
+    //                     "name" => $brag_book_schema_detail['bb_title'],
+    //                     "url" => $this->bb_get_current_url(),
+    //                     "description" => $brag_book_schema_detail['bb_description'],
+    //                     "bodyLocation" => $brag_book_schema_detail['bb_procedure_name'],
+    //                     "procedureType" => "Surgical",
+    //                     "recognizingAuthority" => [
+    //                         "@type" => "MedicalOrganization",
+    //                         "name" => "American Society of Plastic Surgeons",
+    //                         "url" => "https://www.plasticsurgery.org/"
+    //                     ],
+    //                         "study" => [
+    //                         "@type" => "MedicalStudy",
+    //                         "name" => $brag_book_schema_detail['bb_title'] . " Case Study",
+    //                         "url" => $this->bb_get_current_url()
+    //                     ],
+    //                 ]
+    //             ]
+    //         ];
 
-            echo '<script type="application/ld+json">' . json_encode($schema_data, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) . '</script>';
-        }
-    }
+    //         echo '<script type="application/ld+json">' . json_encode($schema_data, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) . '</script>';
+    //     }
+    // }
 
     public function bb_print_custom_bragbook_description()
     {
@@ -2428,7 +2428,7 @@ class Ajax_Handler
                     remove_action('wp_head', 'rel_canonical');
                     remove_action('wp_head', 'wp_shortlink_wp_head', 10, 0);
                     add_action('wp_head', array($this, 'bb_print_canonical'));
-                    add_action('wp_head', array($this, 'bb_add_custom_schema'), 1);
+                    //add_action('wp_head', array($this, 'bb_add_custom_schema'), 1);
                 }
             }
         }

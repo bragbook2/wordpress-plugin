@@ -752,6 +752,7 @@ button.bb-sidebar-toggle.bb-sidebar-head-toggle img {
   font-family: ivypresto-display, serif;
   font-weight: 300;
   font-style: normal;
+  text-transform: capitalize;
 }
 
 .bb-filter-attic .bb-search-container-outer {
@@ -837,6 +838,7 @@ button.bb-sidebar-toggle.bb-sidebar-head-toggle img {
   font-family: "Manrope", sans-serif;
   font-weight: 400;
   margin-bottom: 8px;
+  text-transform: capitalize;
 }
 
 .bb-main .bb-filter-attic .bb-content-box-inner-left h3 {
@@ -859,6 +861,7 @@ button.bb-sidebar-toggle.bb-sidebar-head-toggle img {
   font-family: "Manrope", sans-serif;
   font-weight: 400;
   margin-bottom: 8px;
+  text-transform: capitalize;
 }
 
 .bb-main .bb-filter-attic .bb-content-box-inner-left h6 {
