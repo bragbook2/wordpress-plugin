@@ -815,7 +815,7 @@ function generatePagination(caseIds, caseItem) {
 }
 
 function renderPagination(paginationData, caseItem, targetLinkSelector, bb_right_data) {
-  let caseSeoId = caseItem.caseDetails[0]?.seoSuffixUrl ? caseItem.caseDetails[0]?.seoSuffixUrl : caseItem.id;
+  let caseSeoId = caseItem.caseDetails[0]?.seoSuffixUrl ? caseItem.caseDetails[0]?.seoSuffixUrl : "bb-case-" + caseItem.id;
   const paginationList = document.getElementById(`pagination-list-${caseItem.id}`);
   if (!paginationList || !paginationData.length) return;
 
