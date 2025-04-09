@@ -1,9 +1,9 @@
 <?php
 /*
-Plugin Name: BRAG book
+Plugin Name: BRAG Book Gallery
 Plugin URI: https://github.com/bragbook/BRAGbook/releases/latest
 Description: Installs necessary components to display your BRAG book before and after gallery.
-Version: 2.0
+Version: 2.1.0
 Author: Candace Crowe Design
 Author URI: https://www.bragbookgallery.com/
 License: A "Slug" license name e.g. GPL2
@@ -16,6 +16,9 @@ if (!defined('BB_PLUGIN_DIR_PATH')) {
 }
 if (!defined('BB_PLUGIN_DIR_MAIN_PATH')) {
     define('BB_PLUGIN_DIR_MAIN_PATH', plugin_dir_path(__FILE__));
+}
+if (!defined('HOUR_IN_SECONDS')) {
+    define('HOUR_IN_SECONDS', 3600);
 }
 
 require_once BB_PLUGIN_DIR_MAIN_PATH . 'include/admin/class-activator.php';

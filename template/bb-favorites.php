@@ -4,6 +4,7 @@ Template Name: favorites Page Template
 */
 
 get_header();
+
 $bbrag_case_url = strtok($_SERVER["REQUEST_URI"], '?');
 $bbragbook_case_url = trim($bbrag_case_url, '/');
 $parts = explode('/', $bbragbook_case_url);
@@ -23,99 +24,101 @@ if (count($parts) >= 4) {
 <div class="bb-container-main">
     <main class="bb-main ">
         <?php include plugin_dir_path(__FILE__) . 'sidebar-template.php'; 
-        
+        ?>
+        <?php
+     
         if (isset($bbrag_procedure_title) &&     
             isset($bbrag_case_id) && 
             $bbrag_case_url == "/".$parts[0]."/favorites/".$bbrag_procedure_title."/". $bbrag_case_id . "/" && 
             get_option($bbrag_case_id . "_bb_procedure_id_f_" . $page_id_via_slug) !== ''
             ) { 
-            $bbrag_procedure_id = get_option($bbrag_case_id . "_bb_procedure_id_f_" . $page_id_via_slug);
-            $bbrag_case_id = get_option($bbrag_case_id);  
-            $bbrag_procedure_title = get_option($bbrag_procedure_id . '_title'); 
-            $bbrag_patient = 1; 
+            // $bbrag_procedure_id = get_option($bbrag_case_id . "_bb_procedure_id_f_" . $page_id_via_slug);
+            // $bbrag_case_id = get_option($bbrag_case_id);  
+            // $bbrag_procedure_title = get_option($bbrag_procedure_id . '_title'); 
+            // $bbrag_patient = 1; 
 
-            $category_to_match =  $bbrag_case_id;
-            $procedure_title = $bbrag_procedure_title;
-            $procedure_id = $bbrag_procedure_id;
-            $patient_id =  $bbrag_patient;
+            // $category_to_match =  $bbrag_case_id;
+            // $procedure_title = $bbrag_procedure_title;
+            // $procedure_id = $bbrag_procedure_id;
+            // $patient_id =  $bbrag_patient;
             ?>
             
             <div class="bb-content-area">
                 <?php 
-                $matching_data = []; 
-                $case_id_list = [];
-                if(!empty($properties_data) && is_array($properties_data)) {
-                    foreach ($properties_data as $token_key_bb => $token_bb) {
-                        foreach ($token_bb as $bb_website_id => $website_id_bb) { 
-                            foreach($website_id_bb as $api_item) {
-                                foreach($api_item['api_data'] as $item){
-                                    if($category_to_match == '') {
-                                        $category_to_match = $item['photoSets'][0]['caseId'];
-                                    }
-                                    if ($item['photoSets'][0]['caseId'] == $category_to_match) {
-                                        $matching_data[] = $item;
-                                    }
-                                    if (in_array($procedure_id, $item['procedureIds'])) {
-                                        if(!empty($item['photoSets'])) {
-                                            $case_id_list[] = $item['photoSets'][0]['caseId'];
-                                        }
-                                    } 
-                                }
-                            }
-                        }
-                    }
-                }
+                // $matching_data = []; 
+                // $case_id_list = [];
+                // if(!empty($properties_data) && is_array($properties_data)) {
+                //     foreach ($properties_data as $token_key_bb => $token_bb) {
+                //         foreach ($token_bb as $bb_website_id => $website_id_bb) { 
+                //             foreach($website_id_bb as $api_item) {
+                //                 foreach($api_item['api_data'] as $item){
+                //                     if($category_to_match == '') {
+                //                         $category_to_match = $item['photoSets'][0]['caseId'];
+                //                     }
+                //                     if ($item['photoSets'][0]['caseId'] == $category_to_match) {
+                //                         $matching_data[] = $item;
+                //                     }
+                //                     if (in_array($procedure_id, $item['procedureIds'])) {
+                //                         if(!empty($item['photoSets'])) {
+                //                             $case_id_list[] = $item['photoSets'][0]['caseId'];
+                //                         }
+                //                     } 
+                //                 }
+                //             }
+                //         }
+                //     }
+                // }
 
-                $case_page_title = isset($parts[2]) ? $parts[2] : '';
-                if(!empty($case_page_title)) {
-                    $case_page_title = str_replace('-', ' ', $case_page_title);
-                    $case_page_title = ucfirst($case_page_title);
-                }
+                // $case_page_title = isset($parts[2]) ? $parts[2] : '';
+                // if(!empty($case_page_title)) {
+                //     $case_page_title = str_replace('-', ' ', $case_page_title);
+                //     $case_page_title = ucfirst($case_page_title);
+                // }
 
-                $images = [];
-                $setup_wizard = '';
-                $procedure_description = '';
-                $default_and_seo_page_title = '';
-                foreach($matching_data as $procedure_data) {
-                    if(empty($procedure_description)) {
-                        $procedure_description = isset($procedure_data['caseDetails'][0]['seoPageDescription']) 
-                        && !empty($procedure_data['caseDetails'][0]['seoPageDescription']) ? $procedure_data['caseDetails'][0]['seoPageDescription'] : '';
-                    }
-                    if(empty($default_and_seo_page_title)) {
-                        $default_and_seo_page_title = isset($procedure_data['caseDetails'][0]['seoPageTitle']) 
-                        && !empty($procedure_data['caseDetails'][0]['seoPageTitle']) ? $procedure_data['caseDetails'][0]['seoPageTitle'] : '';
-                    }
+                // $images = [];
+                // $setup_wizard = '';
+                // $procedure_description = '';
+                // $default_and_seo_page_title = '';
+                // foreach($matching_data as $procedure_data) {
+                //     if(empty($procedure_description)) {
+                //         $procedure_description = isset($procedure_data['caseDetails'][0]['seoPageDescription']) 
+                //         && !empty($procedure_data['caseDetails'][0]['seoPageDescription']) ? $procedure_data['caseDetails'][0]['seoPageDescription'] : '';
+                //     }
+                //     if(empty($default_and_seo_page_title)) {
+                //         $default_and_seo_page_title = isset($procedure_data['caseDetails'][0]['seoPageTitle']) 
+                //         && !empty($procedure_data['caseDetails'][0]['seoPageTitle']) ? $procedure_data['caseDetails'][0]['seoPageTitle'] : '';
+                //     }
 
-                    $bb_angle_count = 0;
-                    foreach ($procedure_data['photoSets'] as $key => $case) {
-                        $bb_angle_count++;
-                        $bb_new_image_case = isset($case['highResPostProcessedImageLocation']) && !is_null($case['highResPostProcessedImageLocation'])
-                            ? $case['highResPostProcessedImageLocation'] 
-                                : (isset($case['postProcessedImageLocation']) && !is_null($case['postProcessedImageLocation']) 
-                                    ? $case['postProcessedImageLocation'] 
-                                    : $case['originalBeforeLocation']);
+                //     $bb_angle_count = 0;
+                //     foreach ($procedure_data['photoSets'] as $key => $case) {
+                //         $bb_angle_count++;
+                //         $bb_new_image_case = isset($case['highResPostProcessedImageLocation']) && !is_null($case['highResPostProcessedImageLocation'])
+                //             ? $case['highResPostProcessedImageLocation'] 
+                //                 : (isset($case['postProcessedImageLocation']) && !is_null($case['postProcessedImageLocation']) 
+                //                     ? $case['postProcessedImageLocation'] 
+                //                     : $case['originalBeforeLocation']);
 
-                        $images[] = [
-                            '@type' => 'ImageObject',
-                            'url' => $bb_new_image_case,
-                            'caption' => empty($default_and_seo_page_title) ? "$case_page_title - angle $bb_angle_count" : "$default_and_seo_page_title - angle $bb_angle_count", 
-                            'representativeOfPage' => true,
-                            'thumbnailUrl' => $bb_new_image_case
-                        ];
-                    }
-                }
+                //         $images[] = [
+                //             '@type' => 'ImageObject',
+                //             'url' => $bb_new_image_case,
+                //             'caption' => empty($default_and_seo_page_title) ? "$case_page_title - angle $bb_angle_count" : "$default_and_seo_page_title - angle $bb_angle_count", 
+                //             'representativeOfPage' => true,
+                //             'thumbnailUrl' => $bb_new_image_case
+                //         ];
+                //     }
+                // }
 
-                $bb_pro_cat_page = isset($parts[2]) ? home_url() . '/' . $parts[0] . '/favorites/' . $parts[2] . '/' : home_url();
-                $bb_gallery_page_title = get_the_title($page_id_via_slug);
-                $default_and_seo_page_title = empty($default_and_seo_page_title) ? $bb_gallery_page_title : $default_and_seo_page_title;
-                if(isset($parts[3])) {
-                    $bb_input = $parts[3];
-                    if (isset($bb_input) && preg_match('/^\d+$/', $bb_input)) {
-                        $bb_case_url_title = $case_page_title;
-                    }else {
-                        $bb_case_url_title = $bb_input;
-                    }
-                }
+                // $bb_pro_cat_page = isset($parts[2]) ? home_url() . '/' . $parts[0] . '/favorites/' . $parts[2] . '/' : home_url();
+                // $bb_gallery_page_title = get_the_title($page_id_via_slug);
+                // $default_and_seo_page_title = empty($default_and_seo_page_title) ? $bb_gallery_page_title : $default_and_seo_page_title;
+                // if(isset($parts[3])) {
+                //     $bb_input = $parts[3];
+                //     if (isset($bb_input) && preg_match('/^\d+$/', $bb_input)) {
+                //         $bb_case_url_title = $case_page_title;
+                //     }else {
+                //         $bb_case_url_title = $bb_input;
+                //     }
+                // }
                 ?>
                 <div class="bb-filter-attic bb-filter-attic-borderless">
                     <button type="button" class="bb-sidebar-toggle">
@@ -257,57 +260,57 @@ if (count($parts) >= 4) {
                     </div>
                 </div>
                 <?php
-                $bb_current_case_page_count = get_option('bb_current_case_page_count_f');
-                $schema = [
-                    "@context" => "https://schema.org",
-                    "@type" => "ImageGallery",
-                    "name" => "Before and After Gallery $bb_case_url_title : Patient $bb_current_case_page_count",
-                    "description" => "Photo gallery of $bb_case_url_title results showing before and after photos from different angles.",
-                    'mainEntity' => [
-                        '@type' => 'MedicalProcedure',
-                        'name' => $default_and_seo_page_title,
-                        'description' => $procedure_description,
-                        'procedureType' => 'CosmeticProcedure',
-                        'medicalSpecialty' => 'PlasticSurgery',
+                // $bb_current_case_page_count = get_option('bb_current_case_page_count_f');
+                // $schema = [
+                //     "@context" => "https://schema.org",
+                //     "@type" => "ImageGallery",
+                //     "name" => "Before and After Gallery $bb_case_url_title : Patient $bb_current_case_page_count",
+                //     "description" => "Photo gallery of $bb_case_url_title results showing before and after photos from different angles.",
+                //     'mainEntity' => [
+                //         '@type' => 'MedicalProcedure',
+                //         'name' => $default_and_seo_page_title,
+                //         'description' => $procedure_description,
+                //         'procedureType' => 'CosmeticProcedure',
+                //         'medicalSpecialty' => 'PlasticSurgery',
                         
-                    ],
-                    'image' => $images,
-                    'breadcrumb' => array(
-                        '@type' => 'BreadcrumbList',
-                        'itemListElement' => array(
-                            array(
-                                '@type' => 'ListItem',
-                                'position' => 1,
-                                'name' => 'Home',
-                                'item' => home_url()
-                            ),
-                            array(
-                                '@type' => 'ListItem',
-                                'position' => 2,
-                                'name' => $bb_gallery_page_title,
-                                'item' => home_url() . '/' . $parts[0] . '/'
-                            ),
-                            array(
-                                '@type' => 'ListItem',
-                                'position' => 3,
-                                'name' => 'Before and After ' . $case_page_title . ' Gallary',
-                                'item' =>  $bb_pro_cat_page
-                            ),
-                            array(
-                                '@type' => 'ListItem',
-                                'position' => 4,
-                                'name' => $default_and_seo_page_title,
-                                'item' =>  home_url() . $bbrag_case_url
-                            )
-                        )
-                    ),
-                    'url' =>  home_url() . $bbrag_case_url
-                ];
-                $schema_json = json_encode($schema, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
+                //     ],
+                //     'image' => $images,
+                //     'breadcrumb' => array(
+                //         '@type' => 'BreadcrumbList',
+                //         'itemListElement' => array(
+                //             array(
+                //                 '@type' => 'ListItem',
+                //                 'position' => 1,
+                //                 'name' => 'Home',
+                //                 'item' => home_url()
+                //             ),
+                //             array(
+                //                 '@type' => 'ListItem',
+                //                 'position' => 2,
+                //                 'name' => $bb_gallery_page_title,
+                //                 'item' => home_url() . '/' . $parts[0] . '/'
+                //             ),
+                //             array(
+                //                 '@type' => 'ListItem',
+                //                 'position' => 3,
+                //                 'name' => 'Before and After ' . $case_page_title . ' Gallary',
+                //                 'item' =>  $bb_pro_cat_page
+                //             ),
+                //             array(
+                //                 '@type' => 'ListItem',
+                //                 'position' => 4,
+                //                 'name' => $default_and_seo_page_title,
+                //                 'item' =>  home_url() . $bbrag_case_url
+                //             )
+                //         )
+                //     ),
+                //     'url' =>  home_url() . $bbrag_case_url
+                // ];
+                // $schema_json = json_encode($schema, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
                 ?>
-                <script type="application/ld+json">
-                    <?php echo $schema_json; ?>
-                </script>
+                <!-- <script type="application/ld+json">
+                    <?php //echo $schema_json; ?>
+                </script> -->
             </div>            
         <?php
         } else { 
@@ -320,7 +323,7 @@ if (count($parts) >= 4) {
                 </button>
                 <h2><span>My Favorites</span></h2>
             </div>
-            <div class="bb-content-boxes bb-content-boxes-sm">
+            <div class="bb-content-boxes-sm">
                 <div class="bb-content-boxes" id="bb-content-boxes-ajax">
                          
                 </div>

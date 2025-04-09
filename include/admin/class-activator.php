@@ -34,9 +34,12 @@ class Activator {
             'leftArrowUrl' => BB_PLUGIN_DIR_PATH . 'assets/images/caret-left.svg',
             'rightArrowUrl' => BB_PLUGIN_DIR_PATH . 'assets/images/caret-right.svg',
             'heartBordered' => BB_PLUGIN_DIR_PATH . 'assets/images/red-heart-outline.svg',
+            'heartdown' => BB_PLUGIN_DIR_PATH . 'assets/images/down-arrow.svg',
+            'heartRed' => BB_PLUGIN_DIR_PATH . 'assets/images/red-heart.svg',
+            'heartrunning' => BB_PLUGIN_DIR_PATH . 'assets/images/running-heart.gif',
             'ajaxurl' => admin_url('admin-ajax.php')
         ));
-		
+		 
     }
     public static function include_template($template) { 
         $page_slug = get_post_field('post_name', get_post());
