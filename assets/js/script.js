@@ -265,8 +265,8 @@ function fetchCaseData(loadMoreCount) {
                                       <a href="${procedureUrl}">
                                           <img src="${imgSrc}" alt="${imgAlt}">
                                       </a>
-                                      <img class="bb-heart-icon bb-open-fav-modal" 
-                                          data-case-id="${caseId}"
+                                      <img class="bb-heart-icon bb-open-fav-modal 1" 
+                                          data-case-id="${caseItemId}"
                                           data-bb_api_token="${apiToken}" 
                                           data-bb_website_id="${websitePropertyId}" 
                                           src="${heartImage}" 
