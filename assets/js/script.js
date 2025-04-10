@@ -190,11 +190,12 @@ function fetchCaseData(loadMoreCount) {
           let heartImage;
           let sidebarApi;
           let fav_data;
+          let currentProcedure;
           if (data.data.sidebar_api) {
             try {
               const parsedSidebarApi = JSON.parse(JSON.parse(data.data.sidebar_api));
               sidebarApi = parsedSidebarApi.data?.flatMap(item => item.procedures) || [];
-              const currentProcedure = sidebarApi.find(pro => pro.slugName === procedureSlug);
+              currentProcedure = sidebarApi.find(pro => pro.slugName === procedureSlug);
               if (currentProcedure && currentProcedure.nudity && isListsPage) document.getElementById('popup').style.display = 'flex';
               displayProcedureTitle(sidebarApi, procedureSlug);
             } catch (error) {
@@ -218,6 +219,8 @@ function fetchCaseData(loadMoreCount) {
               if (applyBBButton) applyBBButton.innerHTML = `Apply`;
               let images = [];
               if (caseSet.data) {
+                let bb_gallery_page_title = pageSlug.split('-').map(w => w[0].toUpperCase() + w.slice(1)).join(' ');
+                let bb_procedure_Title = procedureSlug.split('-').map(w => w[0].toUpperCase() + w.slice(1)).join(' ');
                 caseSet.data.forEach((caseItem, index) => {
                   if (caseItem.photoSets && caseItem.photoSets.length > 0) {
                     let photoSet = caseItem.photoSets[0];
@@ -229,7 +232,7 @@ function fetchCaseData(loadMoreCount) {
                     let caseItemId = caseItem.id;
                     let caseDetails = caseItem.details || "";
                     caseItem.patientCount = ++bb_case_count;
-                    let caseId = "";
+                    let caseId = null;
                     seoSuffixUrl = caseItem.caseDetails[0].seoSuffixUrl;
                     if (seoSuffixUrl) {
                       caseId = seoSuffixUrl;
@@ -245,9 +248,9 @@ function fetchCaseData(loadMoreCount) {
                     }
                     let imageObj = {
                       "@type": "ImageObject",
-                      "name": procedureSlug,
-                      "description": `Photo gallery of ${procedureSlug} results showing before and after photos from different angles.`,
-                      "url": `${targetLinkSelector}${caseItem.caseId}`,
+                      "name": bb_procedure_Title,
+                      "description": `Photo gallery of ${bb_procedure_Title} results showing before and after photos from different angles.`,
+                      "url": `${targetLinkSelector}${caseId}`,
                       "thumbnailUrl": imgSrc
                     };
 
@@ -297,43 +300,42 @@ function fetchCaseData(loadMoreCount) {
                     contentBox.innerHTML += newContent;
                   }
                 });
-
-                // let schema = {
-                //   "@context": "https://schema.org",
-                //   "@type": "ImageGallery",
-                //   "name": `${procedureSlug} Before & After Gallery`,
-                //   "description": `Review ${caseSet.data.length} ${procedureSlug} before and after cases. Each case includes photos from multiple angles, along with details about the procedure.`,
-                //   "url": `/${pageSlug}/${procedureSlug}/`,
-                //   "image": images,
-                //   "breadcrumb": {
-                //     "@type": "BreadcrumbList",
-                //     "itemListElement": [
-                //       {
-                //         "@type": "ListItem",
-                //         "position": 1,
-                //         "name": "Home",
-                //         "item": `/`
-                //       },
-                //       {
-                //         "@type": "ListItem",
-                //         "position": 2,
-                //         "name": `${procedureSlug}`,
-                //         "item": `/${pageSlug}/${procedureSlug}/`
-                //       },
-                //       {
-                //         "@type": "ListItem",
-                //         "position": 3,
-                //         "name": `${procedureSlug} Procedure`,
-                //         "item": `/${pageSlug}/${procedureSlug}/`
-                //       }
-                //     ]
-                //   }
-                // };
-                // let schemaJson = JSON.stringify(schema, null, 4);
-                // let schemaScript = document.createElement('script');
-                // schemaScript.type = 'application/ld+json';
-                // schemaScript.innerHTML = schemaJson;
-                // document.head.appendChild(schemaScript);
+                let schema = {
+                  "@context": "https://schema.org",
+                  "@type": "ImageGallery",
+                  "name": `${bb_procedure_Title} Before & After Gallery`,
+                  "description": `Review ${caseSet.data.length} ${bb_procedure_Title} before and after cases. Each case includes photos from multiple angles, along with details about the procedure.`,
+                  "url": `/${pageSlug}/${procedureSlug}/`,
+                  "image": images,
+                  "breadcrumb": {
+                    "@type": "BreadcrumbList",
+                    "itemListElement": [
+                      {
+                        "@type": "ListItem",
+                        "position": 1,
+                        "name": "Home",
+                        "item": window.location.origin
+                      },
+                      {
+                        "@type": "ListItem",
+                        "position": 2,
+                        "name": `${bb_gallery_page_title}`,
+                        "item": `/${pageSlug}`
+                      },
+                      {
+                        "@type": "ListItem",
+                        "position": 3,
+                        "name": `${bb_procedure_Title} Procedure`,
+                        "item": `/${pageSlug}/${procedureSlug}`
+                      }
+                    ]
+                  }
+                };
+                let schemaJson = JSON.stringify(schema, null, 4);
+                let schemaScript = document.createElement('script');
+                schemaScript.type = 'application/ld+json';
+                schemaScript.innerHTML = schemaJson;
+                document.head.appendChild(schemaScript);
 
               } else if (caseSet.favorites) {
                 caseSet.favorites.forEach((caseItem) => {
@@ -418,8 +420,10 @@ function fetchCaseData(loadMoreCount) {
               document.querySelector("#bb_f_gif_sidebar")?.remove();
               let patienLeftBox = document.querySelector(".bb-patient-left");
               if (patienLeftBox) {
+                let titleWithoutDashes;
                 let bbPatientNo = null;
                 caseSet.data.forEach((caseItem) => {
+                  titleWithoutDashes = procedureSlug.split('-').map(w => w[0].toUpperCase() + w.slice(1)).join(' ');
                   if (seoSuffixUrl) bbPatientNo = (caseItem.caseIds?.findIndex(item => item.seoSuffixUrl == seoSuffixUrl) + 1);
                   else if (caseIdentifier) bbPatientNo = (caseItem.caseIds?.findIndex(item => item.id == caseIdentifier) + 1);
                   let caseId = caseItem.id;
@@ -427,7 +431,6 @@ function fetchCaseData(loadMoreCount) {
                   if (caseItem.caseDetails[0].seoHeadline) {
                     proceduralName = caseItem.caseDetails[0].seoHeadline;
                   } else {
-                    let titleWithoutDashes = procedureSlug.replace(/-/g, ' ');
                     proceduralName = titleWithoutDashes + ': Patient ' + bbPatientNo;
                   }
                   if (caseId == caseIdentifier || seoSuffixUrl == caseItem.caseDetails[0]?.seoSuffixUrl) {
@@ -445,8 +448,8 @@ function fetchCaseData(loadMoreCount) {
                         patienLeftBox.appendChild(imgElement);
                         let imageObjc = {
                           "@type": "ImageObject",
-                          "name": procedureSlug,
-                          "description": `Photo gallery of ${procedureSlug} results showing before and after photos from different angles.`,
+                          "name": titleWithoutDashes,
+                          "description": `Photo gallery of ${titleWithoutDashes} results showing before and after photos from different angles.`,
                           "url": `${targetLinkSelector}${caseItem.id}`,
                           "thumbnailUrl": bb_new_image_value
                         };
@@ -537,67 +540,63 @@ function fetchCaseData(loadMoreCount) {
                   renderPagination(paginationData, caseItem, targetLinkSelector, bb_right_data);
                 });
               }
-              // let bb_case_url_title = currentProcedure ? currentProcedure.name : '';
-              // let bb_current_case_page_count = currentProcedure ? currentProcedure.totalCase : '';
-              // let default_and_seo_page_title = bb_case_url_title;
-              // let procedure_description = "Detailed description of the procedure.";
-              // let bb_gallery_page_title = "Gallery Page Title";
-              // let case_page_title = "Case Page Title";
-              // let bbrag_case_url = "/case-gallery";
-              // let bb_pro_cat_page = "/category-page";
-              // let targetLinkSelectorc = "/target-url/";
-              // let caseIdentifierc = "case-id";
+              let bb_procedure_title = currentProcedure ? currentProcedure.name : '';
+              let bb_current_procedure_count = currentProcedure ? currentProcedure.totalCase : '';
+              let bb_current_procedure_slug = currentProcedure ? "/" + currentProcedure.slugName : '/';
+              let procedure_description = currentProcedure ? currentProcedure.description : '';
+              let bb_case_page_title = caseSet.data[0].caseDetails[0].seoHeadline ? caseSet.data[0].caseDetails[0].seoHeadline : linkText;
+              let bb_gallery_page_title = pathSegments[0].split('-').map(w => w[0].toUpperCase() + w.slice(1)).join(' ');
+              console.log(procedure_description);
+              let bb_gallery_page_url = "/" + pathSegments[0];
+              let schema = {
+                "@context": "https://schema.org",
+                "@type": "ImageGallery",
+                "name": `Before and After Gallery ${bb_procedure_title} : Patient ${bb_current_procedure_count}`,
+                "description": `Photo gallery of ${bb_procedure_title} results showing before and after photos from different angles.`,
+                "mainEntity": {
+                  "@type": "MedicalProcedure",
+                  "name": bb_procedure_title,
+                  "description": procedure_description,
+                  "procedureType": "CosmeticProcedure",
+                  "medicalSpecialty": "PlasticSurgery"
+                },
+                "image": images_case,
+                "breadcrumb": {
+                  "@type": "BreadcrumbList",
+                  "itemListElement": [
+                    {
+                      "@type": "ListItem",
+                      "position": 1,
+                      "name": "Home",
+                      "item": window.location.origin
+                    },
+                    {
+                      "@type": "ListItem",
+                      "position": 2,
+                      "name": bb_gallery_page_title,
+                      "item": bb_gallery_page_url
+                    },
+                    {
+                      "@type": "ListItem",
+                      "position": 3,
+                      "name": `Before and After ${bb_case_page_title} Gallery`,
+                      "item": bb_current_procedure_slug
+                    },
+                    {
+                      "@type": "ListItem",
+                      "position": 4,
+                      "name": bb_case_page_title,
+                      "item": window.location.href
+                    }
+                  ]
+                },
+              };
 
-              // let schema = {
-              //   "@context": "https://schema.org",
-              //   "@type": "ImageGallery",
-              //   "name": `Before and After Gallery ${default_and_seo_page_title} : Patient ${bb_current_case_page_count}`,
-              //   "description": `Photo gallery of ${default_and_seo_page_title} results showing before and after photos from different angles.`,
-              //   "mainEntity": {
-              //     "@type": "MedicalProcedure",
-              //     "name": default_and_seo_page_title,
-              //     "description": procedure_description,
-              //     "procedureType": "CosmeticProcedure",
-              //     "medicalSpecialty": "PlasticSurgery"
-              //   },
-              //   "image": images_case,
-              //   "breadcrumb": {
-              //     "@type": "BreadcrumbList",
-              //     "itemListElement": [
-              //       {
-              //         "@type": "ListItem",
-              //         "position": 1,
-              //         "name": "Home",
-              //         "item": "/"
-              //       },
-              //       {
-              //         "@type": "ListItem",
-              //         "position": 2,
-              //         "name": bb_gallery_page_title,
-              //         "item": `/`
-              //       },
-              //       {
-              //         "@type": "ListItem",
-              //         "position": 3,
-              //         "name": `Before and After ${case_page_title} Gallery`,
-              //         "item": bb_pro_cat_page
-              //       },
-              //       {
-              //         "@type": "ListItem",
-              //         "position": 4,
-              //         "name": default_and_seo_page_title,
-              //         "item": `/${bbrag_case_url}`
-              //       }
-              //     ]
-              //   },
-              //   "url": `/${bbrag_case_url}`
-              // };
-
-              // let schemaJson = JSON.stringify(schema, null, 4);
-              // let schemaScript = document.createElement('script');
-              // schemaScript.type = 'application/ld+json';
-              // schemaScript.innerHTML = schemaJson;
-              // document.head.appendChild(schemaScript);
+              let schemaJson = JSON.stringify(schema, null, 4);
+              let schemaScript = document.createElement('script');
+              schemaScript.type = 'application/ld+json';
+              schemaScript.innerHTML = schemaJson;
+              document.head.appendChild(schemaScript);
             }
           } else {
             console.error("Invalid response structure:", data);

@@ -32,7 +32,7 @@ function bb_get_sidebar_data($parts_page_name, $combine_gallery_page_slug) {
             if (empty($api_token) || empty($websiteproperty_id)) {
                 continue;
             }
-            $bb_sidebar_url = "https://www.bragbookv2.com/api/plugin/sidebar?apiToken={$api_token}";
+            $bb_sidebar_url = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/sidebar?apiToken={$api_token}";
             $sidebar_list = get_api_sidebar_bb($bb_sidebar_url); 
             $sidebar_set = json_decode($sidebar_list, true) ?? []; 
             $result = [
@@ -45,7 +45,7 @@ function bb_get_sidebar_data($parts_page_name, $combine_gallery_page_slug) {
         }
     }
     if (!empty($token_array)) { 
-        $bb_sidebar_url = "https://www.bragbookv2.com/api/plugin/combine/sidebar";
+        $bb_sidebar_url = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/combine/sidebar";
 
         $response = wp_remote_post($bb_sidebar_url, array(
             'method'    => 'POST',
@@ -277,11 +277,11 @@ function bb_mvp_brag_shortcode($parts_page_name, $combine_gallery_page_slug) {
             if (empty($api_token) || empty($websiteproperty_id)) {
                 continue;
             }
-            $cat_url = "https://www.bragbookv2.com/api/plugin/categories?apiToken={$api_token}&websitepropertyId={$websiteproperty_id}";
+            $cat_url = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/categories?apiToken={$api_token}&websitepropertyId={$websiteproperty_id}";
             $category_list = bb_get_grabbook_category_feed($cat_url); 
             $cat_set = json_decode($category_list, true) ?? []; 
 
-            $url = "https://www.bragbookv2.com/api/plugin/cases?apiToken={$api_token}&websitepropertyId={$websiteproperty_id}";
+            $url = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/cases?apiToken={$api_token}&websitepropertyId={$websiteproperty_id}";
             $data = bb_get_grabbook_api($url);
             $api_data = json_decode($data, true) ?? []; 
 

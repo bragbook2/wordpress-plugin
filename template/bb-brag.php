@@ -282,7 +282,7 @@ if ($bbrag_case_url == "/".$parts[0]."/consultation/") {
             continue;
         }
         if($page_slug_bb == $parts[0]) {
-            $response = wp_remote_post('https://www.bragbookv2.com/api/plugin/views?apiToken='. $api_token, array(
+            $response = wp_remote_post('https://nextjs-bragbook-app-dev.vercel.app/api/plugin/views?apiToken='. $api_token, array(
                 'method'    => 'POST',
                 'body'      => json_encode(array(
                     'caseId'  => $bbrag_case_id,

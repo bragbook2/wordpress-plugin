@@ -70,7 +70,7 @@ class Ajax_Handler
             $filter_get = '';
             //if(!empty($staticFilter) || !empty($dynamicFilter)){ 
             if ($page_slug == $combine_gallery_page_slug) {
-                $url = "https://www.bragbookv2.com/api/plugin/combine/filters";
+                $url = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/combine/filters";
                 $response = wp_remote_post($url, array(
                     'method' => 'POST',
                     'body' => json_encode(array(
@@ -89,7 +89,7 @@ class Ajax_Handler
 
                 $filter_get = wp_remote_retrieve_body($response);
             } else {
-                $filter_api = "https://www.bragbookv2.com/api/plugin/filters?apiToken={$apiToken}&procedureId={$procedureId}&websitePropertyId={$websitePropertyId}";
+                $filter_api = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/filters?apiToken={$apiToken}&procedureId={$procedureId}&websitePropertyId={$websitePropertyId}";
                 if (get_transient($filter_api) == false) {
                     $filter_get = self::case_and_filter_api($filter_api);
                 } else {
@@ -102,7 +102,7 @@ class Ajax_Handler
             if ($caseId !== "" || $seoSuffixUrl!== "") {
                 if ($page_slug == $combine_gallery_page_slug) {
                     $caseId=$caseId?$caseId:'123';
-                    $url = "https://www.bragbookv2.com/api/plugin/combine/cases/$caseId?seoSuffixUrl=$seoSuffixUrl";
+                    $url = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/combine/cases/$caseId?seoSuffixUrl=$seoSuffixUrl";
                     $response = wp_remote_post($url, array(
                         'method' => 'POST',
                         'body' => json_encode(array(
@@ -122,7 +122,7 @@ class Ajax_Handler
                     $data = wp_remote_retrieve_body($response);
 
                 } else {
-                    $url = "https://www.bragbookv2.com/api/plugin/cases?websitepropertyId={$websitePropertyId}&apiToken={$apiToken}&caseId={$caseId}&seoSuffixUrl={$seoSuffixUrl}&procedureId={$procedureId}";
+                    $url = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/cases?websitepropertyId={$websitePropertyId}&apiToken={$apiToken}&caseId={$caseId}&seoSuffixUrl={$seoSuffixUrl}&procedureId={$procedureId}";
 
                     if (get_transient($url) !== false) {
                         $data = get_transient($url);
@@ -182,7 +182,7 @@ class Ajax_Handler
 
 
 
-                    $url = "https://www.bragbookv2.com/api/plugin/combine/cases";
+                    $url = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/combine/cases";
 
                     $response = wp_remote_post($url, array(
                         'method' => 'POST',
@@ -201,7 +201,7 @@ class Ajax_Handler
                     $data_in = $dynamicFilterCombineAPIBody;
                     
                 } else {
-                    $url = "https://www.bragbookv2.com/api/plugin/cases/paginate?websitePropertyId={$websitePropertyId}&count={$count}&apiToken={$apiToken}&procedureId={$procedureId}{$staticFilter}{$dynamicFilter}";
+                    $url = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/cases/paginate?websitePropertyId={$websitePropertyId}&count={$count}&apiToken={$apiToken}&procedureId={$procedureId}{$staticFilter}{$dynamicFilter}";
                     if (get_transient($url) !== false) {
                         $data = get_transient($url);
                     } else {
@@ -237,7 +237,7 @@ class Ajax_Handler
                     
                     if($page_slug == $page_slug_bb){
                         $pageSlugBB = $page_slug_bb;
-                        $url_fav = "https://www.bragbookv2.com/api/plugin/favorites?apiToken={$apiToken}&websitepropertyId={$websitePropertyId}&email={$favorite_email_id}";
+                        $url_fav = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/favorites?apiToken={$apiToken}&websitepropertyId={$websitePropertyId}&email={$favorite_email_id}";
 
                         $ch = curl_init();
                         curl_setopt($ch, CURLOPT_URL, $url_fav);
@@ -253,7 +253,7 @@ class Ajax_Handler
                                 $case_fav[] = $caseItem->id;
                             }
                         }
-                        $bb_sidebar_url = "https://www.bragbookv2.com/api/plugin/sidebar?apiToken={$apiToken}";
+                        $bb_sidebar_url = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/sidebar?apiToken={$apiToken}";
                         
                         $cacheKey = "$procedureSlug-single";
                         $sidebar_list = get_transient($cacheKey);
@@ -271,7 +271,7 @@ class Ajax_Handler
                         }
                     }elseif($page_slug == $combine_gallery_page_slug && $tc == count($api_tokens)) {
                        // /api/plugin/combine/favorites/list
-                        $url_fav = "https://www.bragbookv2.com/api/plugin/combine/favorites/list";
+                        $url_fav = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/combine/favorites/list";
                         $response = wp_remote_post($url_fav, array(
                             'method' => 'POST',
                             'body' => json_encode(array(
@@ -289,7 +289,7 @@ class Ajax_Handler
                         }
                        
                         $favorite_data_brag_json = wp_remote_retrieve_body($response);
-                        $bb_sidebar_url = "https://www.bragbookv2.com/api/plugin/combine/sidebar";
+                        $bb_sidebar_url = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/combine/sidebar";
 
                         $response_sidebar = wp_remote_post($bb_sidebar_url, array(
                             'method'    => 'POST',
@@ -530,7 +530,7 @@ class Ajax_Handler
         //                 continue;
         //             }
 
-        //             $url = 'https://www.bragbookv2.com/api/plugin/favorites?apiToken='.$api_token.'&websitepropertyId='.$websiteproperty_id.'&email='.$favorite_email_id;
+        //             $url = 'https://nextjs-bragbook-app-dev.vercel.app/api/plugin/favorites?apiToken='.$api_token.'&websitepropertyId='.$websiteproperty_id.'&email='.$favorite_email_id;
         //             $ch = curl_init();
         //             curl_setopt($ch, CURLOPT_URL, $url);
         //             curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
@@ -1347,11 +1347,11 @@ class Ajax_Handler
                 foreach ($api_tokens as $api_token_index => $api_token_value) {
                     $websiteproperty_id = $websiteproperty_ids[$api_token_index];
 
-                    $url = "https://www.bragbookv2.com/api/plugin/consultations?apiToken=" . $api_token_value . "&websitepropertyId=" . $websiteproperty_id;
+                    $url = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/consultations?apiToken=" . $api_token_value . "&websitepropertyId=" . $websiteproperty_id;
                     self::send_form_data_and_create_post($data, $url, $name, $description, $email, $phone);
                 }
             } else {
-                $url = "https://www.bragbookv2.com/api/plugin/consultations?apiToken=" . $api_tokens[$index] . "&websitepropertyId=" . $websiteproperty_ids[$index];
+                $url = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/consultations?apiToken=" . $api_tokens[$index] . "&websitepropertyId=" . $websiteproperty_ids[$index];
                 self::send_form_data_and_create_post($data, $url, $name, $description, $email, $phone);
             }
 
@@ -1873,7 +1873,7 @@ class Ajax_Handler
         $bbApiTokens = explode(", ", $bbApiTokens[0]); // Splitting the tokens by ", "
         $websiteproperty_id_array = array_map('intval', explode(", ", $bbWebsiteIds[0]));
 
-        $response = wp_remote_post('https://www.bragbookv2.com/api/plugin/combine/favorites/add', array(
+        $response = wp_remote_post('https://nextjs-bragbook-app-dev.vercel.app/api/plugin/combine/favorites/add', array(
             'method' => 'POST',
             'body' => json_encode(array(
                 "apiTokens"=> $bbApiTokens,
@@ -1898,7 +1898,7 @@ class Ajax_Handler
         // )));
         // echo "</pre>";
         // die('here');
-        // $response = wp_remote_post('https://www.bragbookv2.com/api/plugin/favorites?apiToken=' . $api_token . '&websitepropertyId=' . $websiteproperty_id, array(
+        // $response = wp_remote_post('https://nextjs-bragbook-app-dev.vercel.app/api/plugin/favorites?apiToken=' . $api_token . '&websitepropertyId=' . $websiteproperty_id, array(
         //     'method' => 'POST',
         //     'body' => json_encode(array(
         //         'email' => $email,
@@ -1994,7 +1994,7 @@ class Ajax_Handler
 
         if(isset($parts[1]) && empty($parts[2])){
             if($combine_gallery_page_slug == $parts[0]){
-                $bb_sidebar_url = "https://www.bragbookv2.com/api/plugin/combine/sidebar";
+                $bb_sidebar_url = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/combine/sidebar";
                 $procedureIdsName = $this->getProcedureIDFromSidebar(array_values($api_tokens), $parts[1], $bb_sidebar_url, true);
                 $procedureTotalCase = $procedureIdsName["procedureTotalCase"];
             } else {
@@ -2005,7 +2005,7 @@ class Ajax_Handler
                         if (empty($api_token) || empty($websiteproperty_id)) {
                             continue;
                         }
-                        $bb_sidebar_url = "https://www.bragbookv2.com/api/plugin/sidebar?apiToken={$api_token}";
+                        $bb_sidebar_url = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/sidebar?apiToken={$api_token}";
                         $procedureIdsName = $this->getProcedureIDFromSidebar($api_token, $parts[1], $bb_sidebar_url, false);
                         $procedureTotalCase = $procedureIdsName["procedureTotalCase"];
                     }
@@ -2023,12 +2023,12 @@ class Ajax_Handler
             // Get case data for combine pages
             if ($combine_gallery_page_slug == $parts[0]) {
                 // get procedureIds from sidebar API
-                $bb_sidebar_url = "https://www.bragbookv2.com/api/plugin/combine/sidebar";
+                $bb_sidebar_url = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/combine/sidebar";
                 $procedureIdsName = $this->getProcedureIDFromSidebar(array_values($api_tokens), $parts[1], $bb_sidebar_url, true);
                 $procedureIds = $procedureIdsName["bb_procedure_id"];
                 $procedureName = $procedureIdsName["bb_procedure_name"];
                 $caseId = $caseId ? $caseId : '123';
-                $url = "https://www.bragbookv2.com/api/plugin/combine/cases/$caseId?seoSuffixUrl=$seoSuffixUrl";
+                $url = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/combine/cases/$caseId?seoSuffixUrl=$seoSuffixUrl";
 
                 $json_body = json_encode(array(
                     'apiTokens' => array_values($api_tokens),
@@ -2063,11 +2063,11 @@ class Ajax_Handler
                             continue;
                         }
                         // get procedureIds from sidebar API
-                        $bb_sidebar_url = "https://www.bragbookv2.com/api/plugin/sidebar?apiToken={$api_token}";
+                        $bb_sidebar_url = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/sidebar?apiToken={$api_token}";
                         $procedureIdsName = $this->getProcedureIDFromSidebar($api_token, $parts[1], $bb_sidebar_url, false);
                         $procedureId = $procedureIdsName["bb_procedure_id"];
                         $procedureName = $procedureIdsName["bb_procedure_name"];
-                        $url = "https://www.bragbookv2.com/api/plugin/cases?websitepropertyId={$websiteproperty_id}&apiToken={$api_token}&caseId={$caseId}&seoSuffixUrl={$seoSuffixUrl}&procedureId={$procedureId}";
+                        $url = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/cases?websitepropertyId={$websiteproperty_id}&apiToken={$api_token}&caseId={$caseId}&seoSuffixUrl={$seoSuffixUrl}&procedureId={$procedureId}";
                         $data = get_transient($url);
 
 						if ( false === $data ) {
@@ -2198,7 +2198,7 @@ class Ajax_Handler
 
     public function getSingleProcedureIDFromSidebar($api_token, $procedureSlug)
     {
-        $bb_sidebar_url = "https://www.bragbookv2.com/api/plugin/sidebar?apiToken={$api_token}";
+        $bb_sidebar_url = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/sidebar?apiToken={$api_token}";
         $sidebar_list = get_transient($bb_sidebar_url);
 
         if (!$sidebar_list) {
