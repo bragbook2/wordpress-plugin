@@ -1091,16 +1091,14 @@ ul.bb-patient-features li {
   max-height: 900px;
   background-color: #fff !important;
   margin-inline: 20px;
-  position: sticky;
-  top: 50px;
-  bottom: 60px;
+  position: relative;
   margin: auto;
 }
 
 .bb-fav-modal {
   position: fixed;
   background: rgba(0, 0, 0, 0.387);
-  top: 0;
+  top: auto;
   bottom: 0;
   left: 0;
   right: 0;

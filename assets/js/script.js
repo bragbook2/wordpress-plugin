@@ -546,7 +546,6 @@ function fetchCaseData(loadMoreCount) {
               let procedure_description = currentProcedure ? currentProcedure.description : '';
               let bb_case_page_title = caseSet.data[0].caseDetails[0].seoHeadline ? caseSet.data[0].caseDetails[0].seoHeadline : linkText;
               let bb_gallery_page_title = pathSegments[0].split('-').map(w => w[0].toUpperCase() + w.slice(1)).join(' ');
-              console.log(procedure_description);
               let bb_gallery_page_url = "/" + pathSegments[0];
               let schema = {
                 "@context": "https://schema.org",
@@ -1672,11 +1671,30 @@ function leavePopup() {
 }
 
 document.addEventListener("DOMContentLoaded", function () {
-  const header = document.querySelector("header");
-  const banner = document.querySelector(".bb-main");
-
-  if (window.getComputedStyle(header).position === "fixed") {
-    const headerHeight = header.offsetHeight;
-    banner.style.paddingTop = `${headerHeight + 30}px`;
-  }
-});
+  let header = document.querySelector("header");
+  if(!header) header = document.querySelector(".header"); 
+   const banner = document.querySelector(".bb-main");
+ 
+   if (window.getComputedStyle(header).position === "fixed") {
+     const headerHeight = header.offsetHeight;
+     banner.style.paddingTop = `${headerHeight + 30}px`;
+   }
+ });
+ 
+ document.addEventListener("DOMContentLoaded", function () {
+    let headerSection = document.querySelector("header");
+  if(!headerSection) headerSection = document.querySelector(".header"); 
+   const modalBox = document.querySelector(".bb-fav-modal");
+ 
+   if (headerSection && modalBox) {
+    if (window.getComputedStyle(headerSection).position === "fixed") {
+     const headerHeight = headerSection.offsetHeight;
+     modalBox.style.height = `calc(100vh - ${headerHeight}px)`;
+    }else{
+      modalBox.style.height = `100vh`;
+      modalBox.style.paddingTop = `50px`;
+    }
+   } else {
+     console.warn("'.header' or '.bb-fav-modal' element not found.");
+   }
+ });

@@ -213,6 +213,7 @@ class Shortcode {
         $cat_title = $atts['title'];
         $cat_details = $atts['details'];
         $cat_start = $atts['start'];
+        $cat_procedure_name = $atts['category'];
 
         $cat_website_property_id = $atts['website_property_id'];
         $api_tokens = get_option('bragbook_api_token', []); 
@@ -265,12 +266,10 @@ class Shortcode {
         <div class="bb-main">
             <div class="bb-slider">
                 <?php
-                $limit_count = 1;
-                
+                $limit_count = 0;
                 $bb_scase_ids_list = [];
                 $spro_title_bb = $result['slugName'];
                 $carousel_data_bb = json_decode($data_car);
-                
                 foreach($carousel_data_bb->data as $procedure_data) {
                     
                         if (!empty($procedure_data->photoSets)) { 
@@ -278,7 +277,6 @@ class Shortcode {
                             <div class="bb-slick-slide">
                                 <div class="bb-slide">
                                     <?php
-                                    
                                     $bb_new_image_procedure_data = isset($procedure_data->photoSets[0]->highResPostProcessedImageLocation) && !is_null($procedure_data->photoSets[0]->highResPostProcessedImageLocation)
                                         ? $procedure_data->photoSets[0]->highResPostProcessedImageLocation 
                                         : (isset($procedure_data->photoSets[0]->postProcessedImageLocation) && !is_null($procedure_data->photoSets[0]->postProcessedImageLocation) 
@@ -300,12 +298,13 @@ class Shortcode {
                                     <?php if ($cat_title == 1 || $cat_details == 1) { ?>
                                         <div class="bb-content-box-inner">
                                             <div class="bb-content-box-inner-left">
-                                                <?php if ($cat_title == 1) { ?>
-                                                    <h5><?php echo isset($procedure_data->caseDetails[0]->seoHeadline) ? $procedure_data->caseDetails[0]->seoHeadline : 'blepharoplasty'; ?> : Patient</h5>
+                                                <?php if ($cat_title == 1) { 
+                                                    ?>
+                                                    <h5><?php echo isset($procedure_data->caseDetails[0]->seoHeadline) ? $procedure_data->caseDetails[0]->seoHeadline : $cat_procedure_name; ?> : Patient: <?=++$limit_count?></h5>
                                                     <p><?php echo self::bb_limitWords($procedure_data->details, 50); ?></p>
                                                 <?php } ?>
                                                 <?php if ($cat_details == 1) { ?>
-                                                    <button type="button"><a href="<?php echo "/" . $bb_slug_link . "/" . $spro_title_bb . "/" . $procedure_data->id; ?>">View More</a></button>
+                                                    <button type="button"><a href="<?php echo "/" . $bb_slug_link . "/" . $spro_title_bb . "/" . $caseSeoSuffixUrl; ?>">View More</a></button>
                                                 <?php } ?>
                                             </div>
                                         </div>
