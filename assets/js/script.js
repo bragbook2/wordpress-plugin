@@ -883,8 +883,8 @@ for (let i = 0; i < accordion.length; i++) {
 }
 
 function displayProcedureTitle(sidebarData, procedureSlug) {
-  const title = sidebarData.find(procedure => procedure.slugName == procedureSlug)?.name;
-  if (document.getElementById("procedure-title")) document.getElementById("procedure-title").innerHTML = `${title ? title : ""} Before & After Gallery`;
+  const procedureTitle = document.querySelector(`a[href="${window.location.pathname}"]`).innerText.split("(")[0];
+  if (document.getElementById("procedure-title")) document.getElementById("procedure-title").innerHTML = `${procedureTitle ? procedureTitle : ""} Before & After Gallery`;
 }
 
 
