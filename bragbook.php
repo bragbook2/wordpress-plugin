@@ -20,6 +20,9 @@ if (!defined('BB_PLUGIN_DIR_MAIN_PATH')) {
 if (!defined('HOUR_IN_SECONDS')) {
     define('HOUR_IN_SECONDS', 3600);
 }
+if (!defined('BB_BASE_URL')) {
+    define('BB_BASE_URL', 'https://nextjs-bragbook-app-dev.vercel.app');
+}
 
 require_once BB_PLUGIN_DIR_MAIN_PATH . 'include/admin/class-activator.php';
 require_once BB_PLUGIN_DIR_MAIN_PATH . 'include/admin/class-shortcode.php';

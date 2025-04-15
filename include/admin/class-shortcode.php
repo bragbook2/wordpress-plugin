@@ -153,12 +153,12 @@ class Shortcode {
     //             continue;
     //         }
     
-    //         $cat_url = "https://bragbookv2.com/api/plugin/categories?apiToken=" . $api_token . "&websitepropertyId=" . $websiteproperty_id;
+    //         $cat_url = BB_BASE_URL . "/api/plugin/categories?apiToken=" . $api_token . "&websitepropertyId=" . $websiteproperty_id;
     //         $category_list = self::bb_get_grabbook_category_feed($cat_url);
     
     //         $cat_set = json_decode($category_list, true);
     
-    //         $url = "https://bragbookv2.com/api/plugin/cases?apiToken=" . $api_token . "&websitepropertyId=" . $websiteproperty_id;
+    //         $url = BB_BASE_URL . "/api/plugin/cases?apiToken=" . $api_token . "&websitepropertyId=" . $websiteproperty_id;
     //         $data = self::bb_get_grabbook_api($url);
     //         $api_data = json_decode($data, true);
     
@@ -220,7 +220,7 @@ class Shortcode {
         $websiteproperty_ids = get_option('bragbook_websiteproperty_id', []);
         $gallery_slugs = get_option('bb_gallery_page_slug', []); 
           
-        $token = '';  
+        $token = '';
         foreach ($api_tokens as $index => $api_token) {
             $websiteproperty_id = $websiteproperty_ids[$index] ?? '';
             $page_slug_bb = $gallery_slugs[$index] ?? '';
@@ -229,7 +229,7 @@ class Shortcode {
                 if (empty($api_token) || empty($websiteproperty_id)) {
                     continue;
                 }
-                $bb_sidebar_url = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/sidebar?apiToken={$api_token}";
+                $bb_sidebar_url = BB_BASE_URL . "/api/plugin/sidebar?apiToken={$api_token}";
                 
                 $token = $api_token;
                 $bb_slug_link = $page_slug_bb;
@@ -252,7 +252,7 @@ class Shortcode {
          }
         
          $id = $result['id'];
-         $url_car = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/carousel?websitePropertyId={$cat_website_property_id}&start={$cat_start}&limit={$cat_limit}&apiToken={$token}&procedureId={$id}";
+         $url_car = BB_BASE_URL . "/api/plugin/carousel?websitePropertyId={$cat_website_property_id}&start={$cat_start}&limit={$cat_limit}&apiToken={$token}&procedureId={$id}";
 
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url_car);
@@ -349,7 +349,7 @@ class Shortcode {
                 if (empty($api_token) || empty($websiteproperty_id)) {
                     continue;
                 }
-                $bb_sidebar_url = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/sidebar?apiToken={$api_token}";
+                $bb_sidebar_url = BB_BASE_URL . "/api/plugin/sidebar?apiToken={$api_token}";
                 
                 $token = $api_token;
                 $bb_slug_link = $page_slug_bb;
@@ -372,9 +372,9 @@ class Shortcode {
          }
         
          $id = $result['id'];
-        $url_case = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/cases/?websitePropertyId={$cat_website_property_id}&apiToken={$token}&caseId={$caseid}&procedureId={$id}";
+        $url_case = BB_BASE_URL . "/api/plugin/cases/?websitePropertyId={$cat_website_property_id}&apiToken={$token}&caseId={$caseid}&procedureId={$id}";
 
-        // $url_car = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/carousel?websitePropertyId={$cat_website_property_id}&start={$cat_start}&limit={$cat_limit}&apiToken={$token}&procedureId={$id}";
+        // $url_car = BB_BASE_URL . "/api/plugin/carousel?websitePropertyId={$cat_website_property_id}&start={$cat_start}&limit={$cat_limit}&apiToken={$token}&procedureId={$id}";
 
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url_case);
@@ -455,7 +455,7 @@ class Shortcode {
                 if (empty($api_token) || empty($websiteproperty_id)) {
                     continue;
                 }
-                $bb_sidebar_url = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/sidebar?apiToken={$api_token}";
+                $bb_sidebar_url = BB_BASE_URL . "/api/plugin/sidebar?apiToken={$api_token}";
                 
                 $token = $api_token;
                 $bb_slug_link = $page_slug_bb;
@@ -706,7 +706,7 @@ class Shortcode {
                if (empty($api_token) || empty($websiteproperty_id)) {
                    continue;
                }
-               $bb_sidebar_url = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/sidebar?apiToken={$api_token}";
+               $bb_sidebar_url = BB_BASE_URL . "/api/plugin/sidebar?apiToken={$api_token}";
                
                $token = $api_token;
                $bb_slug_link = $page_slug_bb;
@@ -730,9 +730,9 @@ class Shortcode {
        
         $id = $result['id'];
         $procedure_name_bb = $result['slugName'];
-      // $url_pro = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/cases/paginate?websitePropertyId={$cat_website_property_id}&count=1&apiToken={$token}&procedureId={$id}";
+      // $url_pro = BB_BASE_URL . "/api/plugin/cases/paginate?websitePropertyId={$cat_website_property_id}&count=1&apiToken={$token}&procedureId={$id}";
 
-        $url_pro = "https://nextjs-bragbook-app-dev.vercel.app/api/plugin/carousel?websitePropertyId={$cat_website_property_id}&start={$cat_start}&limit={$cat_limit}&apiToken={$token}&procedureId={$id}";
+        $url_pro = BB_BASE_URL . "/api/plugin/carousel?websitePropertyId={$cat_website_property_id}&start={$cat_start}&limit={$cat_limit}&apiToken={$token}&procedureId={$id}";
 
        $ch = curl_init();
        curl_setopt($ch, CURLOPT_URL, $url_pro);
