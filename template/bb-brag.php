@@ -554,8 +554,46 @@ if ($bbrag_case_url == "/".$parts[0]."/consultation/") {
                     </div>
                 </div>
                 <?php
-                    echo isset($explode_string['0']) ? $explode_string['0'] : '';
-                    foreach ($explode_string as $string) {
+                    if (isset($explode_string[0])) {
+                        $content = $explode_string[0];
+                        $lines = preg_split("/\r\n|\n|\r/", $content);
+                        $output = '';
+                        foreach ($lines as $line) {
+                            $trimmedLine = trim($line);
+                            if ($trimmedLine === '') {
+                                continue;
+                            }
+                            $output .= ($trimmedLine === strip_tags($trimmedLine)) ? "<p>{$trimmedLine}</p>" : $trimmedLine;
+                        }
+                        echo $output;
+                    }
+                    
+                    $output = array_map(function($item) {
+                        $item = str_replace("\r\n", "\n", $item); 
+                        $pos = strpos($item, ']');
+                    
+                        if ($pos !== false) {
+                            $shortcode = substr($item, 0, $pos + 1);
+                            $after = substr($item, $pos + 1);
+                            $afterLines = explode("\n", $after);
+                            $afterLines = array_map(function ($line) {
+                                $trimmed = trim($line);
+                                if ($trimmed === '') return $line;
+                                return ($trimmed === strip_tags($trimmed)) ? '<p>' . $trimmed . '</p>' : $line;
+                            }, $afterLines);
+                            return $shortcode . "\n" . implode("\n", $afterLines);
+                        } else {
+                            $lines = explode("\n", $item);
+                            $lines = array_map(function ($line) {
+                                $trimmed = trim($line);
+                                if ($trimmed === '') return $line;
+                                return ($trimmed === strip_tags($trimmed)) ? '<p>' . $trimmed . '</p>' : $line;
+                            }, $lines);
+                            return implode("\n", $lines);
+                        }
+                    }, $explode_string);
+                    
+                    foreach ($output as $string) {
                         if (strpos($string, 'shortcode') !== false) {
                             echo do_shortcode('[' . $string);
                         }

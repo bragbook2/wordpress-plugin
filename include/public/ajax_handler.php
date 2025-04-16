@@ -1977,8 +1977,8 @@ class Ajax_Handler
 
         $parts = explode('/', $bbragbook_case_url);
 
-        $bb_seo_title = strip_tags($first_element);
-        $bb_seo_description = $text_after_first_tag;
+        $bb_seo_title = isset($first_element) ? strip_tags($first_element) : null;
+        $bb_seo_description = isset($text_after_first_tag) ? strip_tags($text_after_first_tag) : null;
         $combine_gallery_page_id = get_option('combine_gallery_page_id');
         $combine_gallery_page = get_post($combine_gallery_page_id);
         $combine_gallery_page_slug = get_option('combine_gallery_slug');
