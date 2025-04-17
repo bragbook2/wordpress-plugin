@@ -90,14 +90,14 @@ function get_api_sidebar_bb($url) {
     if (get_transient($url) !== false) {
         return get_transient($url);
     }
-    
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
 
-    $data = curl_exec($ch);
-    curl_close($ch);
+    $response = wp_remote_get( $url );
+    if ( is_wp_error( $response ) ) {
+        $error_message = $response->get_error_message();
+        echo "Something went wrong: $error_message";
+    } else {
+        $data = wp_remote_retrieve_body( $response );
+    }
    
     $bb_set_transient_urls[$url] = $data;
     update_option( 'bb_set_transient_url_sidebar', $bb_set_transient_urls );
@@ -243,13 +243,13 @@ function bb_get_grabbook_api($url) {
         return get_transient($url);
     }
 
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-
-    $data = curl_exec($ch);
-    curl_close($ch);
+    $response = wp_remote_get( $url );
+    if ( is_wp_error( $response ) ) {
+        $error_message = $response->get_error_message();
+        echo "Something went wrong: $error_message";
+    } else {
+        $data = wp_remote_retrieve_body( $response );
+    }
 
     $bb_set_transient_urls[$url] = $data;
     update_option( 'bb_set_transient_url', $bb_set_transient_urls );

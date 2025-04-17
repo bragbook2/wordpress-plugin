@@ -233,16 +233,16 @@ class Shortcode {
                 
                 $token = $api_token;
                 $bb_slug_link = $page_slug_bb;
-                
-                $ch = curl_init();
-                curl_setopt($ch, CURLOPT_URL, $bb_sidebar_url);
-                curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-                curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-                $data = curl_exec($ch);
-                curl_close($ch);
-             
-              $sidebar_set = json_decode($data, true) ?? []; 
-            
+
+                $response = wp_remote_get( $bb_sidebar_url );
+                if ( is_wp_error( $response ) ) {
+                    $error_message = $response->get_error_message();
+                    echo "Something went wrong: $error_message";
+                    $sidebar_set = [];
+                } else {
+                    $data = wp_remote_retrieve_body( $response );
+                    $sidebar_set = json_decode( $data, true ) ?? [];
+                }
             }
         }
       
@@ -254,12 +254,14 @@ class Shortcode {
          $id = $result['id'];
          $url_car = BB_BASE_URL . "/api/plugin/carousel?websitePropertyId={$cat_website_property_id}&start={$cat_start}&limit={$cat_limit}&apiToken={$token}&procedureId={$id}";
 
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url_car);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-        $data_car = curl_exec($ch);
-        curl_close($ch); 
+        $response = wp_remote_get( $url_car );
+        if ( is_wp_error( $response ) ) {
+            $error_message = $response->get_error_message();
+            echo "Something went wrong: $error_message";
+            $data_car = '';
+        } else {
+            $data_car = wp_remote_retrieve_body( $response );
+        }
 
         ob_start();
         ?>
@@ -353,16 +355,17 @@ class Shortcode {
                 
                 $token = $api_token;
                 $bb_slug_link = $page_slug_bb;
-                
-                $ch = curl_init();
-                curl_setopt($ch, CURLOPT_URL, $bb_sidebar_url);
-                curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-                curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-                $data = curl_exec($ch);
-                curl_close($ch);
-             
-              $sidebar_set = json_decode($data, true) ?? []; 
             
+                $response = wp_remote_get( $bb_sidebar_url );
+
+                if ( is_wp_error( $response ) ) {
+                    $error_message = $response->get_error_message();
+                    echo "Something went wrong: $error_message";
+                    $sidebar_set = [];
+                } else {
+                    $data = wp_remote_retrieve_body( $response );
+                    $sidebar_set = json_decode( $data, true ) ?? [];
+                }
             }
         }
       
@@ -376,14 +379,15 @@ class Shortcode {
 
         // $url_car = BB_BASE_URL . "/api/plugin/carousel?websitePropertyId={$cat_website_property_id}&start={$cat_start}&limit={$cat_limit}&apiToken={$token}&procedureId={$id}";
 
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url_case);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-        $data_case = curl_exec($ch);
-        curl_close($ch);
-      
-         $result_set = json_decode($data_case, true);
+        $response = wp_remote_get( $url_case );
+        if ( is_wp_error( $response ) ) {
+            $error_message = $response->get_error_message();
+            echo "Something went wrong: $error_message";
+            $result_set = [];
+        } else {
+            $data_case = wp_remote_retrieve_body( $response );
+            $result_set = json_decode( $data_case, true );
+        }
        
         
          ob_start();
@@ -460,14 +464,15 @@ class Shortcode {
                 $token = $api_token;
                 $bb_slug_link = $page_slug_bb;
                 
-                $ch = curl_init();
-                curl_setopt($ch, CURLOPT_URL, $bb_sidebar_url);
-                curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-                curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-                $data = curl_exec($ch);
-                curl_close($ch);
-             
-              $sidebar_set = json_decode($data, true) ?? []; 
+                $response = wp_remote_get( $bb_sidebar_url );
+                if ( is_wp_error( $response ) ) {
+                    $error_message = $response->get_error_message();
+                    echo "Something went wrong: $error_message";
+                    $sidebar_set = [];
+                } else {
+                    $data = wp_remote_retrieve_body( $response );
+                    $sidebar_set = json_decode( $data, true ) ?? [];
+                }
             
             }
         }
@@ -710,15 +715,15 @@ class Shortcode {
                
                $token = $api_token;
                $bb_slug_link = $page_slug_bb;
-               
-               $ch = curl_init();
-               curl_setopt($ch, CURLOPT_URL, $bb_sidebar_url);
-               curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-               curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-               $data = curl_exec($ch);
-               curl_close($ch);
-            
-             $sidebar_set = json_decode($data, true) ?? []; 
+
+                $response = wp_remote_get( $bb_sidebar_url );
+                if ( is_wp_error( $response ) ) {
+                    echo "Something went wrong: " . $response->get_error_message();
+                    $sidebar_set = [];
+                } else {
+                    $data = wp_remote_retrieve_body( $response );
+                    $sidebar_set = json_decode( $data, true ) ?? [];
+                }
            
            }
        }
@@ -734,13 +739,14 @@ class Shortcode {
 
         $url_pro = BB_BASE_URL . "/api/plugin/carousel?websitePropertyId={$cat_website_property_id}&start={$cat_start}&limit={$cat_limit}&apiToken={$token}&procedureId={$id}";
 
-       $ch = curl_init();
-       curl_setopt($ch, CURLOPT_URL, $url_pro);
-       curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-       curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-       $data_pro = curl_exec($ch);
-       curl_close($ch);
-        $result_pro = json_decode($data_pro, true);
+        $response = wp_remote_get( $url_pro );
+        if ( is_wp_error( $response ) ) {
+            echo "Something went wrong: " . $response->get_error_message();
+            $result_pro = [];
+        } else {
+            $data_pro = wp_remote_retrieve_body( $response );
+            $result_pro = json_decode( $data_pro, true );
+        }
         $api_data = [];
         $categories = [];
         

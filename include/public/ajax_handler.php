@@ -239,13 +239,13 @@ class Ajax_Handler
                         $pageSlugBB = $page_slug_bb;
                         $url_fav = BB_BASE_URL . "/api/plugin/favorites?apiToken={$apiToken}&websitepropertyId={$websitePropertyId}&email={$favorite_email_id}";
 
-                        $ch = curl_init();
-                        curl_setopt($ch, CURLOPT_URL, $url_fav);
-                        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-                        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-
-                        $favorite_data_brag_json = curl_exec($ch);
-                        curl_close($ch);
+                        $response = wp_remote_get( $url_fav );
+                        if ( is_wp_error( $response ) ) {
+                            $error_message = $response->get_error_message();
+                            echo "Something went wrong: $error_message";
+                        } else {
+                            $favorite_data_brag_json = wp_remote_retrieve_body( $response );
+                        }
                         $favorite_data_brag = json_decode($favorite_data_brag_json);
                        
                         foreach ($favorite_data_brag->favorites as $favorite) {
@@ -356,13 +356,13 @@ class Ajax_Handler
     }
     public static function case_and_filter_api($url)
     {
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-
-        $data = curl_exec($ch);
-        curl_close($ch);
+        $response = wp_remote_get( $url );
+        if ( is_wp_error( $response ) ) {
+            $error_message = $response->get_error_message();
+            echo "Something went wrong: $error_message";
+        } else {
+            $data = wp_remote_retrieve_body( $response );
+        }
 
         set_transient($url, $data, 1800);
         return $data;
@@ -1285,19 +1285,23 @@ class Ajax_Handler
     public static function send_form_data_and_create_post($data, $url, $name, $description, $email, $phone)
     {
         $jsonData = json_encode($data);
-        $ch = curl_init($url);
 
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonData);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Content-Type: application/json',
-            'Content-Length: ' . strlen($jsonData)
-        ]);
+        $response = wp_remote_post( $url, array(
+            'body'    => $jsonData,
+            'headers' => array(
+                'Content-Type'   => 'application/json',
+                'Content-Length' => strlen( $jsonData ), // optional, WP usually sets this
+            ),
+        ) );
 
-        $response = curl_exec($ch);
-        $responseData = json_decode($response, true);
-        curl_close($ch);
+        if ( is_wp_error( $response ) ) {
+            $error_message = $response->get_error_message();
+            echo "Something went wrong: $error_message";
+        } else {
+            $body = wp_remote_retrieve_body( $response );
+            $responseData = json_decode( $body, true );
+            // Now $responseData is your decoded array
+        }
 
         if (isset($responseData['success']) && $responseData['success'] === true) {
             $post_id = wp_insert_post(array(
@@ -2256,69 +2260,6 @@ class Ajax_Handler
     <?php 
     }
 
-    // public function bb_add_custom_schema() {
-
-    //     $bbrag_case_url = strtok($_SERVER["REQUEST_URI"], '?');
-    //     $bbragbook_case_url = trim($bbrag_case_url, '/');
-    //     $parts = explode('/', $bbragbook_case_url);
-    //     $formattedString = ucwords(str_replace("-", " ", $parts[0]));      
-
-    //     $brag_book_schema_detail = $this->seoData;
-
-    //     if (isset($parts[2]) && !empty($parts[2])) {
-    //         $breadcrumb = [
-    //             [
-    //                 "@type" => "ListItem",
-    //                 "position" => 1,
-    //                 "name" => "Home",
-    //                 "item" => home_url()
-    //             ],
-    //             [
-    //                 "@type" => "ListItem",
-    //                 "position" => 2,
-    //                 "name" => $formattedString,
-    //                 "item" => "/" . $parts[0]
-    //             ],
-    //             [
-    //                 "@type" => "ListItem",
-    //                 "position" => 3,
-    //                 "name" => $brag_book_schema_detail['bb_title'],
-    //                 "item" => $this->bb_get_current_url()
-    //             ]
-    //         ];
-
-    //         $schema_data = [
-    //             "@context" => "https://schema.org",
-    //             "@graph" => [
-    //                 [
-    //                     "@type" => "BreadcrumbList",
-    //                     "itemListElement" => $breadcrumb
-    //                 ],
-    //                 [
-    //                     "@type" => "Website",
-    //                     "name" => $brag_book_schema_detail['bb_title'],
-    //                     "url" => $this->bb_get_current_url(),
-    //                     "description" => $brag_book_schema_detail['bb_description'],
-    //                     "bodyLocation" => $brag_book_schema_detail['bb_procedure_name'],
-    //                     "procedureType" => "Surgical",
-    //                     "recognizingAuthority" => [
-    //                         "@type" => "MedicalOrganization",
-    //                         "name" => "American Society of Plastic Surgeons",
-    //                         "url" => "https://www.plasticsurgery.org/"
-    //                     ],
-    //                         "study" => [
-    //                         "@type" => "MedicalStudy",
-    //                         "name" => $brag_book_schema_detail['bb_title'] . " Case Study",
-    //                         "url" => $this->bb_get_current_url()
-    //                     ],
-    //                 ]
-    //             ]
-    //         ];
-
-    //         echo '<script type="application/ld+json">' . json_encode($schema_data, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) . '</script>';
-    //     }
-    // }
-
     public function bb_print_custom_bragbook_description()
     {
         echo '<meta name="description" content="' . $this->bb_get_custom_bragbook_description() . '">';
@@ -2428,7 +2369,6 @@ class Ajax_Handler
                     remove_action('wp_head', 'rel_canonical');
                     remove_action('wp_head', 'wp_shortlink_wp_head', 10, 0);
                     add_action('wp_head', array($this, 'bb_print_canonical'));
-                    //add_action('wp_head', array($this, 'bb_add_custom_schema'), 1);
                 }
             }
         }
