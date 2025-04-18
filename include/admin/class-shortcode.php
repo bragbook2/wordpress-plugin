@@ -213,7 +213,7 @@ class Shortcode {
         $cat_title = $atts['title'];
         $cat_details = $atts['details'];
         $cat_start = $atts['start'];
-        $cat_procedure_name = $atts['category'];
+        $cat_title_formatted = ucwords(str_replace('-', ' ', $cat_name));
 
         $cat_website_property_id = $atts['website_property_id'];
         $api_tokens = get_option('bragbook_api_token', []); 
@@ -302,7 +302,7 @@ class Shortcode {
                                             <div class="bb-content-box-inner-left">
                                                 <?php if ($cat_title == 1) { 
                                                     ?>
-                                                    <h5><?php echo isset($procedure_data->caseDetails[0]->seoHeadline) ? $procedure_data->caseDetails[0]->seoHeadline : $cat_procedure_name; ?> : Patient: <?=++$limit_count?></h5>
+                                                    <h5><?php echo isset($procedure_data->caseDetails[0]->seoHeadline) ? $procedure_data->caseDetails[0]->seoHeadline : $cat_title_formatted; ?> : Patient: <?=++$limit_count?></h5>
                                                     <p><?php echo self::bb_limitWords($procedure_data->details, 50); ?></p>
                                                 <?php } ?>
                                                 <?php if ($cat_details == 1) { ?>
