@@ -223,6 +223,8 @@ class Ajax_Handler
                 
                 $websiteproperty_ids = get_option('bragbook_websiteproperty_id', []);
                 $gallery_slugs = get_option('bb_gallery_page_slug', []);
+                $seo_pages_title = get_option('bb_seo_page_title', []);
+                $seo_pages_description = get_option('bb_seo_page_description', []);
                
                 $favorite_data_bb = [];
                 $tc = 0;
@@ -236,6 +238,8 @@ class Ajax_Handler
                     $page_slug_bb = $gallery_slugs[$index] ?? '';
                     
                     if($page_slug == $page_slug_bb){
+                        $seo_page_title = $seo_pages_title[$index] ?? '';
+                        $seo_page_description = $seo_pages_description[$index] ?? '';
                         $pageSlugBB = $page_slug_bb;
                         $url_fav = BB_BASE_URL . "/api/plugin/favorites?apiToken={$apiToken}&websitepropertyId={$websitePropertyId}&email={$favorite_email_id}";
 
@@ -345,6 +349,8 @@ class Ajax_Handler
                     'info' => $info,
                     'page_slug' => $page_slug,
                     'page_slug_bb' => $pageSlugBB,
+                    'seo_page_title' => $seo_page_title,
+                    'seo_page_description' => $seo_page_description,
                 ]
             ];
             // Return the response as JSON
@@ -1219,6 +1225,12 @@ class Ajax_Handler
         if (isset($form_data['bb_gallery_page_slug'])) {
             update_option('bb_gallery_page_slug', array_map('sanitize_text_field', $form_data['bb_gallery_page_slug']));
         }
+        if (isset($form_data['bb_seo_page_title'])) {
+            update_option('bb_seo_page_title', array_map('sanitize_text_field', $form_data['bb_seo_page_title']));
+        }
+        if (isset($form_data['bb_seo_page_description'])) {
+            update_option('bb_seo_page_description', array_map('sanitize_text_field', $form_data['bb_seo_page_description']));
+        }
         $bb_pages_slugs = get_option('bb_gallery_page_slug', []);
         self::bb_token_base_page_creation($bb_token_based_page_keys, $bb_pages_slugs, $current_user_id);
 
@@ -1505,7 +1517,6 @@ class Ajax_Handler
                         if (!empty(get_option('combine_gallery_slug'))) {
                             $combine_gallery_slug = get_option('combine_gallery_slug');
                         }
-
                         ?>
                         <div class="dynamic-api-table">
                             <table id="dynamicTable">
@@ -1514,6 +1525,8 @@ class Ajax_Handler
                                         <th>API Token</th>
                                         <th>Website Property ID</th>
                                         <th>Gallery Page</th>
+                                        <th>Seo Page Title</th>
+                                        <th>Seo Page Description</th>
                                         <th></th>
                                     </tr>
                                 </thead>
@@ -1524,6 +1537,8 @@ class Ajax_Handler
                                     $api_tokens = get_option('bragbook_api_token', []);
                                     $website_ids = get_option('bragbook_websiteproperty_id', []);
                                     $bb_page_list_gallery = get_option('bb_gallery_stored_pages_ids');
+                                    $bb_seo_pages_title = get_option('bb_seo_page_title', []);
+                                    $bb_seo_pages_description = get_option('bb_seo_page_description', []);
 
                                     $num_rows = max(count($api_tokens), count($website_ids));
                                     $used_slugs = [];
@@ -1533,6 +1548,8 @@ class Ajax_Handler
                                         if (isset($api_tokens[$key])) {
                                             $api_token = isset($api_tokens[$key]) ? esc_attr($api_tokens[$key]) : '';
                                             $website_id = isset($website_ids[$key]) ? esc_attr($website_ids[$key]) : '';
+                                            $bb_seo_page_title = isset($bb_seo_pages_title[$key]) ? esc_attr($bb_seo_pages_title[$key]) : '';
+                                            $bb_seo_page_description = isset($bb_seo_pages_description[$key]) ? esc_attr($bb_seo_pages_description[$key]) : '';
                                             $gallery_slug = $value;
 
                                             if (in_array($gallery_slug, $used_slugs)) {
@@ -1565,6 +1582,16 @@ class Ajax_Handler
                                                     <input type="hidden" name="bb_hidden_page_slug_with_id[<?php echo $i; ?>]"
                                                         value="<?php echo $page_id . '_' . $gallery_slug; ?>">
 
+                                                </td>
+                                                <td>
+                                                    <input type="text" data-key="<?php echo $key; ?>"
+                                                        name="bb_seo_page_title[<?php echo $key; ?>]"
+                                                        value="<?php echo $bb_seo_page_title; ?>" required>
+                                                </td>
+                                                <td>
+                                                    <input type="text" data-key="<?php echo $key; ?>"
+                                                        name="bb_seo_page_description[<?php echo $key; ?>]"
+                                                        value="<?php echo $bb_seo_page_description; ?>" required>
                                                 </td>
                                                 <td>
                                                     <button type="button" class="removeRow">Remove Row</button>
@@ -1625,6 +1652,12 @@ class Ajax_Handler
                                             </td>
                                             <td>
                                                 <input type="text" data-key="page_${newRowNumber}" name="bb_gallery_page_slug[page_${newRowNumber}]" value="" required>
+                                            </td>
+                                            <td>
+                                                <input type="text" data-key="page_${newRowNumber}" name="bb_seo_page_title[page_${newRowNumber}]" value="" required>
+                                            </td>
+                                            <td>
+                                                <input type="text" data-key="page_${newRowNumber}" name="bb_seo_page_description[page_${newRowNumber}]" value="" required>
                                             </td>
                                             <td>
                                                 <button type="button" class="removeRow">Remove Row</button>
@@ -1981,14 +2014,16 @@ class Ajax_Handler
 
         $parts = explode('/', $bbragbook_case_url);
 
-        $bb_seo_title = isset($first_element) ? strip_tags($first_element) : null;
-        $bb_seo_description = isset($text_after_first_tag) ? strip_tags($text_after_first_tag) : null;
+        $bb_seo_title = null;
+        $bb_seo_description = null;
         $combine_gallery_page_id = get_option('combine_gallery_page_id');
         $combine_gallery_page = get_post($combine_gallery_page_id);
         $combine_gallery_page_slug = get_option('combine_gallery_slug');
         $api_tokens = get_option('bragbook_api_token', []);
         $websiteproperty_ids = get_option('bragbook_websiteproperty_id', []);
         $gallery_slugs = get_option('bb_gallery_page_slug', []);
+        $bb_seo_pages_title = get_option('bb_seo_page_title', []);
+        $bb_seo_pages_description = get_option('bb_seo_page_description', []);
 
         //Get caseId from URL if exists
         $caseId = null;
@@ -1996,6 +2031,23 @@ class Ajax_Handler
         $procedureName = null;
         $procedureTotalCase = null;
 
+        if(isset($parts[0]) && empty($parts[1]) && empty($parts[2])){
+            if($combine_gallery_page_slug == $parts[0]){
+
+            } else {
+                foreach ($api_tokens as $index => $api_token) {
+                        $websiteproperty_id = $websiteproperty_ids[$index] ?? '';
+                        $page_slug_bb = $gallery_slugs[$index] ?? '';
+                    if (($page_slug_bb == $parts[0])) {
+                        $bb_seo_title = $bb_seo_pages_title[$index] ?? '';
+                        $bb_seo_description = $bb_seo_pages_description[$index] ?? '';
+                        if (empty($api_token) || empty($websiteproperty_id)) {
+                            continue;
+                        }
+                    }
+                }
+            }
+        }
         if(isset($parts[1]) && empty($parts[2])){
             if($combine_gallery_page_slug == $parts[0]){
                 $bb_sidebar_url = BB_BASE_URL . "/api/plugin/combine/sidebar";

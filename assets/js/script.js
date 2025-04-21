@@ -184,6 +184,7 @@ function fetchCaseData(loadMoreCount) {
       body: new URLSearchParams(requestData).toString(),
     }).then((response) => response.json())
       .then((data) => {
+        const seopagetitle = data.data.seo_page_title;
         const myFavoriteCountSpan = document.getElementById("bb_favorite_caseIds_count");
         myFavoriteCountSpan ? myFavoriteCountSpan.style.display = 'inline' : '';
         try {
@@ -419,6 +420,7 @@ function fetchCaseData(loadMoreCount) {
               let images_case = [];
               document.querySelector("#bb_f_gif_sidebar")?.remove();
               let patienLeftBox = document.querySelector(".bb-patient-left");
+              let proceduralName = "";
               if (patienLeftBox) {
                 let titleWithoutDashes;
                 let bbPatientNo = null;
@@ -427,7 +429,6 @@ function fetchCaseData(loadMoreCount) {
                   if (seoSuffixUrl) bbPatientNo = (caseItem.caseIds?.findIndex(item => item.seoSuffixUrl == seoSuffixUrl) + 1);
                   else if (caseIdentifier) bbPatientNo = (caseItem.caseIds?.findIndex(item => item.id == caseIdentifier) + 1);
                   let caseId = caseItem.id;
-                  let proceduralName = "";
                   if (caseItem.caseDetails[0].seoHeadline) {
                     proceduralName = caseItem.caseDetails[0].seoHeadline;
                   } else {
@@ -442,7 +443,7 @@ function fetchCaseData(loadMoreCount) {
                           value.originalBeforeLocation;
                         let imgElement = document.createElement("img");
                         imgElement.className =
-                          "bbrag_gallery_image testing-image";
+                          "bbrag_gallery_image";
                         imgElement.src = bb_new_image_value;
                         imgElement.alt = (value.seoAltText ?? "Before and after " + proceduralName) + " - angle " + (itemIndex + 1);
                         patienLeftBox.appendChild(imgElement);
@@ -545,7 +546,6 @@ function fetchCaseData(loadMoreCount) {
               let bb_current_procedure_slug = currentProcedure ? "/" + currentProcedure.slugName : '/';
               let procedure_description = currentProcedure ? currentProcedure.description : '';
               let bb_case_page_title = caseSet.data[0].caseDetails[0].seoHeadline ? caseSet.data[0].caseDetails[0].seoHeadline : linkText;
-              let bb_gallery_page_title = pathSegments[0].split('-').map(w => w[0].toUpperCase() + w.slice(1)).join(' ');
               let bb_gallery_page_url = "/" + pathSegments[0];
               let schema = {
                 "@context": "https://schema.org",
@@ -572,13 +572,13 @@ function fetchCaseData(loadMoreCount) {
                     {
                       "@type": "ListItem",
                       "position": 2,
-                      "name": bb_gallery_page_title,
+                      "name": seopagetitle,
                       "item": bb_gallery_page_url
                     },
                     {
                       "@type": "ListItem",
                       "position": 3,
-                      "name": `Before and After ${bb_case_page_title} Gallery`,
+                      "name": `Before and After ${bb_procedure_title} Gallery`,
                       "item": bb_current_procedure_slug
                     },
                     {
