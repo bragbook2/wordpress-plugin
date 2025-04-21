@@ -1909,6 +1909,12 @@ p.bb-fav-modal-close-button {
   }
 }
 
+@media (max-width: 1439px) {
+  .bb-main .bb-sidebar {
+    width: 320px;
+  }
+}
+
 @media (max-width: 1199px) {
   .age-validation-modal p {
     font-size: 22px;

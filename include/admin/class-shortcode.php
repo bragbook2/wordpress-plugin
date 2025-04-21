@@ -302,11 +302,8 @@ class Shortcode {
                                             <div class="bb-content-box-inner-left">
                                                 <?php if ($cat_title == 1) { 
                                                     ?>
-                                                    <h5><?php echo isset($procedure_data->caseDetails[0]->seoHeadline) ? $procedure_data->caseDetails[0]->seoHeadline : $cat_title_formatted; ?> : Patient: <?=++$limit_count?></h5>
+                                                    <h5><?php echo isset($procedure_data->caseDetails[0]->seoHeadline) ? $procedure_data->caseDetails[0]->seoHeadline : $cat_title_formatted. " Patient: ";?></h5>
                                                     <p><?php echo self::bb_limitWords($procedure_data->details, 50); ?></p>
-                                                <?php } ?>
-                                                <?php if ($cat_details == 1) { ?>
-                                                    <button type="button"><a href="<?php echo "/" . $bb_slug_link . "/" . $spro_title_bb . "/" . $caseSeoSuffixUrl; ?>">View More</a></button>
                                                 <?php } ?>
                                             </div>
                                         </div>
@@ -314,7 +311,6 @@ class Shortcode {
                                 </div>
                             </div>
                             <?php
-                           
                         }
                     }
                 ?>
@@ -802,15 +798,15 @@ class Shortcode {
                                 </div>";
                         }
 
-                        if ($cat_details == 1) {
+                        // if ($cat_details == 1) {
                            
-                            $newContent .= "
-                                <div class='bb-content-box-cta'>
-                                    <a class='view-more-btn' href='$procedureUrl'>
-                                        View More
-                                    </a>
-                                </div>";
-                        }
+                        //     $newContent .= "
+                        //         <div class='bb-content-box-cta'>
+                        //             <a class='view-more-btn' href='$procedureUrl'>
+                        //                 View More
+                        //             </a>
+                        //         </div>";
+                        // }
 
                         $newContent .= "</div>"; 
 

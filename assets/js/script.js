@@ -1674,10 +1674,12 @@ document.addEventListener("DOMContentLoaded", function () {
   let header = document.querySelector("header");
   if(!header) header = document.querySelector(".header"); 
    const banner = document.querySelector(".bb-main");
+   const mainPage = document.querySelector("#page");
  
    if (window.getComputedStyle(header).position === "fixed") {
      const headerHeight = header.offsetHeight;
      banner.style.paddingTop = `${headerHeight + 30}px`;
+     mainPage.style.paddingTop = `${headerHeight}px`;
    }
  });
  

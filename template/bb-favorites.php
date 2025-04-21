@@ -181,7 +181,7 @@ if (count($parts) >= 4) {
                                             : $value['originalBeforeLocation']);
                                 
                             ?>
-                                <img class="bbrag_gallery_image testing-image" src="<?php echo $bb_new_image_value; ?>" alt="<?php echo isset($value['seoAltText']) ? $value['seoAltText'] : ''; ?>">
+                                <img class="bbrag_gallery_image" src="<?php echo $bb_new_image_value; ?>" alt="<?php echo isset($value['seoAltText']) ? $value['seoAltText'] : ''; ?>">
                             <?php
                             }
                         }    
