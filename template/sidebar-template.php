@@ -226,7 +226,7 @@ if($combine_gallery_page_slug == $parts_page_name[0]) {
     <!-- <p>Before and after gallery powered by <span style="color:red">BRAG book™</span></p> -->
     
 </div>
-<?
+<?php
 /*********************************************************************************************************** */
 function bb_get_grabbook_category_feed($url) {
     $cats_json = bb_get_grabbook_api($url);

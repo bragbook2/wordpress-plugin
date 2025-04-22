@@ -1687,14 +1687,23 @@ document.addEventListener("DOMContentLoaded", function () {
     let headerSection = document.querySelector("header");
   if(!headerSection) headerSection = document.querySelector(".header"); 
    const modalBox = document.querySelector(".bb-fav-modal");
- 
+   const headerHeight = headerSection.offsetHeight;
+
    if (headerSection && modalBox) {
     if (window.getComputedStyle(headerSection).position === "fixed") {
-     const headerHeight = headerSection.offsetHeight;
      modalBox.style.height = `calc(100vh - ${headerHeight}px)`;
     }else{
       modalBox.style.height = `100vh`;
-      modalBox.style.paddingTop = `50px`;
+      modalBox.style.paddingTop = `${headerHeight + 50}px`;
+      window.addEventListener('scroll', function () {
+        const scrollTop = window.scrollY || document.documentElement.scrollTop;
+        if (scrollTop > 100) {
+          modalBox.style.transition = 'all 0.3s';
+          modalBox.style.paddingTop = '50px';
+        } else {
+          modalBox.style.paddingTop = `${headerHeight + 50}px`;
+        }
+      });
     }
    } else {
      console.warn("'.header' or '.bb-fav-modal' element not found.");

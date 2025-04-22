@@ -339,7 +339,6 @@ button.bb-sidebar-toggle.bb-sidebar-head-toggle img {
 }
 
 .bb-container-main {
-  container-type: inline-size;
   width: 100%;
 }
 
@@ -1835,7 +1834,7 @@ p.bb-fav-modal-close-button {
   border-radius: 3px 0 0 3px;
 }
 
-@container (max-width: 1620px) {
+@media only screen and (max-width: 1620px) {
   .bb-main .bb-content-area {
     padding-left: 50px;
   }
@@ -1849,7 +1848,7 @@ p.bb-fav-modal-close-button {
   }
 }
 
-@container (max-width: 1439px) {
+@media only screen and (max-width: 1439px) {
   .bb-main {
     padding-left: 30px;
     padding-right: 30px;
@@ -1937,7 +1936,7 @@ p.bb-fav-modal-close-button {
 
 }
 
-@container (max-width: 1199px) {
+@media only screen and (max-width: 1199px) {
   .bb-main .bb-content-area>h2 {
     margin-bottom: 35px;
     font-size: 28px;
@@ -2058,7 +2057,7 @@ p.bb-fav-modal-close-button {
   }
 }
 
-@container (max-width: 991px) {
+@media only screen and (max-width: 991px) {
   .bb-filter-content {
     gap: 20px;
     right: 0;
@@ -2136,7 +2135,7 @@ p.bb-fav-modal-close-button {
   }
 }
 
-@container (max-width: 767px) {
+@media only screen and (max-width: 767px) {
   .bb-sidebar-btn.mobile-footer {
     border: none !important;
     color: #000 !important;
