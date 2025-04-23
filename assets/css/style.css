@@ -512,7 +512,7 @@ button.bb-sidebar-toggle.bb-sidebar-head-toggle img {
   color: #1e1e1e;
   font-size: 22px;
   line-height: 1.3;
-  margin-bottom: 70px;
+  margin-bottom: 40px;
 }
 
 .bb-slider .bb-slide {
@@ -2286,7 +2286,7 @@ p.bb-fav-modal-close-button {
   }
 
   .bb-main .bb-content-area>p {
-    margin-bottom: 120px;
+    margin-bottom: 20px;
   }
 
   .bb-main .bb-slider {
@@ -2726,4 +2726,11 @@ p.bb-fav-modal-close-button {
     gap: 0;
     flex-direction: column;
   }
+}
+
+p.bb-carousel-tite {
+  font-size: 17px;
+  font-family: "Manrope", sans-serif;
+  font-weight: 500;
+  line-height: 1.4;
 }

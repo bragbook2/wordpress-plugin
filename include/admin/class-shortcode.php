@@ -302,8 +302,8 @@ class Shortcode {
                                             <div class="bb-content-box-inner-left">
                                                 <?php if ($cat_title == 1) { 
                                                     ?>
-                                                    <h5><?php echo isset($procedure_data->caseDetails[0]->seoHeadline) ? $procedure_data->caseDetails[0]->seoHeadline : $cat_title_formatted. " Patient: ";?></h5>
-                                                    <p><?php echo self::bb_limitWords($procedure_data->details, 50); ?></p>
+                                                    <p class="bb-carousel-tite"><?php echo isset($procedure_data->caseDetails[0]->seoHeadline) ? $procedure_data->caseDetails[0]->seoHeadline : $cat_title_formatted. " Patient: ";?></p>
+                                                    <?php echo str_replace('<p>', '<p class="bb-carousel-description">', self::bb_limitWords($procedure_data->details, 50)); ?>
                                                 <?php } ?>
                                             </div>
                                         </div>

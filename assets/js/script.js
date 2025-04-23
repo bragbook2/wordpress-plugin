@@ -1679,7 +1679,7 @@ document.addEventListener("DOMContentLoaded", function () {
    if (window.getComputedStyle(header).position === "fixed") {
      const headerHeight = header.offsetHeight;
      banner.style.paddingTop = `${headerHeight + 30}px`;
-     mainPage.style.paddingTop = `${headerHeight}px`;
+     mainPage.style.paddingTop = `${headerHeight + 30}px`;
    }
  });
  
