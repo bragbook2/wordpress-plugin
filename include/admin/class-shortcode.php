@@ -300,9 +300,10 @@ class Shortcode {
                                     <?php if ($cat_title == 1 || $cat_details == 1) { ?>
                                         <div class="bb-content-box-inner">
                                             <div class="bb-content-box-inner-left">
-                                                <?php if ($cat_title == 1) { 
-                                                    ?>
-                                                    <p class="bb-carousel-tite"><?php echo isset($procedure_data->caseDetails[0]->seoHeadline) ? $procedure_data->caseDetails[0]->seoHeadline : $cat_title_formatted. " Patient: ";?></p>
+                                                <?php if ($cat_title == 1) { ?>
+                                                    <p class="bb-carousel-tite"><?php echo isset($procedure_data->caseDetails[0]->seoHeadline) ? $procedure_data->caseDetails[0]->seoHeadline : $cat_title_formatted. " Patient";?></p>
+                                                    <?php }
+                                                    if ($cat_details == 1){ ?>
                                                     <?php echo str_replace('<p>', '<p class="bb-carousel-description">', self::bb_limitWords($procedure_data->details, 50)); ?>
                                                 <?php } ?>
                                             </div>
