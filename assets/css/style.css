@@ -541,7 +541,7 @@ button.bb-sidebar-toggle.bb-sidebar-head-toggle img {
 
 .bb-slider .slick-track {
   display: flex;
-  align-items: center;
+  align-items: stretch;
 }
 
 .bb-slider .slick-prev {
