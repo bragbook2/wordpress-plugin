@@ -153,12 +153,12 @@ class Shortcode {
     //             continue;
     //         }
     
-    //         $cat_url = "https://bragbookv2.com/api/plugin/categories?apiToken=" . $api_token . "&websitepropertyId=" . $websiteproperty_id;
+    //         $cat_url = BB_BASE_URL . "/api/plugin/categories?apiToken=" . $api_token . "&websitepropertyId=" . $websiteproperty_id;
     //         $category_list = self::bb_get_grabbook_category_feed($cat_url);
     
     //         $cat_set = json_decode($category_list, true);
     
-    //         $url = "https://bragbookv2.com/api/plugin/cases?apiToken=" . $api_token . "&websitepropertyId=" . $websiteproperty_id;
+    //         $url = BB_BASE_URL . "/api/plugin/cases?apiToken=" . $api_token . "&websitepropertyId=" . $websiteproperty_id;
     //         $data = self::bb_get_grabbook_api($url);
     //         $api_data = json_decode($data, true);
     
@@ -213,13 +213,14 @@ class Shortcode {
         $cat_title = $atts['title'];
         $cat_details = $atts['details'];
         $cat_start = $atts['start'];
+        $cat_title_formatted = ucwords(str_replace('-', ' ', $cat_name));
 
         $cat_website_property_id = $atts['website_property_id'];
         $api_tokens = get_option('bragbook_api_token', []); 
         $websiteproperty_ids = get_option('bragbook_websiteproperty_id', []);
         $gallery_slugs = get_option('bb_gallery_page_slug', []); 
           
-        $token = '';  
+        $token = '';
         foreach ($api_tokens as $index => $api_token) {
             $websiteproperty_id = $websiteproperty_ids[$index] ?? '';
             $page_slug_bb = $gallery_slugs[$index] ?? '';
@@ -228,20 +229,20 @@ class Shortcode {
                 if (empty($api_token) || empty($websiteproperty_id)) {
                     continue;
                 }
-                $bb_sidebar_url = "https://www.bragbookv2.com/api/plugin/sidebar?apiToken={$api_token}";
+                $bb_sidebar_url = BB_BASE_URL . "/api/plugin/sidebar?apiToken={$api_token}";
                 
                 $token = $api_token;
                 $bb_slug_link = $page_slug_bb;
-                
-                $ch = curl_init();
-                curl_setopt($ch, CURLOPT_URL, $bb_sidebar_url);
-                curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-                curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-                $data = curl_exec($ch);
-                curl_close($ch);
-             
-              $sidebar_set = json_decode($data, true) ?? []; 
-            
+
+                $response = wp_remote_get( $bb_sidebar_url );
+                if ( is_wp_error( $response ) ) {
+                    $error_message = $response->get_error_message();
+                    echo "Something went wrong: $error_message";
+                    $sidebar_set = [];
+                } else {
+                    $data = wp_remote_retrieve_body( $response );
+                    $sidebar_set = json_decode( $data, true ) ?? [];
+                }
             }
         }
       
@@ -251,26 +252,26 @@ class Shortcode {
          }
         
          $id = $result['id'];
-         $url_car = "https://www.bragbookv2.com/api/plugin/carousel?websitePropertyId={$cat_website_property_id}&start={$cat_start}&limit={$cat_limit}&apiToken={$token}&procedureId={$id}";
+         $url_car = BB_BASE_URL . "/api/plugin/carousel?websitePropertyId={$cat_website_property_id}&start={$cat_start}&limit={$cat_limit}&apiToken={$token}&procedureId={$id}";
 
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url_car);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-        $data_car = curl_exec($ch);
-        curl_close($ch); 
+        $response = wp_remote_get( $url_car );
+        if ( is_wp_error( $response ) ) {
+            $error_message = $response->get_error_message();
+            echo "Something went wrong: $error_message";
+            $data_car = '';
+        } else {
+            $data_car = wp_remote_retrieve_body( $response );
+        }
 
         ob_start();
         ?>
         <div class="bb-main">
             <div class="bb-slider">
                 <?php
-                $limit_count = 1;
-                
+                $limit_count = 0;
                 $bb_scase_ids_list = [];
                 $spro_title_bb = $result['slugName'];
                 $carousel_data_bb = json_decode($data_car);
-                
                 foreach($carousel_data_bb->data as $procedure_data) {
                     
                         if (!empty($procedure_data->photoSets)) { 
@@ -278,7 +279,6 @@ class Shortcode {
                             <div class="bb-slick-slide">
                                 <div class="bb-slide">
                                     <?php
-                                    
                                     $bb_new_image_procedure_data = isset($procedure_data->photoSets[0]->highResPostProcessedImageLocation) && !is_null($procedure_data->photoSets[0]->highResPostProcessedImageLocation)
                                         ? $procedure_data->photoSets[0]->highResPostProcessedImageLocation 
                                         : (isset($procedure_data->photoSets[0]->postProcessedImageLocation) && !is_null($procedure_data->photoSets[0]->postProcessedImageLocation) 
@@ -301,11 +301,10 @@ class Shortcode {
                                         <div class="bb-content-box-inner">
                                             <div class="bb-content-box-inner-left">
                                                 <?php if ($cat_title == 1) { ?>
-                                                    <h5><?php echo isset($procedure_data->caseDetails[0]->seoHeadline) ? $procedure_data->caseDetails[0]->seoHeadline : 'blepharoplasty'; ?> : Patient</h5>
-                                                    <p><?php echo self::bb_limitWords($procedure_data->details, 50); ?></p>
-                                                <?php } ?>
-                                                <?php if ($cat_details == 1) { ?>
-                                                    <button type="button"><a href="<?php echo "/" . $bb_slug_link . "/" . $spro_title_bb . "/" . $procedure_data->id; ?>">View More</a></button>
+                                                    <p class="bb-carousel-tite"><?php echo isset($procedure_data->caseDetails[0]->seoHeadline) ? $procedure_data->caseDetails[0]->seoHeadline : $cat_title_formatted. " Patient";?></p>
+                                                    <?php }
+                                                    if ($cat_details == 1){ ?>
+                                                    <?php echo str_replace('<p>', '<p class="bb-carousel-description">', self::bb_limitWords($procedure_data->details, 50)); ?>
                                                 <?php } ?>
                                             </div>
                                         </div>
@@ -313,7 +312,6 @@ class Shortcode {
                                 </div>
                             </div>
                             <?php
-                           
                         }
                     }
                 ?>
@@ -350,20 +348,21 @@ class Shortcode {
                 if (empty($api_token) || empty($websiteproperty_id)) {
                     continue;
                 }
-                $bb_sidebar_url = "https://www.bragbookv2.com/api/plugin/sidebar?apiToken={$api_token}";
+                $bb_sidebar_url = BB_BASE_URL . "/api/plugin/sidebar?apiToken={$api_token}";
                 
                 $token = $api_token;
                 $bb_slug_link = $page_slug_bb;
-                
-                $ch = curl_init();
-                curl_setopt($ch, CURLOPT_URL, $bb_sidebar_url);
-                curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-                curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-                $data = curl_exec($ch);
-                curl_close($ch);
-             
-              $sidebar_set = json_decode($data, true) ?? []; 
             
+                $response = wp_remote_get( $bb_sidebar_url );
+
+                if ( is_wp_error( $response ) ) {
+                    $error_message = $response->get_error_message();
+                    echo "Something went wrong: $error_message";
+                    $sidebar_set = [];
+                } else {
+                    $data = wp_remote_retrieve_body( $response );
+                    $sidebar_set = json_decode( $data, true ) ?? [];
+                }
             }
         }
       
@@ -373,18 +372,19 @@ class Shortcode {
          }
         
          $id = $result['id'];
-        $url_case = "https://www.bragbookv2.com/api/plugin/cases/?websitePropertyId={$cat_website_property_id}&apiToken={$token}&caseId={$caseid}&procedureId={$id}";
+        $url_case = BB_BASE_URL . "/api/plugin/cases/?websitePropertyId={$cat_website_property_id}&apiToken={$token}&caseId={$caseid}&procedureId={$id}";
 
-        // $url_car = "https://www.bragbookv2.com/api/plugin/carousel?websitePropertyId={$cat_website_property_id}&start={$cat_start}&limit={$cat_limit}&apiToken={$token}&procedureId={$id}";
+        // $url_car = BB_BASE_URL . "/api/plugin/carousel?websitePropertyId={$cat_website_property_id}&start={$cat_start}&limit={$cat_limit}&apiToken={$token}&procedureId={$id}";
 
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url_case);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-        $data_case = curl_exec($ch);
-        curl_close($ch);
-      
-         $result_set = json_decode($data_case, true);
+        $response = wp_remote_get( $url_case );
+        if ( is_wp_error( $response ) ) {
+            $error_message = $response->get_error_message();
+            echo "Something went wrong: $error_message";
+            $result_set = [];
+        } else {
+            $data_case = wp_remote_retrieve_body( $response );
+            $result_set = json_decode( $data_case, true );
+        }
        
         
          ob_start();
@@ -456,19 +456,20 @@ class Shortcode {
                 if (empty($api_token) || empty($websiteproperty_id)) {
                     continue;
                 }
-                $bb_sidebar_url = "https://www.bragbookv2.com/api/plugin/sidebar?apiToken={$api_token}";
+                $bb_sidebar_url = BB_BASE_URL . "/api/plugin/sidebar?apiToken={$api_token}";
                 
                 $token = $api_token;
                 $bb_slug_link = $page_slug_bb;
                 
-                $ch = curl_init();
-                curl_setopt($ch, CURLOPT_URL, $bb_sidebar_url);
-                curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-                curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-                $data = curl_exec($ch);
-                curl_close($ch);
-             
-              $sidebar_set = json_decode($data, true) ?? []; 
+                $response = wp_remote_get( $bb_sidebar_url );
+                if ( is_wp_error( $response ) ) {
+                    $error_message = $response->get_error_message();
+                    echo "Something went wrong: $error_message";
+                    $sidebar_set = [];
+                } else {
+                    $data = wp_remote_retrieve_body( $response );
+                    $sidebar_set = json_decode( $data, true ) ?? [];
+                }
             
             }
         }
@@ -707,19 +708,19 @@ class Shortcode {
                if (empty($api_token) || empty($websiteproperty_id)) {
                    continue;
                }
-               $bb_sidebar_url = "https://www.bragbookv2.com/api/plugin/sidebar?apiToken={$api_token}";
+               $bb_sidebar_url = BB_BASE_URL . "/api/plugin/sidebar?apiToken={$api_token}";
                
                $token = $api_token;
                $bb_slug_link = $page_slug_bb;
-               
-               $ch = curl_init();
-               curl_setopt($ch, CURLOPT_URL, $bb_sidebar_url);
-               curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-               curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-               $data = curl_exec($ch);
-               curl_close($ch);
-            
-             $sidebar_set = json_decode($data, true) ?? []; 
+
+                $response = wp_remote_get( $bb_sidebar_url );
+                if ( is_wp_error( $response ) ) {
+                    echo "Something went wrong: " . $response->get_error_message();
+                    $sidebar_set = [];
+                } else {
+                    $data = wp_remote_retrieve_body( $response );
+                    $sidebar_set = json_decode( $data, true ) ?? [];
+                }
            
            }
        }
@@ -731,17 +732,18 @@ class Shortcode {
        
         $id = $result['id'];
         $procedure_name_bb = $result['slugName'];
-      // $url_pro = "https://www.bragbookv2.com/api/plugin/cases/paginate?websitePropertyId={$cat_website_property_id}&count=1&apiToken={$token}&procedureId={$id}";
+      // $url_pro = BB_BASE_URL . "/api/plugin/cases/paginate?websitePropertyId={$cat_website_property_id}&count=1&apiToken={$token}&procedureId={$id}";
 
-        $url_pro = "https://www.bragbookv2.com/api/plugin/carousel?websitePropertyId={$cat_website_property_id}&start={$cat_start}&limit={$cat_limit}&apiToken={$token}&procedureId={$id}";
+        $url_pro = BB_BASE_URL . "/api/plugin/carousel?websitePropertyId={$cat_website_property_id}&start={$cat_start}&limit={$cat_limit}&apiToken={$token}&procedureId={$id}";
 
-       $ch = curl_init();
-       curl_setopt($ch, CURLOPT_URL, $url_pro);
-       curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-       curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-       $data_pro = curl_exec($ch);
-       curl_close($ch);
-        $result_pro = json_decode($data_pro, true);
+        $response = wp_remote_get( $url_pro );
+        if ( is_wp_error( $response ) ) {
+            echo "Something went wrong: " . $response->get_error_message();
+            $result_pro = [];
+        } else {
+            $data_pro = wp_remote_retrieve_body( $response );
+            $result_pro = json_decode( $data_pro, true );
+        }
         $api_data = [];
         $categories = [];
         
@@ -797,15 +799,15 @@ class Shortcode {
                                 </div>";
                         }
 
-                        if ($cat_details == 1) {
+                        // if ($cat_details == 1) {
                            
-                            $newContent .= "
-                                <div class='bb-content-box-cta'>
-                                    <a class='view-more-btn' href='$procedureUrl'>
-                                        View More
-                                    </a>
-                                </div>";
-                        }
+                        //     $newContent .= "
+                        //         <div class='bb-content-box-cta'>
+                        //             <a class='view-more-btn' href='$procedureUrl'>
+                        //                 View More
+                        //             </a>
+                        //         </div>";
+                        // }
 
                         $newContent .= "</div>"; 
 

@@ -32,7 +32,7 @@ function bb_get_sidebar_data($parts_page_name, $combine_gallery_page_slug) {
             if (empty($api_token) || empty($websiteproperty_id)) {
                 continue;
             }
-            $bb_sidebar_url = "https://www.bragbookv2.com/api/plugin/sidebar?apiToken={$api_token}";
+            $bb_sidebar_url = BB_BASE_URL . "/api/plugin/sidebar?apiToken={$api_token}";
             $sidebar_list = get_api_sidebar_bb($bb_sidebar_url); 
             $sidebar_set = json_decode($sidebar_list, true) ?? []; 
             $result = [
@@ -45,7 +45,7 @@ function bb_get_sidebar_data($parts_page_name, $combine_gallery_page_slug) {
         }
     }
     if (!empty($token_array)) { 
-        $bb_sidebar_url = "https://www.bragbookv2.com/api/plugin/combine/sidebar";
+        $bb_sidebar_url = BB_BASE_URL . "/api/plugin/combine/sidebar";
 
         $response = wp_remote_post($bb_sidebar_url, array(
             'method'    => 'POST',
@@ -90,14 +90,14 @@ function get_api_sidebar_bb($url) {
     if (get_transient($url) !== false) {
         return get_transient($url);
     }
-    
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
 
-    $data = curl_exec($ch);
-    curl_close($ch);
+    $response = wp_remote_get( $url );
+    if ( is_wp_error( $response ) ) {
+        $error_message = $response->get_error_message();
+        echo "Something went wrong: $error_message";
+    } else {
+        $data = wp_remote_retrieve_body( $response );
+    }
    
     $bb_set_transient_urls[$url] = $data;
     update_option( 'bb_set_transient_url_sidebar', $bb_set_transient_urls );
@@ -226,7 +226,7 @@ if($combine_gallery_page_slug == $parts_page_name[0]) {
     <!-- <p>Before and after gallery powered by <span style="color:red">BRAG book™</span></p> -->
     
 </div>
-<?
+<?php
 /*********************************************************************************************************** */
 function bb_get_grabbook_category_feed($url) {
     $cats_json = bb_get_grabbook_api($url);
@@ -243,13 +243,13 @@ function bb_get_grabbook_api($url) {
         return get_transient($url);
     }
 
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-
-    $data = curl_exec($ch);
-    curl_close($ch);
+    $response = wp_remote_get( $url );
+    if ( is_wp_error( $response ) ) {
+        $error_message = $response->get_error_message();
+        echo "Something went wrong: $error_message";
+    } else {
+        $data = wp_remote_retrieve_body( $response );
+    }
 
     $bb_set_transient_urls[$url] = $data;
     update_option( 'bb_set_transient_url', $bb_set_transient_urls );
@@ -277,11 +277,11 @@ function bb_mvp_brag_shortcode($parts_page_name, $combine_gallery_page_slug) {
             if (empty($api_token) || empty($websiteproperty_id)) {
                 continue;
             }
-            $cat_url = "https://www.bragbookv2.com/api/plugin/categories?apiToken={$api_token}&websitepropertyId={$websiteproperty_id}";
+            $cat_url = BB_BASE_URL . "/api/plugin/categories?apiToken={$api_token}&websitepropertyId={$websiteproperty_id}";
             $category_list = bb_get_grabbook_category_feed($cat_url); 
             $cat_set = json_decode($category_list, true) ?? []; 
 
-            $url = "https://www.bragbookv2.com/api/plugin/cases?apiToken={$api_token}&websitepropertyId={$websiteproperty_id}";
+            $url = BB_BASE_URL . "/api/plugin/cases?apiToken={$api_token}&websitepropertyId={$websiteproperty_id}";
             $data = bb_get_grabbook_api($url);
             $api_data = json_decode($data, true) ?? []; 
 

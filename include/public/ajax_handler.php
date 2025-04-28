@@ -70,7 +70,7 @@ class Ajax_Handler
             $filter_get = '';
             //if(!empty($staticFilter) || !empty($dynamicFilter)){ 
             if ($page_slug == $combine_gallery_page_slug) {
-                $url = "https://www.bragbookv2.com/api/plugin/combine/filters";
+                $url = BB_BASE_URL . "/api/plugin/combine/filters";
                 $response = wp_remote_post($url, array(
                     'method' => 'POST',
                     'body' => json_encode(array(
@@ -89,7 +89,7 @@ class Ajax_Handler
 
                 $filter_get = wp_remote_retrieve_body($response);
             } else {
-                $filter_api = "https://www.bragbookv2.com/api/plugin/filters?apiToken={$apiToken}&procedureId={$procedureId}&websitePropertyId={$websitePropertyId}";
+                $filter_api = BB_BASE_URL . "/api/plugin/filters?apiToken={$apiToken}&procedureId={$procedureId}&websitePropertyId={$websitePropertyId}";
                 if (get_transient($filter_api) == false) {
                     $filter_get = self::case_and_filter_api($filter_api);
                 } else {
@@ -102,7 +102,7 @@ class Ajax_Handler
             if ($caseId !== "" || $seoSuffixUrl!== "") {
                 if ($page_slug == $combine_gallery_page_slug) {
                     $caseId=$caseId?$caseId:'123';
-                    $url = "https://www.bragbookv2.com/api/plugin/combine/cases/$caseId?seoSuffixUrl=$seoSuffixUrl";
+                    $url = BB_BASE_URL . "/api/plugin/combine/cases/$caseId?seoSuffixUrl=$seoSuffixUrl";
                     $response = wp_remote_post($url, array(
                         'method' => 'POST',
                         'body' => json_encode(array(
@@ -122,7 +122,7 @@ class Ajax_Handler
                     $data = wp_remote_retrieve_body($response);
 
                 } else {
-                    $url = "https://www.bragbookv2.com/api/plugin/cases?websitepropertyId={$websitePropertyId}&apiToken={$apiToken}&caseId={$caseId}&seoSuffixUrl={$seoSuffixUrl}&procedureId={$procedureId}";
+                    $url = BB_BASE_URL . "/api/plugin/cases?websitepropertyId={$websitePropertyId}&apiToken={$apiToken}&caseId={$caseId}&seoSuffixUrl={$seoSuffixUrl}&procedureId={$procedureId}";
 
                     if (get_transient($url) !== false) {
                         $data = get_transient($url);
@@ -182,7 +182,7 @@ class Ajax_Handler
 
 
 
-                    $url = "https://www.bragbookv2.com/api/plugin/combine/cases";
+                    $url = BB_BASE_URL . "/api/plugin/combine/cases";
 
                     $response = wp_remote_post($url, array(
                         'method' => 'POST',
@@ -201,7 +201,7 @@ class Ajax_Handler
                     $data_in = $dynamicFilterCombineAPIBody;
                     
                 } else {
-                    $url = "https://www.bragbookv2.com/api/plugin/cases/paginate?websitePropertyId={$websitePropertyId}&count={$count}&apiToken={$apiToken}&procedureId={$procedureId}{$staticFilter}{$dynamicFilter}";
+                    $url = BB_BASE_URL . "/api/plugin/cases/paginate?websitePropertyId={$websitePropertyId}&count={$count}&apiToken={$apiToken}&procedureId={$procedureId}{$staticFilter}{$dynamicFilter}";
                     if (get_transient($url) !== false) {
                         $data = get_transient($url);
                     } else {
@@ -223,6 +223,8 @@ class Ajax_Handler
                 
                 $websiteproperty_ids = get_option('bragbook_websiteproperty_id', []);
                 $gallery_slugs = get_option('bb_gallery_page_slug', []);
+                $seo_pages_title = get_option('bb_seo_page_title', []);
+                $seo_pages_description = get_option('bb_seo_page_description', []);
                
                 $favorite_data_bb = [];
                 $tc = 0;
@@ -236,16 +238,18 @@ class Ajax_Handler
                     $page_slug_bb = $gallery_slugs[$index] ?? '';
                     
                     if($page_slug == $page_slug_bb){
+                        $seo_page_title = $seo_pages_title[$index] ?? '';
+                        $seo_page_description = $seo_pages_description[$index] ?? '';
                         $pageSlugBB = $page_slug_bb;
-                        $url_fav = "https://www.bragbookv2.com/api/plugin/favorites?apiToken={$apiToken}&websitepropertyId={$websitePropertyId}&email={$favorite_email_id}";
+                        $url_fav = BB_BASE_URL . "/api/plugin/favorites?apiToken={$apiToken}&websitepropertyId={$websitePropertyId}&email={$favorite_email_id}";
 
-                        $ch = curl_init();
-                        curl_setopt($ch, CURLOPT_URL, $url_fav);
-                        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-                        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-
-                        $favorite_data_brag_json = curl_exec($ch);
-                        curl_close($ch);
+                        $response = wp_remote_get( $url_fav );
+                        if ( is_wp_error( $response ) ) {
+                            $error_message = $response->get_error_message();
+                            echo "Something went wrong: $error_message";
+                        } else {
+                            $favorite_data_brag_json = wp_remote_retrieve_body( $response );
+                        }
                         $favorite_data_brag = json_decode($favorite_data_brag_json);
                        
                         foreach ($favorite_data_brag->favorites as $favorite) {
@@ -253,7 +257,7 @@ class Ajax_Handler
                                 $case_fav[] = $caseItem->id;
                             }
                         }
-                        $bb_sidebar_url = "https://www.bragbookv2.com/api/plugin/sidebar?apiToken={$apiToken}";
+                        $bb_sidebar_url = BB_BASE_URL . "/api/plugin/sidebar?apiToken={$apiToken}";
                         
                         $cacheKey = "$procedureSlug-single";
                         $sidebar_list = get_transient($cacheKey);
@@ -271,7 +275,7 @@ class Ajax_Handler
                         }
                     }elseif($page_slug == $combine_gallery_page_slug && $tc == count($api_tokens)) {
                        // /api/plugin/combine/favorites/list
-                        $url_fav = "https://www.bragbookv2.com/api/plugin/combine/favorites/list";
+                        $url_fav = BB_BASE_URL . "/api/plugin/combine/favorites/list";
                         $response = wp_remote_post($url_fav, array(
                             'method' => 'POST',
                             'body' => json_encode(array(
@@ -289,7 +293,7 @@ class Ajax_Handler
                         }
                        
                         $favorite_data_brag_json = wp_remote_retrieve_body($response);
-                        $bb_sidebar_url = "https://www.bragbookv2.com/api/plugin/combine/sidebar";
+                        $bb_sidebar_url = BB_BASE_URL . "/api/plugin/combine/sidebar";
 
                         $response_sidebar = wp_remote_post($bb_sidebar_url, array(
                             'method'    => 'POST',
@@ -345,6 +349,8 @@ class Ajax_Handler
                     'info' => $info,
                     'page_slug' => $page_slug,
                     'page_slug_bb' => $pageSlugBB,
+                    'seo_page_title' => $seo_page_title,
+                    'seo_page_description' => $seo_page_description,
                 ]
             ];
             // Return the response as JSON
@@ -356,13 +362,13 @@ class Ajax_Handler
     }
     public static function case_and_filter_api($url)
     {
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-
-        $data = curl_exec($ch);
-        curl_close($ch);
+        $response = wp_remote_get( $url );
+        if ( is_wp_error( $response ) ) {
+            $error_message = $response->get_error_message();
+            echo "Something went wrong: $error_message";
+        } else {
+            $data = wp_remote_retrieve_body( $response );
+        }
 
         set_transient($url, $data, 1800);
         return $data;
@@ -530,7 +536,7 @@ class Ajax_Handler
         //                 continue;
         //             }
 
-        //             $url = 'https://www.bragbookv2.com/api/plugin/favorites?apiToken='.$api_token.'&websitepropertyId='.$websiteproperty_id.'&email='.$favorite_email_id;
+        //             $url = BB_BASE_URL . "/api/plugin/favorites?apiToken='.$api_token.'&websitepropertyId='.$websiteproperty_id.'&email='.$favorite_email_id;
         //             $ch = curl_init();
         //             curl_setopt($ch, CURLOPT_URL, $url);
         //             curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
@@ -1219,6 +1225,12 @@ class Ajax_Handler
         if (isset($form_data['bb_gallery_page_slug'])) {
             update_option('bb_gallery_page_slug', array_map('sanitize_text_field', $form_data['bb_gallery_page_slug']));
         }
+        if (isset($form_data['bb_seo_page_title'])) {
+            update_option('bb_seo_page_title', array_map('sanitize_text_field', $form_data['bb_seo_page_title']));
+        }
+        if (isset($form_data['bb_seo_page_description'])) {
+            update_option('bb_seo_page_description', array_map('sanitize_text_field', $form_data['bb_seo_page_description']));
+        }
         $bb_pages_slugs = get_option('bb_gallery_page_slug', []);
         self::bb_token_base_page_creation($bb_token_based_page_keys, $bb_pages_slugs, $current_user_id);
 
@@ -1285,19 +1297,23 @@ class Ajax_Handler
     public static function send_form_data_and_create_post($data, $url, $name, $description, $email, $phone)
     {
         $jsonData = json_encode($data);
-        $ch = curl_init($url);
 
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonData);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Content-Type: application/json',
-            'Content-Length: ' . strlen($jsonData)
-        ]);
+        $response = wp_remote_post( $url, array(
+            'body'    => $jsonData,
+            'headers' => array(
+                'Content-Type'   => 'application/json',
+                'Content-Length' => strlen( $jsonData ), // optional, WP usually sets this
+            ),
+        ) );
 
-        $response = curl_exec($ch);
-        $responseData = json_decode($response, true);
-        curl_close($ch);
+        if ( is_wp_error( $response ) ) {
+            $error_message = $response->get_error_message();
+            echo "Something went wrong: $error_message";
+        } else {
+            $body = wp_remote_retrieve_body( $response );
+            $responseData = json_decode( $body, true );
+            // Now $responseData is your decoded array
+        }
 
         if (isset($responseData['success']) && $responseData['success'] === true) {
             $post_id = wp_insert_post(array(
@@ -1347,11 +1363,11 @@ class Ajax_Handler
                 foreach ($api_tokens as $api_token_index => $api_token_value) {
                     $websiteproperty_id = $websiteproperty_ids[$api_token_index];
 
-                    $url = "https://www.bragbookv2.com/api/plugin/consultations?apiToken=" . $api_token_value . "&websitepropertyId=" . $websiteproperty_id;
+                    $url = BB_BASE_URL . "/api/plugin/consultations?apiToken=" . $api_token_value . "&websitepropertyId=" . $websiteproperty_id;
                     self::send_form_data_and_create_post($data, $url, $name, $description, $email, $phone);
                 }
             } else {
-                $url = "https://www.bragbookv2.com/api/plugin/consultations?apiToken=" . $api_tokens[$index] . "&websitepropertyId=" . $websiteproperty_ids[$index];
+                $url = BB_BASE_URL . "/api/plugin/consultations?apiToken=" . $api_tokens[$index] . "&websitepropertyId=" . $websiteproperty_ids[$index];
                 self::send_form_data_and_create_post($data, $url, $name, $description, $email, $phone);
             }
 
@@ -1501,7 +1517,6 @@ class Ajax_Handler
                         if (!empty(get_option('combine_gallery_slug'))) {
                             $combine_gallery_slug = get_option('combine_gallery_slug');
                         }
-
                         ?>
                         <div class="dynamic-api-table">
                             <table id="dynamicTable">
@@ -1510,6 +1525,8 @@ class Ajax_Handler
                                         <th>API Token</th>
                                         <th>Website Property ID</th>
                                         <th>Gallery Page</th>
+                                        <th>Seo Page Title</th>
+                                        <th>Seo Page Description</th>
                                         <th></th>
                                     </tr>
                                 </thead>
@@ -1520,6 +1537,8 @@ class Ajax_Handler
                                     $api_tokens = get_option('bragbook_api_token', []);
                                     $website_ids = get_option('bragbook_websiteproperty_id', []);
                                     $bb_page_list_gallery = get_option('bb_gallery_stored_pages_ids');
+                                    $bb_seo_pages_title = get_option('bb_seo_page_title', []);
+                                    $bb_seo_pages_description = get_option('bb_seo_page_description', []);
 
                                     $num_rows = max(count($api_tokens), count($website_ids));
                                     $used_slugs = [];
@@ -1529,6 +1548,8 @@ class Ajax_Handler
                                         if (isset($api_tokens[$key])) {
                                             $api_token = isset($api_tokens[$key]) ? esc_attr($api_tokens[$key]) : '';
                                             $website_id = isset($website_ids[$key]) ? esc_attr($website_ids[$key]) : '';
+                                            $bb_seo_page_title = isset($bb_seo_pages_title[$key]) ? esc_attr($bb_seo_pages_title[$key]) : '';
+                                            $bb_seo_page_description = isset($bb_seo_pages_description[$key]) ? esc_attr($bb_seo_pages_description[$key]) : '';
                                             $gallery_slug = $value;
 
                                             if (in_array($gallery_slug, $used_slugs)) {
@@ -1561,6 +1582,16 @@ class Ajax_Handler
                                                     <input type="hidden" name="bb_hidden_page_slug_with_id[<?php echo $i; ?>]"
                                                         value="<?php echo $page_id . '_' . $gallery_slug; ?>">
 
+                                                </td>
+                                                <td>
+                                                    <input type="text" data-key="<?php echo $key; ?>"
+                                                        name="bb_seo_page_title[<?php echo $key; ?>]"
+                                                        value="<?php echo $bb_seo_page_title; ?>" required>
+                                                </td>
+                                                <td>
+                                                    <input type="text" data-key="<?php echo $key; ?>"
+                                                        name="bb_seo_page_description[<?php echo $key; ?>]"
+                                                        value="<?php echo $bb_seo_page_description; ?>" required>
                                                 </td>
                                                 <td>
                                                     <button type="button" class="removeRow">Remove Row</button>
@@ -1621,6 +1652,12 @@ class Ajax_Handler
                                             </td>
                                             <td>
                                                 <input type="text" data-key="page_${newRowNumber}" name="bb_gallery_page_slug[page_${newRowNumber}]" value="" required>
+                                            </td>
+                                            <td>
+                                                <input type="text" data-key="page_${newRowNumber}" name="bb_seo_page_title[page_${newRowNumber}]" value="" required>
+                                            </td>
+                                            <td>
+                                                <input type="text" data-key="page_${newRowNumber}" name="bb_seo_page_description[page_${newRowNumber}]" value="" required>
                                             </td>
                                             <td>
                                                 <button type="button" class="removeRow">Remove Row</button>
@@ -1873,7 +1910,7 @@ class Ajax_Handler
         $bbApiTokens = explode(", ", $bbApiTokens[0]); // Splitting the tokens by ", "
         $websiteproperty_id_array = array_map('intval', explode(", ", $bbWebsiteIds[0]));
 
-        $response = wp_remote_post('https://www.bragbookv2.com/api/plugin/combine/favorites/add', array(
+        $response = wp_remote_post(BB_BASE_URL . '/api/plugin/combine/favorites/add', array(
             'method' => 'POST',
             'body' => json_encode(array(
                 "apiTokens"=> $bbApiTokens,
@@ -1898,7 +1935,7 @@ class Ajax_Handler
         // )));
         // echo "</pre>";
         // die('here');
-        // $response = wp_remote_post('https://www.bragbookv2.com/api/plugin/favorites?apiToken=' . $api_token . '&websitepropertyId=' . $websiteproperty_id, array(
+        // $response = wp_remote_post(BB_BASE_URL . '/api/plugin/favorites?apiToken=' . $api_token . '&websitepropertyId=' . $websiteproperty_id, array(
         //     'method' => 'POST',
         //     'body' => json_encode(array(
         //         'email' => $email,
@@ -1977,14 +2014,16 @@ class Ajax_Handler
 
         $parts = explode('/', $bbragbook_case_url);
 
-        $bb_seo_title = strip_tags($first_element);
-        $bb_seo_description = $text_after_first_tag;
+        $bb_seo_title = null;
+        $bb_seo_description = null;
         $combine_gallery_page_id = get_option('combine_gallery_page_id');
         $combine_gallery_page = get_post($combine_gallery_page_id);
         $combine_gallery_page_slug = get_option('combine_gallery_slug');
         $api_tokens = get_option('bragbook_api_token', []);
         $websiteproperty_ids = get_option('bragbook_websiteproperty_id', []);
         $gallery_slugs = get_option('bb_gallery_page_slug', []);
+        $bb_seo_pages_title = get_option('bb_seo_page_title', []);
+        $bb_seo_pages_description = get_option('bb_seo_page_description', []);
 
         //Get caseId from URL if exists
         $caseId = null;
@@ -1992,9 +2031,26 @@ class Ajax_Handler
         $procedureName = null;
         $procedureTotalCase = null;
 
+        if(isset($parts[0]) && empty($parts[1]) && empty($parts[2])){
+            if($combine_gallery_page_slug == $parts[0]){
+
+            } else {
+                foreach ($api_tokens as $index => $api_token) {
+                        $websiteproperty_id = $websiteproperty_ids[$index] ?? '';
+                        $page_slug_bb = $gallery_slugs[$index] ?? '';
+                    if (($page_slug_bb == $parts[0])) {
+                        $bb_seo_title = $bb_seo_pages_title[$index] ?? '';
+                        $bb_seo_description = $bb_seo_pages_description[$index] ?? '';
+                        if (empty($api_token) || empty($websiteproperty_id)) {
+                            continue;
+                        }
+                    }
+                }
+            }
+        }
         if(isset($parts[1]) && empty($parts[2])){
             if($combine_gallery_page_slug == $parts[0]){
-                $bb_sidebar_url = "https://www.bragbookv2.com/api/plugin/combine/sidebar";
+                $bb_sidebar_url = BB_BASE_URL . "/api/plugin/combine/sidebar";
                 $procedureIdsName = $this->getProcedureIDFromSidebar(array_values($api_tokens), $parts[1], $bb_sidebar_url, true);
                 $procedureTotalCase = $procedureIdsName["procedureTotalCase"];
             } else {
@@ -2005,7 +2061,7 @@ class Ajax_Handler
                         if (empty($api_token) || empty($websiteproperty_id)) {
                             continue;
                         }
-                        $bb_sidebar_url = "https://www.bragbookv2.com/api/plugin/sidebar?apiToken={$api_token}";
+                        $bb_sidebar_url = BB_BASE_URL . "/api/plugin/sidebar?apiToken={$api_token}";
                         $procedureIdsName = $this->getProcedureIDFromSidebar($api_token, $parts[1], $bb_sidebar_url, false);
                         $procedureTotalCase = $procedureIdsName["procedureTotalCase"];
                     }
@@ -2023,12 +2079,12 @@ class Ajax_Handler
             // Get case data for combine pages
             if ($combine_gallery_page_slug == $parts[0]) {
                 // get procedureIds from sidebar API
-                $bb_sidebar_url = "https://www.bragbookv2.com/api/plugin/combine/sidebar";
+                $bb_sidebar_url = BB_BASE_URL . "/api/plugin/combine/sidebar";
                 $procedureIdsName = $this->getProcedureIDFromSidebar(array_values($api_tokens), $parts[1], $bb_sidebar_url, true);
                 $procedureIds = $procedureIdsName["bb_procedure_id"];
                 $procedureName = $procedureIdsName["bb_procedure_name"];
                 $caseId = $caseId ? $caseId : '123';
-                $url = "https://www.bragbookv2.com/api/plugin/combine/cases/$caseId?seoSuffixUrl=$seoSuffixUrl";
+                $url = BB_BASE_URL . "/api/plugin/combine/cases/$caseId?seoSuffixUrl=$seoSuffixUrl";
 
                 $json_body = json_encode(array(
                     'apiTokens' => array_values($api_tokens),
@@ -2063,11 +2119,11 @@ class Ajax_Handler
                             continue;
                         }
                         // get procedureIds from sidebar API
-                        $bb_sidebar_url = "https://www.bragbookv2.com/api/plugin/sidebar?apiToken={$api_token}";
+                        $bb_sidebar_url = BB_BASE_URL . "/api/plugin/sidebar?apiToken={$api_token}";
                         $procedureIdsName = $this->getProcedureIDFromSidebar($api_token, $parts[1], $bb_sidebar_url, false);
                         $procedureId = $procedureIdsName["bb_procedure_id"];
                         $procedureName = $procedureIdsName["bb_procedure_name"];
-                        $url = "https://www.bragbookv2.com/api/plugin/cases?websitepropertyId={$websiteproperty_id}&apiToken={$api_token}&caseId={$caseId}&seoSuffixUrl={$seoSuffixUrl}&procedureId={$procedureId}";
+                        $url = BB_BASE_URL . "/api/plugin/cases?websitepropertyId={$websiteproperty_id}&apiToken={$api_token}&caseId={$caseId}&seoSuffixUrl={$seoSuffixUrl}&procedureId={$procedureId}";
                         $data = get_transient($url);
 
 						if ( false === $data ) {
@@ -2198,7 +2254,7 @@ class Ajax_Handler
 
     public function getSingleProcedureIDFromSidebar($api_token, $procedureSlug)
     {
-        $bb_sidebar_url = "https://www.bragbookv2.com/api/plugin/sidebar?apiToken={$api_token}";
+        $bb_sidebar_url = BB_BASE_URL . "/api/plugin/sidebar?apiToken={$api_token}";
         $sidebar_list = get_transient($bb_sidebar_url);
 
         if (!$sidebar_list) {
@@ -2255,69 +2311,6 @@ class Ajax_Handler
         </div>
     <?php 
     }
-
-    // public function bb_add_custom_schema() {
-
-    //     $bbrag_case_url = strtok($_SERVER["REQUEST_URI"], '?');
-    //     $bbragbook_case_url = trim($bbrag_case_url, '/');
-    //     $parts = explode('/', $bbragbook_case_url);
-    //     $formattedString = ucwords(str_replace("-", " ", $parts[0]));      
-
-    //     $brag_book_schema_detail = $this->seoData;
-
-    //     if (isset($parts[2]) && !empty($parts[2])) {
-    //         $breadcrumb = [
-    //             [
-    //                 "@type" => "ListItem",
-    //                 "position" => 1,
-    //                 "name" => "Home",
-    //                 "item" => home_url()
-    //             ],
-    //             [
-    //                 "@type" => "ListItem",
-    //                 "position" => 2,
-    //                 "name" => $formattedString,
-    //                 "item" => "/" . $parts[0]
-    //             ],
-    //             [
-    //                 "@type" => "ListItem",
-    //                 "position" => 3,
-    //                 "name" => $brag_book_schema_detail['bb_title'],
-    //                 "item" => $this->bb_get_current_url()
-    //             ]
-    //         ];
-
-    //         $schema_data = [
-    //             "@context" => "https://schema.org",
-    //             "@graph" => [
-    //                 [
-    //                     "@type" => "BreadcrumbList",
-    //                     "itemListElement" => $breadcrumb
-    //                 ],
-    //                 [
-    //                     "@type" => "Website",
-    //                     "name" => $brag_book_schema_detail['bb_title'],
-    //                     "url" => $this->bb_get_current_url(),
-    //                     "description" => $brag_book_schema_detail['bb_description'],
-    //                     "bodyLocation" => $brag_book_schema_detail['bb_procedure_name'],
-    //                     "procedureType" => "Surgical",
-    //                     "recognizingAuthority" => [
-    //                         "@type" => "MedicalOrganization",
-    //                         "name" => "American Society of Plastic Surgeons",
-    //                         "url" => "https://www.plasticsurgery.org/"
-    //                     ],
-    //                         "study" => [
-    //                         "@type" => "MedicalStudy",
-    //                         "name" => $brag_book_schema_detail['bb_title'] . " Case Study",
-    //                         "url" => $this->bb_get_current_url()
-    //                     ],
-    //                 ]
-    //             ]
-    //         ];
-
-    //         echo '<script type="application/ld+json">' . json_encode($schema_data, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) . '</script>';
-    //     }
-    // }
 
     public function bb_print_custom_bragbook_description()
     {
@@ -2428,7 +2421,6 @@ class Ajax_Handler
                     remove_action('wp_head', 'rel_canonical');
                     remove_action('wp_head', 'wp_shortlink_wp_head', 10, 0);
                     add_action('wp_head', array($this, 'bb_print_canonical'));
-                    //add_action('wp_head', array($this, 'bb_add_custom_schema'), 1);
                 }
             }
         }
