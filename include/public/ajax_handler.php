@@ -1133,20 +1133,18 @@ class Ajax_Handler
             $bb_remove_pages_from_setting = get_option('bb_remove_pages_from_setting');
             $bb_remove_combine_gallery_from_setting = get_option('bb_remove_combine_gallery_from_setting');
 
-            if ($new_title !== $current_title) {
-                $post_data = array(
+            if (empty($current_title) && empty($new_slug)) {
+                wp_update_post([
                     'ID' => $post_id,
                     'post_title' => $new_title
-                );
-
-                wp_update_post($post_data);
-
+                ]);
+            
                 $page_bb_combine = get_option('combine_gallery_page_id');
-                if ($page_bb_combine == $post_id && get_post_status($post_id) === 'trash') {
-                    update_option('combine_gallery_slug', "");
-                } else {
-                    $combine_page_data_bb = '';
-                    if ($page_bb_combine == $post_id) {
+            
+                if ($page_bb_combine == $post_id) {
+                    if (get_post_status($post_id) === 'trash') {
+                        update_option('combine_gallery_slug', "");
+                    } else {
                         update_option('combine_gallery_slug', $new_slug);
                     }
                 }
