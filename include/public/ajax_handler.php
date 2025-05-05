@@ -753,7 +753,7 @@ class Ajax_Handler
             set_transient($bb_set_transient_url, $bb_set_transient_url_data, 2);
         }
 
-        $filepath = trailingslashit(ABSPATH) . 'bragbook-sitemap.xml';
+        $filepath = trailingslashit(ABSPATH) . 'brag-book-sitemap.xml';
 
         if(file_exists($filepath)){
             $this->create_bragbook_sitemap();
@@ -1241,7 +1241,7 @@ class Ajax_Handler
         $seoPluginOptions = get_option('bb_seo_plugin_selector');
         $api_tokens = get_option('bragbook_api_token', []);
 
-        $filepath = trailingslashit(ABSPATH) . 'bragbook-sitemap.xml';
+        $filepath = trailingslashit(ABSPATH) . 'brag-book-sitemap.xml';
 
         if(!empty($seoPluginOptions) && !empty($api_tokens) && !file_exists($filepath)){
             $this->create_bragbook_sitemap();
@@ -2431,7 +2431,7 @@ class Ajax_Handler
         $pageURL = (isset($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] == "on") ? 'https://' : 'http://';
         $siteURL = $pageURL . $_SERVER['HTTP_HOST'] . '/';
 
-        $pluginURL = plugin_dir_url(__DIR__) . '../bragbook-sitemap-style.xsl';
+        $pluginURL = plugin_dir_url(__DIR__) . '../brag-book-sitemap-style.xsl';
 
         $revXmlSitemapOutput = '<?xml version="1.0" encoding="UTF-8"?>';
         $revXmlSitemapOutput .= '<?xml-stylesheet type="text/xsl" href="' . $pluginURL . '"?>';
@@ -2453,7 +2453,7 @@ class Ajax_Handler
         $dom = new \DOMDocument;
         $dom->preserveWhiteSpace = false;
         $dom->loadXML($revXmlSitemapOutput);
-        $dom->save($_SERVER['DOCUMENT_ROOT'] . '/bragbook-sitemap.xml');
+        $dom->save($_SERVER['DOCUMENT_ROOT'] . '/brag-book-sitemap.xml');
       }
 
     function add_bragbook_sitemap_to_yoast() {
@@ -2471,7 +2471,7 @@ class Ajax_Handler
 
         $appended_text = '';
 
-        $static_post_link = home_url() . '/bragbook-sitemap.xml';
+        $static_post_link = home_url() . '/brag-book-sitemap.xml';
         $static_lastmod = $date->format('c');
         $appended_text .= '<sitemap>' .
                             '<loc>' . esc_url($static_post_link) . '</loc>' .
