@@ -1243,10 +1243,8 @@ class Ajax_Handler
 
         $filepath = trailingslashit(ABSPATH) . 'brag-book-sitemap.xml';
 
-        if(!empty($seoPluginOptions) && !empty($api_tokens) && !file_exists($filepath)){
+        if(!empty($api_tokens) && !file_exists($filepath)){
             $this->create_bragbook_sitemap();
-        }elseif(empty($seoPluginOptions) && file_exists($filepath)){
-            unlink($filepath);
         }
         // Send success response
         wp_send_json_success('Settings saved successfully.');
