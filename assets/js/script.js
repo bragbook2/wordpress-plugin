@@ -1672,27 +1672,27 @@ function leavePopup() {
 
 document.addEventListener("DOMContentLoaded", function () {
   let header = document.querySelector("header");
-  if(!header) header = document.querySelector(".header"); 
-   const banner = document.querySelector(".bb-main");
-   const mainPage = document.querySelector("#page");
- 
-   if (window.getComputedStyle(header).position === "fixed") {
-     const headerHeight = header.offsetHeight;
-     banner.style.paddingTop = `${headerHeight + 30}px`;
-     mainPage.style.paddingTop = `${headerHeight + 30}px`;
-   }
- });
- 
- document.addEventListener("DOMContentLoaded", function () {
-    let headerSection = document.querySelector("header");
-  if(!headerSection) headerSection = document.querySelector(".header"); 
-   const modalBox = document.querySelector(".bb-fav-modal");
-   const headerHeight = headerSection.offsetHeight;
+  if (!header) header = document.querySelector(".header");
+  const banner = document.querySelector(".bb-main");
+  const mainPage = document.querySelector("#page");
 
-   if (headerSection && modalBox) {
+  if (window.getComputedStyle(header).position === "fixed") {
+    const headerHeight = header.offsetHeight;
+    banner.style.paddingTop = `${headerHeight + 30}px`;
+    if (mainPage) mainPage.style.paddingTop = `${headerHeight + 30}px`;
+  }
+});
+
+document.addEventListener("DOMContentLoaded", function () {
+  let headerSection = document.querySelector("header");
+  if (!headerSection) headerSection = document.querySelector(".header");
+  const modalBox = document.querySelector(".bb-fav-modal");
+  const headerHeight = headerSection.offsetHeight;
+
+  if (headerSection && modalBox) {
     if (window.getComputedStyle(headerSection).position === "fixed") {
-     modalBox.style.height = `calc(100vh - ${headerHeight}px)`;
-    }else{
+      modalBox.style.height = `calc(100vh - ${headerHeight}px)`;
+    } else {
       modalBox.style.height = `100vh`;
       modalBox.style.paddingTop = `${headerHeight + 50}px`;
       window.addEventListener('scroll', function () {
@@ -1705,7 +1705,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       });
     }
-   } else {
-     console.warn("'.header' or '.bb-fav-modal' element not found.");
-   }
- });
+  } else {
+    console.warn("'.header' or '.bb-fav-modal' element not found.");
+  }
+});

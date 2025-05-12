@@ -2173,6 +2173,7 @@ p.bb-fav-modal-close-button {
     position: absolute;
     z-index: 11;
     font-size: 0;
+    padding: 0;
   }
 
   .bb-main .bb-sidebar {

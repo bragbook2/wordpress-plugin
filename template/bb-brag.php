@@ -409,20 +409,12 @@ if ($bbrag_case_url == "/".$parts[0]."/consultation/") {
                 </div>
                 <div class="bb-patient-box">
                     <div class="bb-patient-left">
-
                     </div>
                     <div class="bb-patient-right">
-                        
-                        
-                       
-                        <div class="bb-patient-slides">
-                           
-                        </div>    
+                            
                     </div>
                 </div>
-              
             </div>
-            
             <div class="bb-fav-modal">
                 <div class="bb-fav-modal-inner"> 
                     <p class="bb-fav-modal-close-button">X</p>

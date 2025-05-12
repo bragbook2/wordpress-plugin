@@ -374,8 +374,6 @@ class Shortcode {
          $id = $result['id'];
         $url_case = BB_BASE_URL . "/api/plugin/cases/?websitePropertyId={$cat_website_property_id}&apiToken={$token}&caseId={$caseid}&procedureId={$id}";
 
-        // $url_car = BB_BASE_URL . "/api/plugin/carousel?websitePropertyId={$cat_website_property_id}&start={$cat_start}&limit={$cat_limit}&apiToken={$token}&procedureId={$id}";
-
         $response = wp_remote_get( $url_case );
         if ( is_wp_error( $response ) ) {
             $error_message = $response->get_error_message();
@@ -785,29 +783,19 @@ class Shortcode {
                                     </a>
                                 </div>";
 
-                        if ($cat_title == 1) {
+                                if ($cat_title == 1 || $cat_details == 1) {
                            
                             $newContent .= "
                                 <div class='bb-content-box-inner'>
-                                    <div class='bb-content-box-inner-left'>
-                                        <h5>$thirdPart : Patient $patientCount</h5>
-                                        <p>$caseDetails</p> 
-                                    </div>
+                                    <div class='bb-content-box-inner-left'>";
+                                    if ($cat_title == 1) $newContent .= "<p class='bb-carousel-tite'>$thirdPart : Patient $patientCount</p>";
+                                    if ($cat_details == 1) $newContent .= "<p>$caseDetails</p>";
+                                    $newContent .= "</div>
                                     <div class='bb-content-box-inner-right'>
                                         <!-- You can add content here if needed -->
                                     </div>
                                 </div>";
                         }
-
-                        // if ($cat_details == 1) {
-                           
-                        //     $newContent .= "
-                        //         <div class='bb-content-box-cta'>
-                        //             <a class='view-more-btn' href='$procedureUrl'>
-                        //                 View More
-                        //             </a>
-                        //         </div>";
-                        // }
 
                         $newContent .= "</div>"; 
 
