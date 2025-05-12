@@ -1480,6 +1480,7 @@ function initFavorite() {
   });
 
   function bb_favorites_submission(data) {
+    console.log(data);
     var caseId = data.caseIds;
     jQuery.ajax({
       url: bb_plugin_data.ajaxurl,
@@ -1494,6 +1495,8 @@ function initFavorite() {
         bbWebsiteIds: data.bbWebsiteIds,
       },
       success: function (response) {
+    console.log("response :" , response );
+
         if (response.success) {
           const imgElements = document.querySelectorAll(`img[data-case-id="${caseId}"]`);
           if (imgElements.length) {

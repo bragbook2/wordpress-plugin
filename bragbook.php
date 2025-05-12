@@ -26,6 +26,7 @@ if (!defined('BB_BASE_URL')) {
 
 require_once BB_PLUGIN_DIR_MAIN_PATH . 'include/admin/class-activator.php';
 require_once BB_PLUGIN_DIR_MAIN_PATH . 'include/admin/class-shortcode.php';
+require_once BB_PLUGIN_DIR_MAIN_PATH . 'include/public/bb_api.php';
 require_once BB_PLUGIN_DIR_MAIN_PATH . 'include/public/ajax_handler.php';
 $theme_directory = get_template(); 
 $header_path = get_stylesheet_directory() . '/header.php'; 

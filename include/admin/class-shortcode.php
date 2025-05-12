@@ -229,20 +229,23 @@ class Shortcode {
                 if (empty($api_token) || empty($websiteproperty_id)) {
                     continue;
                 }
-                $bb_sidebar_url = BB_BASE_URL . "/api/plugin/sidebar?apiToken={$api_token}";
+                // $bb_sidebar_url = BB_BASE_URL . "/api/plugin/sidebar?apiToken={$api_token}";
                 
                 $token = $api_token;
                 $bb_slug_link = $page_slug_bb;
 
-                $response = wp_remote_get( $bb_sidebar_url );
-                if ( is_wp_error( $response ) ) {
-                    $error_message = $response->get_error_message();
-                    echo "Something went wrong: $error_message";
-                    $sidebar_set = [];
-                } else {
-                    $data = wp_remote_retrieve_body( $response );
-                    $sidebar_set = json_decode( $data, true ) ?? [];
-                }
+                // $response = wp_remote_get( $bb_sidebar_url );
+                // if ( is_wp_error( $response ) ) {
+                //     $error_message = $response->get_error_message();
+                //     echo "Something went wrong: $error_message";
+                //     $sidebar_set = [];
+                // } else {
+                //     $data = wp_remote_retrieve_body( $response );
+                //     $sidebar_set = json_decode( $data, true ) ?? [];
+                // }
+                $sidebar = new Bb_Api();
+                $data = $sidebar->get_api_sidebar_bb($api_token);
+                $sidebar_set = json_decode( $data, true ) ?? [];
             }
         }
       
@@ -250,8 +253,7 @@ class Shortcode {
          if(empty($result)) {
             return false; 
          }
-        
-         $id = $result['id'];
+         $id = $result['ids'][0];
          $url_car = BB_BASE_URL . "/api/plugin/carousel?websitePropertyId={$cat_website_property_id}&start={$cat_start}&limit={$cat_limit}&apiToken={$token}&procedureId={$id}";
 
         $response = wp_remote_get( $url_car );
@@ -348,21 +350,24 @@ class Shortcode {
                 if (empty($api_token) || empty($websiteproperty_id)) {
                     continue;
                 }
-                $bb_sidebar_url = BB_BASE_URL . "/api/plugin/sidebar?apiToken={$api_token}";
+                //$bb_sidebar_url = BB_BASE_URL . "/api/plugin/sidebar?apiToken={$api_token}";
                 
                 $token = $api_token;
                 $bb_slug_link = $page_slug_bb;
             
-                $response = wp_remote_get( $bb_sidebar_url );
+                // $response = wp_remote_get( $bb_sidebar_url );
 
-                if ( is_wp_error( $response ) ) {
-                    $error_message = $response->get_error_message();
-                    echo "Something went wrong: $error_message";
-                    $sidebar_set = [];
-                } else {
-                    $data = wp_remote_retrieve_body( $response );
-                    $sidebar_set = json_decode( $data, true ) ?? [];
-                }
+                // if ( is_wp_error( $response ) ) {
+                //     $error_message = $response->get_error_message();
+                //     echo "Something went wrong: $error_message";
+                //     $sidebar_set = [];
+                // } else {
+                //     $data = wp_remote_retrieve_body( $response );
+                //     $sidebar_set = json_decode( $data, true ) ?? [];
+                // }
+                $sidebar = new Bb_Api();
+                $data = $sidebar->get_api_sidebar_bb($api_token);
+                $sidebar_set = json_decode( $data, true ) ?? [];
             }
         }
       
@@ -371,7 +376,7 @@ class Shortcode {
             return false; 
          }
         
-         $id = $result['id'];
+         $id = $result['ids'][0];
         $url_case = BB_BASE_URL . "/api/plugin/cases/?websitePropertyId={$cat_website_property_id}&apiToken={$token}&caseId={$caseid}&procedureId={$id}";
 
         $response = wp_remote_get( $url_case );
@@ -454,20 +459,23 @@ class Shortcode {
                 if (empty($api_token) || empty($websiteproperty_id)) {
                     continue;
                 }
-                $bb_sidebar_url = BB_BASE_URL . "/api/plugin/sidebar?apiToken={$api_token}";
+                //$bb_sidebar_url = BB_BASE_URL . "/api/plugin/sidebar?apiToken={$api_token}";
                 
                 $token = $api_token;
                 $bb_slug_link = $page_slug_bb;
                 
-                $response = wp_remote_get( $bb_sidebar_url );
-                if ( is_wp_error( $response ) ) {
-                    $error_message = $response->get_error_message();
-                    echo "Something went wrong: $error_message";
-                    $sidebar_set = [];
-                } else {
-                    $data = wp_remote_retrieve_body( $response );
-                    $sidebar_set = json_decode( $data, true ) ?? [];
-                }
+                // $response = wp_remote_get( $bb_sidebar_url );
+                // if ( is_wp_error( $response ) ) {
+                //     $error_message = $response->get_error_message();
+                //     echo "Something went wrong: $error_message";
+                //     $sidebar_set = [];
+                // } else {
+                //     $data = wp_remote_retrieve_body( $response );
+                //     $sidebar_set = json_decode( $data, true ) ?? [];
+                // }
+                $sidebar = new Bb_Api();
+                $data = $sidebar->get_api_sidebar_bb($api_token);
+                $sidebar_set = json_decode( $data, true ) ?? [];
             
             }
         }
@@ -517,7 +525,7 @@ class Shortcode {
                                                 foreach($procedure_data['procedures'] as $procedure ) {
                                                     ?>
                                                     <li>
-                                                    <a id="<?= esc_attr($procedure['id']); ?>"
+                                                    <a id="<?= esc_attr($procedure['ids']); ?>"
                                                         href="<?= "/" . $bb_slug_link . "/" . $procedure['slugName'] . "/"; ?>"
                                                         data-count="1"
                                                         data-api-token="<?= esc_attr($token); ?>"
@@ -706,20 +714,22 @@ class Shortcode {
                if (empty($api_token) || empty($websiteproperty_id)) {
                    continue;
                }
-               $bb_sidebar_url = BB_BASE_URL . "/api/plugin/sidebar?apiToken={$api_token}";
+               //$bb_sidebar_url = BB_BASE_URL . "/api/plugin/sidebar?apiToken={$api_token}";
                
                $token = $api_token;
                $bb_slug_link = $page_slug_bb;
 
-                $response = wp_remote_get( $bb_sidebar_url );
-                if ( is_wp_error( $response ) ) {
-                    echo "Something went wrong: " . $response->get_error_message();
-                    $sidebar_set = [];
-                } else {
-                    $data = wp_remote_retrieve_body( $response );
-                    $sidebar_set = json_decode( $data, true ) ?? [];
-                }
-           
+                // $response = wp_remote_get( $bb_sidebar_url );
+                // if ( is_wp_error( $response ) ) {
+                //     echo "Something went wrong: " . $response->get_error_message();
+                //     $sidebar_set = [];
+                // } else {
+                //     $data = wp_remote_retrieve_body( $response );
+                //     $sidebar_set = json_decode( $data, true ) ?? [];
+                // }
+                $sidebar = new Bb_Api();
+                $data = $sidebar->get_api_sidebar_bb($api_token);
+                $sidebar_set = json_decode( $data, true ) ?? [];
            }
        }
      
@@ -728,7 +738,7 @@ class Shortcode {
            return false; 
         }
        
-        $id = $result['id'];
+        $id = $result['ids'][0];
         $procedure_name_bb = $result['slugName'];
       // $url_pro = BB_BASE_URL . "/api/plugin/cases/paginate?websitePropertyId={$cat_website_property_id}&count=1&apiToken={$token}&procedureId={$id}";
 
