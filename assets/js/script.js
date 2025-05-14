@@ -184,6 +184,15 @@ function fetchCaseData(loadMoreCount) {
       body: new URLSearchParams(requestData).toString(),
     }).then((response) => response.json())
       .then((data) => {
+
+        caseSets = JSON.parse(data.data.case_set);
+        filterSet = JSON.parse(data.data.filter_data);
+        if (data.data.page_slug == data.data.page_slug_bb && pathSegments.length > 1 && pathSegments.length < 4) {
+          if(!filterSet.success || !caseSets.success){
+            window.location.href = '/page-not-found';
+          }
+        }
+
         const seopagetitle = data.data.seo_page_title;
         const myFavoriteCountSpan = document.getElementById("bb_favorite_caseIds_count");
         myFavoriteCountSpan ? myFavoriteCountSpan.style.display = 'inline' : '';
