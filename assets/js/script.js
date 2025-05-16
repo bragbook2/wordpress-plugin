@@ -8,6 +8,9 @@ const isCarouselPage = pathSegments.length === 1;
 const isListsPage = pathSegments.length === 2;
 const isViewMoreDetailPage = pathSegments.length === 3;
 const isFavoriteListPage = pathSegments[1] === "favorites" && pathSegments.length === 2;
+const isConsultationPage = pathSegments[1] === "consultation" && pathSegments.length === 2;
+const isValidPathLength = pathSegments.length > 1 && pathSegments.length < 4;
+const isNotSpecialPage = !isFavoriteListPage && !isConsultationPage;
 
 let linkText;
 
@@ -184,6 +187,14 @@ function fetchCaseData(loadMoreCount) {
       body: new URLSearchParams(requestData).toString(),
     }).then((response) => response.json())
       .then((data) => {
+
+        const caseSets = JSON.parse(data.data.case_set);
+        const filterSet = JSON.parse(data.data.filter_data);
+        const currentPageSlug = data.data.page_slug_bb ?? data.data.combine_page_slug;
+        const isSamePage = currentPageSlug === data.data.page_slug;
+        const isPageValid = filterSet.success && caseSets.success;
+        if (isSamePage && isValidPathLength && isNotSpecialPage && !isPageValid) window.location.href = '/page-not-found';
+
         const seopagetitle = data.data.seo_page_title;
         const myFavoriteCountSpan = document.getElementById("bb_favorite_caseIds_count");
         myFavoriteCountSpan ? myFavoriteCountSpan.style.display = 'inline' : '';

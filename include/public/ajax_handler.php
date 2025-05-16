@@ -277,6 +277,7 @@ class Ajax_Handler
                     'info' => $info,
                     'page_slug' => $page_slug,
                     'page_slug_bb' => $pageSlugBB,
+                    'combine_page_slug' => $combine_gallery_page_slug,
                     'seo_page_title' => $seo_page_title,
                     'seo_page_description' => $seo_page_description,
                 ]

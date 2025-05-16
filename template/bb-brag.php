@@ -10,6 +10,14 @@ $parts = explode('/', $bbragbook_case_url);
 $page = get_page_by_path($parts[0]);
 $favorite_caseIds = get_option('favorite_caseIds_ajax');
 $page_id_via_slug = "";
+
+$page_id_via_slug = $page ? $page->ID : null;
+
+if (is_404() || !$page_id_via_slug) {
+    get_template_part(404);
+    exit;
+}
+
 if($page) {
     $page_id_via_slug = $page->ID;
 }
