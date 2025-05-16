@@ -2111,32 +2111,6 @@ class Ajax_Handler
         return $bb_procedure_id_name_array;
     }
 
-    public function getSingleProcedureIDFromSidebar($api_token, $procedureSlug)
-    {
-        $sidebar_list = get_transient($api_token);
-
-        if (!$sidebar_list) {
-            $sidebar = new Bb_Api();
-            $sidebar_list = $sidebar->get_api_sidebar_bb($api_token);
-            set_transient($bb_sidebar_url, $sidebar_list, HOUR_IN_SECONDS); 
-        }
-
-        $sidebar = json_decode($sidebar_list);
-        $procedureId = null;
-        if (isset($sidebar) && isset($sidebar->data)) {
-            foreach ($sidebar->data as $category) {
-                foreach ($category->procedures as $procedure) {
-                    if ($procedure->slugName == $procedureSlug) {
-                        $procedureId = $procedure->id[0]; 
-                        break 2; 
-                    }
-                }
-            }
-        }
-        return $procedureId;
-    }
-
-
     public function bb_get_custom_bragbook_title()
     {
         // Get SEO data from constructor
