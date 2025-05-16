@@ -270,7 +270,7 @@ function fetchCaseData(loadMoreCount) {
                     if (caseItem.caseDetails[0].seoHeadline) {
                       proceduralName = caseItem.caseDetails[0].seoHeadline;
                     } else {
-                      let titleWithoutDashes = procedureSlug.replace(/-/g, ' ');
+                      let titleWithoutDashes = document.querySelector(`a[href="${window.location.pathname}"]`)?.innerText.replace(/\s*\(\d+\)$/, '');
                       proceduralName = titleWithoutDashes + ': Patient ' + caseItem.patientCount;
                     }
                     images.push(imageObj);
@@ -894,7 +894,7 @@ for (let i = 0; i < accordion.length; i++) {
 }
 
 function displayProcedureTitle(sidebarData, procedureSlug) {
-  const procedureTitle = document.querySelector(`a[href="${window.location.pathname}"]`).innerText.split("(")[0];
+  const procedureTitle = document.querySelector(`a[href="${window.location.pathname}"]`)?.innerText.replace(/\s*\(\d+\)$/, '');
   if (document.getElementById("procedure-title")) document.getElementById("procedure-title").innerHTML = `${procedureTitle ? procedureTitle : ""} Before & After Gallery`;
 }
 
