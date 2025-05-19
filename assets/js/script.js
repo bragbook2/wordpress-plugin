@@ -47,9 +47,42 @@ function handleSingleClickToggles() {
 
   Array.from(clickables).forEach((item) => {
     const toggleClasses = getToggleClasses(item);
-    item.addEventListener("click", () => {
-      toggleClasses.forEach((classname) => toggleElement(classname));
-      item.classList.toggle("isActive");
+    item.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const shouldActivate = !item.classList.contains("isActive");
+      toggleClasses.forEach((classname) => {
+        const element = document.querySelector(`.${classname}`);
+        if (element) {
+          element.classList.toggle("isActive", shouldActivate);
+        }
+      });
+      item.classList.toggle("isActive", shouldActivate);
+    });
+  });
+
+  document.addEventListener("click", (e) => {
+    Array.from(clickables).forEach((item) => {
+      if (item.contains(e.target)) return;
+
+      const toggleClasses = getToggleClasses(item);
+      let clickedInsideAnyTarget = false;
+
+      toggleClasses.forEach((classname) => {
+        const element = document.querySelector(`.${classname}`);
+        if (element && element.contains(e.target)) {
+          clickedInsideAnyTarget = true;
+        }
+      });
+
+      if (!clickedInsideAnyTarget) {
+        toggleClasses.forEach((classname) => {
+          const element = document.querySelector(`.${classname}`);
+          if (element) {
+            element.classList.remove("isActive");
+          }
+        });
+        item.classList.remove("isActive");
+      }
     });
   });
 }
@@ -225,7 +258,6 @@ function fetchCaseData(loadMoreCount) {
             let caseSet = JSON.parse(data.data.case_set);
             if (caseIdentifier == "" && !seoSuffixUrl) {
               if (isListsPage && !isFavoriteListPage) handleLoadMoreButton(caseSet.hasLoadMore);
-              var bb_case_count = (count - 1) * 10;
               let contentBox = document.querySelector(".bb-content-boxes");
               const applyBBButton = document.querySelector(".apply_bb_filter");
               if (applyBBButton) applyBBButton.innerHTML = `Apply`;
@@ -233,85 +265,10 @@ function fetchCaseData(loadMoreCount) {
               if (caseSet.data) {
                 let bb_gallery_page_title = pageSlug.split('-').map(w => w[0].toUpperCase() + w.slice(1)).join(' ');
                 let bb_procedure_Title = procedureSlug.split('-').map(w => w[0].toUpperCase() + w.slice(1)).join(' ');
-                caseSet.data.forEach((caseItem, index) => {
-                  if (caseItem.photoSets && caseItem.photoSets.length > 0) {
-                    let photoSet = caseItem.photoSets[0];
-                    let imgSrc =
-                      photoSet.highResPostProcessedImageLocation ||
-                      photoSet.postProcessedImageLocation ||
-                      photoSet.originalBeforeLocation;
-                    let imgAlt = photoSet.seoAltText + " - angle " + (index + 1) || "Procedure Image";
-                    let caseItemId = caseItem.id;
-                    let caseDetails = caseItem.details || "";
-                    caseItem.patientCount = ++bb_case_count;
-                    let caseId = null;
-                    seoSuffixUrl = caseItem.caseDetails[0].seoSuffixUrl;
-                    if (seoSuffixUrl) {
-                      caseId = seoSuffixUrl;
-                    } else {
-                      caseId = "bb-case-" + caseItemId;
-                    }
-                    let procedureUrl = `/${pageSlug}/${procedureSlug}/${caseId}/`;
 
-                    if (fav_data && fav_data.includes(caseItemId)) {
-                      heartImage = bb_plugin_data.heartBordered;
-                    } else {
-                      heartImage = bb_plugin_data.heartRed;
-                    }
-                    let imageObj = {
-                      "@type": "ImageObject",
-                      "name": bb_procedure_Title,
-                      "description": `Photo gallery of ${bb_procedure_Title} results showing before and after photos from different angles.`,
-                      "url": `${targetLinkSelector}${caseId}`,
-                      "thumbnailUrl": imgSrc
-                    };
+                contentBox.innerHTML += renderCaseDataBB(caseSet.data, count, pageSlug, procedureSlug, targetLinkSelector, apiToken, websitePropertyId, data.data.bragbook_favorite).casesUI;
+                images = renderCaseDataBB(caseSet.data, count, pageSlug, procedureSlug, targetLinkSelector, apiToken, websitePropertyId, data.data.bragbook_favorite).images;
 
-                    let proceduralName = "";
-                    if (caseItem.caseDetails[0].seoHeadline) {
-                      proceduralName = caseItem.caseDetails[0].seoHeadline;
-                    } else {
-                      let titleWithoutDashes = document.querySelector(`a[href="${window.location.pathname}"]`)?.innerText.replace(/\s*\(\d+\)$/, '');
-                      proceduralName = titleWithoutDashes + ': Patient ' + caseItem.patientCount;
-                    }
-                    images.push(imageObj);
-                    let newContent = `
-                              <div class="bb-content-box">
-                                  <div class="bb-content-thumbnail">
-                                      <a href="${procedureUrl}">
-                                          <img src="${imgSrc}" alt="${imgAlt}">
-                                      </a>
-                                      <img class="bb-heart-icon bb-open-fav-modal 1" 
-                                          data-case-id="${caseItemId}"
-                                          data-bb_api_token="${apiToken}" 
-                                          data-bb_website_id="${websitePropertyId}" 
-                                          src="${heartImage}" 
-                                          alt="heart">
-                                  </div>
-                                  <div class="bb-content-box-inner">
-                                      <div class="bb-content-box-inner-left">
-                                          <h2>${proceduralName}</h2>
-                                          <p>${caseDetails}</p> 
-                                      </div>
-                                      <div class="bb-content-box-inner-right">
-                                          <img class="bb-open-fav-modal" 
-                                              data-case-id="${caseItemId}" 
-                                              data-bb_api_token="${apiToken}" 
-                                              data-bb_website_id="${websitePropertyId}" 
-                                              src="${heartImage}" 
-                                              alt="heart">
-                                      </div>
-                                  </div>
-                                  <div class="bb-content-box-cta">
-                                      <a class="view-more-btn" href="${procedureUrl}">
-                                          View More
-                                      </a>
-                                  </div>
-                              </div>
-                          `;
-
-                    contentBox.innerHTML += newContent;
-                  }
-                });
                 let schema = {
                   "@context": "https://schema.org",
                   "@type": "ImageGallery",
@@ -350,83 +307,22 @@ function fetchCaseData(loadMoreCount) {
                 document.head.appendChild(schemaScript);
 
               } else if (caseSet.favorites) {
-                caseSet.favorites.forEach((caseItem) => {
-                  if (caseItem.cases[0].photoSets && caseItem.cases[0].photoSets.length > 0 && sidebarApi) {
-                    if (caseItem && caseItem.cases[0].procedureIds.length > 0) {
-                      const isCombine = sidebarApi[0]?.ids;
-                      let slugName;
-                      if (isCombine) {
-                        for (let i = 0; i < sidebarApi[0].ids.length; i++) {
-                          if (slugName) break;
-                          slugName = sidebarApi.find(p => p.ids[i] == caseItem.cases[0].procedureIds[0])?.slugName;
-                        }
-                      } else {
-                        slugName = sidebarApi.find(p => p.id == caseItem.cases[0].procedureIds[0])?.slugName;
-                      }
-
-                      let photoSet = caseItem.cases[0].photoSets[0];
-                      let imgSrc =
-                        photoSet.highResPostProcessedImageLocation ||
-                        photoSet.postProcessedImageLocation ||
-                        photoSet.originalBeforeLocation;
-                      let imgAlt = photoSet.seoAltText || "Procedure Image";
-                      let caseItemId = caseItem.cases[0].id;
-                      let caseDetails = caseItem.cases[0].details || "";
-                      caseItem.patientCount = ++bb_case_count;
-
-                      let caseId = "";
-                      let seoSuffixUrl = caseItem.cases[0].caseDetails[0]?.seoSuffixUrl;
-                      if (seoSuffixUrl) {
-                        caseId = seoSuffixUrl;
-                      } else {
-                        caseId = "bb-case-" + caseItemId;
-                      }
-
-                      let procedureUrl = `/${pageSlug}/${slugName}/${caseId}/`;
-
-                      heartImage = bb_plugin_data.heartBordered;
-
-                      let newContent = `
-                                <div class="bb-content-box">
-                                    <div class="bb-content-thumbnail">
-                                        <a href="${procedureUrl}">
-                                            <img src="${imgSrc}" alt="${imgAlt}">
-                                        </a>
-                                        <img class="bb-heart-icon bb-open-fav-modal" 
-                                            data-case-id="${caseItemId}"
-                                            data-bb_api_token="${apiToken}" 
-                                            data-bb_website_id="${websitePropertyId}" 
-                                            src="${heartImage}" 
-                                            alt="heart">
-                                    </div>
-                                    <div class="bb-content-box-inner">
-                                        <div class="bb-content-box-inner-left">
-                                            <h5>${procedureSlug} : Patient ${caseItem.patientCount}</h5>
-                                            <p>${caseDetails}</p> 
-                                        </div>
-                                        <div class="bb-content-box-inner-right">
-                                            <img class="bb-open-fav-modal" 
-                                                data-case-id="${caseItemId}" 
-                                                data-bb_api_token="${apiToken}" 
-                                                data-bb_website_id="${websitePropertyId}" 
-                                                src="${heartImage}" 
-                                                alt="heart">
-                                        </div>
-                                    </div>
-                                    <div class="bb-content-box-cta">
-                                        <a class="view-more-btn" href="${procedureUrl}">
-                                            View More
-                                        </a>
-                                    </div>
-                                </div>
-                            `;
-
-                      contentBox.innerHTML += newContent;
-                    }
+                const data = caseSet.favorites.map(fav => {
+                  let slug = '';
+                  for (let i = 0; i < sidebarApi[0].ids.length; i++) {
+                    if (slug) break;
+                    slug = sidebarApi.find(p => p.ids[i] == fav.cases[0].procedureIds[0])?.slugName;
                   }
-                });
-              }
 
+                  return {
+                    ...fav.cases[0],
+                    slug,
+                  };
+                });
+
+
+                contentBox.innerHTML = renderCaseDataBB(data, count, pageSlug, '', targetLinkSelector, apiToken, websitePropertyId, fav_data).casesUI;
+              }
             } else {
               let images_case = [];
               document.querySelector("#bb_f_gif_sidebar")?.remove();
@@ -677,7 +573,7 @@ function fetchCaseData(loadMoreCount) {
                 <button class="apply_bb_filter" onClick='applyFilterBB(${count}, "${pageSlug}", "${elementId}", "${apiToken}", "${websitePropertyId}", "${caseIdentifier}", "${procedureSlug}")'>Apply</button> 
                 </div>`;
 
-              handleAdvanceFilter();
+              handleAdvanceFilter(count, pageSlug, elementId, apiToken, websitePropertyId, caseIdentifier, procedureSlug);
             }
           }
 
@@ -696,6 +592,78 @@ function fetchCaseData(loadMoreCount) {
   }
 }
 
+function renderCaseDataBB(data, count, pageSlug, procedureSlug, targetLinkSelector, apiToken, websitePropertyId, favData) {
+  let caseCount = (count - 1) * 10;
+  let bb_procedure_Title = '';
+  if (procedureSlug) procedureSlug.split('-').map(w => w[0].toUpperCase() + w.slice(1)).join(' ');
+  const images = [];
+  const casesUI = data.map(({ photoSets, id, caseDetails, details, patientCount, slug }, index) => {
+    if (!photoSets?.length) return "";
+    patientCount = ++caseCount;
+    const { highResPostProcessedImageLocation, postProcessedImageLocation, originalBeforeLocation, seoAltText } = photoSets[0];
+    const imgSrc = highResPostProcessedImageLocation || postProcessedImageLocation || originalBeforeLocation;
+    const imgAlt = seoAltText + " - angle " + (index + 1) || "Procedure Image";
+
+    const caseId = caseDetails[0]?.seoSuffixUrl || `bb-case-${id}`;
+    const procedureUrl = `/${pageSlug}/${procedureSlug || slug}/${caseId}/`;
+    const heartImage = favData?.includes(id) ? bb_plugin_data.heartBordered : bb_plugin_data.heartRed;
+
+    let imageObj = {
+      "@type": "ImageObject",
+      "name": bb_procedure_Title,
+      "description": `Photo gallery of ${bb_procedure_Title} results showing before and after photos from different angles.`,
+      "url": `${targetLinkSelector}${caseId}`,
+      "thumbnailUrl": imgSrc
+    };
+
+    let proceduralName = "";
+    if (caseDetails[0]?.seoHeadline) {
+      proceduralName = caseDetails[0]?.seoHeadline;
+    } else {
+      let titleWithoutDashes = document.querySelector(`a[href="${window.location.pathname}"]`)?.innerText.replace(/\s*\(\d+\)$/, '');
+      proceduralName = titleWithoutDashes + ': Patient ' + patientCount;
+    }
+    images.push(imageObj);
+
+    return `
+       <div class="bb-content-box">
+                    <div class="bb-content-thumbnail">
+                        <a href="${procedureUrl}">
+                            <img src="${imgSrc}" alt="${imgAlt}">
+                        </a>
+                        <img class="bb-heart-icon bb-open-fav-modal" 
+                            data-case-id="${id}"
+                            data-bb_api_token="${apiToken}" 
+                            data-bb_website_id="${websitePropertyId}" 
+                            src="${heartImage}" 
+                            alt="heart">
+                    </div>
+                    <div class="bb-content-box-inner">
+                        <div class="bb-content-box-inner-left">
+                            <h2>${proceduralName}</h2>
+                            <p>${details || ''}</p> 
+                        </div>
+                        <div class="bb-content-box-inner-right">
+                            <img class="bb-open-fav-modal" 
+                                data-case-id="${id}" 
+                                data-bb_api_token="${apiToken}" 
+                                data-bb_website_id="${websitePropertyId}" 
+                                src="${heartImage}" 
+                                alt="heart">
+                        </div>
+                    </div>
+                    <div class="bb-content-box-cta">
+                        <a class="view-more-btn" href="${procedureUrl}">
+                            View More
+                        </a>
+                    </div>
+                </div>
+    `;
+  }).join("");
+
+  return { images, casesUI }
+}
+
 function createFilterData(count, pageSlug, elementId, apiToken, websitePropertyId, caseIdentifier, staticFilterCombine, dynamicFilterCombine) {
   return {
     action: "bb_case_api",
@@ -705,8 +673,6 @@ function createFilterData(count, pageSlug, elementId, apiToken, websitePropertyI
     apiToken,
     websitePropertyId,
     caseId: caseIdentifier,
-    staticFilter: Object.entries(staticFilterCombine).map(([k, v]) => `&${k}=${v}`).join(""),
-    dynamicFilter: Object.entries(dynamicFilterCombine).map(([k, v]) => `&${k}=${v}`).join(""),
     dynamicFilterCombine: Object.keys(dynamicFilterCombine).length ? JSON.stringify(dynamicFilterCombine) : 0,
     ...staticFilterCombine
   };
@@ -714,11 +680,7 @@ function createFilterData(count, pageSlug, elementId, apiToken, websitePropertyI
 
 function applyFilterBB(count, pageSlug, elementId, apiToken, websitePropertyId, caseIdentifier, procedureSlug) {
   const contentBox = document.querySelector(".bb-content-boxes");
-  // const applyFilterBtn = document.querySelector(".apply_bb_filter");
-
   contentBox.innerHTML = "";
-  // applyFilterBtn.innerHTML = `<img id="apply_bb_filter" src="${bb_plugin_data.heartrunning}" alt="Loading...">`;
-
   const getCheckedFilters = (selector) => {
     return [...document.querySelectorAll(selector)].reduce((acc, checkbox) => {
       const key = checkbox.getAttribute("data-key").replace(/\s+/g, "|||");
@@ -747,41 +709,26 @@ function applyFilterBB(count, pageSlug, elementId, apiToken, websitePropertyId, 
 
       const caseSet = JSON.parse(data.case_set);
       handleLoadMoreButton(caseSet.hasLoadMore);
-
-      let bb_case_count = (count - 1) * 10;
-      contentBox.innerHTML = caseSet.data.map(({ photoSets, caseDetails, details = "" }) => {
-        if (!photoSets?.length) return "";
-
-        const { highResPostProcessedImageLocation, postProcessedImageLocation, originalBeforeLocation, seoAltText } = photoSets[0];
-        const imgSrc = highResPostProcessedImageLocation || postProcessedImageLocation || originalBeforeLocation;
-        const imgAlt = seoAltText || "Procedure Image";
-
-        const caseId = caseDetails[0]?.seoSuffixUrl || `bb-case-${bb_case_count++}`;
-        const procedureUrl = `/${pageSlug}/${procedureSlug}/${caseId}/`;
-        const heartImage = data.bragbook_favorite.includes(caseId) ? bb_plugin_data.heartBordered : bb_plugin_data.heartRed;
-
-        return `
-          <div class="bb-content-box">
-            <div class="bb-content-thumbnail">
-              <a href="${procedureUrl}"><img src="${imgSrc}" alt="${imgAlt}"></a>
-              <img class="bb-heart-icon bb-open-fav-modal" data-case-id="${caseId}" data-bb_api_token="${apiToken}" data-bb_website_id="${websitePropertyId}" src="${heartImage}" alt="heart">
-            </div>
-            <div class="bb-content-box-inner">
-              <h5>${procedureSlug} : Patient ${bb_case_count}</h5>
-              <p>${details}</p> 
-            </div>
-            <div class="bb-content-box-cta">
-              <a class="view-more-btn" href="${procedureUrl}">View More</a>
-            </div>
-          </div>
-        `;
-      }).join("");
+      contentBox.innerHTML = renderCaseDataBB(caseSet.data, count, pageSlug, procedureSlug, `/${pageSlug}/${procedureSlug}/`, apiToken, websitePropertyId, data.bragbook_favorite).casesUI;
     })
     .catch((err) => console.error("Error fetching data:", err));
-  // .finally(() => applyFilterBtn.innerHTML = "Apply");
 }
 
-function handleAdvanceFilter() {
+function handleDynamicCheckboxChange(key, value) {
+  const checkboxes = document.querySelectorAll(`input[name=${key}]`);
+
+  checkboxes.forEach((checkbox) => {
+    checkbox.addEventListener("change", (event) => {
+      checkboxes.forEach((cb) => {
+        if (cb !== event.target) {
+          cb.checked = false;
+        }
+      });
+    });
+  });
+}
+
+function handleAdvanceFilter(count, pageSlug, elementId, apiToken, websitePropertyId, caseIdentifier, procedureSlug) {
   document.querySelectorAll(".bb-filter-content-inner-wrapper .accordion")
     .forEach(acc => acc.addEventListener("click", function () {
       this.classList.toggle("active");
@@ -794,6 +741,21 @@ function handleAdvanceFilter() {
       .forEach(checkbox => checkbox.checked = false);
 
     document.querySelectorAll(".bb-content-box").forEach(box => box.style.display = "block");
+
+    const clickables = document.getElementsByClassName("toggle-on-click");
+    Array.from(clickables).forEach((item) => {
+      item.classList.remove("isActive");
+
+      const toggleClasses = getToggleClasses(item);
+      toggleClasses.forEach((classname) => {
+        const element = document.querySelector(`.${classname}`);
+        if (element) {
+          element.classList.remove("isActive");
+        }
+      });
+    });
+
+    applyFilterBB(count, pageSlug, elementId, apiToken, websitePropertyId, caseIdentifier, procedureSlug);
   });
 }
 
@@ -1506,7 +1468,6 @@ function initFavorite() {
         bbWebsiteIds: data.bbWebsiteIds,
       },
       success: function (response) {
-    console.log("response :" , response );
 
         if (response.success) {
           const imgElements = document.querySelectorAll(`img[data-case-id="${caseId}"]`);
