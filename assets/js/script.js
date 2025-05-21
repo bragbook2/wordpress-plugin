@@ -347,7 +347,7 @@ function fetchCaseData(loadMoreCount) {
                         let bb_new_image_value =
                           value.highResPostProcessedImageLocation ??
                           value.postProcessedImageLocation ??
-                          value.originalBeforeLocation;
+                          value.beforeLocationUrl;
                         let imgElement = document.createElement("img");
                         imgElement.className =
                           "bbrag_gallery_image";
@@ -600,8 +600,8 @@ function renderCaseDataBB(data, count, pageSlug, procedureSlug, targetLinkSelect
   const casesUI = data.map(({ photoSets, id, caseDetails, details, patientCount, slug }, index) => {
     if (!photoSets?.length) return "";
     patientCount = ++caseCount;
-    const { highResPostProcessedImageLocation, postProcessedImageLocation, originalBeforeLocation, seoAltText } = photoSets[0];
-    const imgSrc = highResPostProcessedImageLocation || postProcessedImageLocation || originalBeforeLocation;
+    const { highResPostProcessedImageLocation, postProcessedImageLocation, beforeLocationUrl, seoAltText } = photoSets[0];
+    const imgSrc = highResPostProcessedImageLocation || postProcessedImageLocation || beforeLocationUrl;
     const imgAlt = seoAltText + " - angle " + (index + 1) || "Procedure Image";
 
     const caseId = caseDetails[0]?.seoSuffixUrl || `bb-case-${id}`;
