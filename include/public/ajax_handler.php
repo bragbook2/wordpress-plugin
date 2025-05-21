@@ -57,7 +57,6 @@ class Ajax_Handler
             $procedureId = sanitize_text_field($_POST['procedureId']);
             $caseId = sanitize_text_field($_POST['caseId']);
             $seoSuffixUrl = sanitize_text_field($_POST['seoSuffixUrl']);
-            // $bb_set_transient_urls = get_option( 'bb_set_transient_url_sidebar', [] );
             $page_slug = sanitize_text_field($_POST['pageSlug']);
             $staticFilter = sanitize_text_field($_POST['staticFilter']);
             $dynamicFilter = sanitize_text_field($_POST['dynamicFilter']);
@@ -79,7 +78,6 @@ class Ajax_Handler
                 }
             }
 
-            // }
             if ($caseId !== "" || $seoSuffixUrl!== "") {
                 $caseId=$caseId?$caseId:'123';
                 if ($page_slug == $combine_gallery_page_slug) {
@@ -96,7 +94,6 @@ class Ajax_Handler
                         $data = $filter_data->bb_get_case_data($caseId, $seoSuffixUrl, $apiToken, $procedureId, $websitePropertyId);
                     }
                 }
-              //  die('here two');
 
             } else {
 
@@ -107,18 +104,17 @@ class Ajax_Handler
                 $dynamicFilterCombineAPIBody['procedureIds'] = array_map('intval', explode(", ", $procedureId));
                 $dynamicFilterCombineAPIBody['websitePropertyIds'] = array_map('intval', explode(", ", $websitePropertyId));
 
-                if ($page_slug == $combine_gallery_page_slug) {
 
                     if (isset($_POST['gender']) && !empty($_POST['gender'])) {
                         $dynamicFilterCombineAPIBody['gender'] = preg_replace('/\\\"/', '', $_POST['gender']);
                     }
 
                     if (isset($_POST['height']) && !empty($_POST['height'])) {
-                        $dynamicFilterCombineAPIBody['height'] = $_POST['height'];
+                        $dynamicFilterCombineAPIBody['height'] = intval($_POST['height']);
                     }
 
                     if (isset($_POST['weight']) && !empty($_POST['weight'])) {
-                        $dynamicFilterCombineAPIBody['weight'] = $_POST['weight'];
+                        $dynamicFilterCombineAPIBody['weight'] = intval($_POST['weight']);
                     }
 
                     if (isset($_POST['ethnicity']) && !empty($_POST['ethnicity'])) {
@@ -126,7 +122,7 @@ class Ajax_Handler
                     }
 
                     if (isset($_POST['age']) && !empty($_POST['age'])) {
-                        $dynamicFilterCombineAPIBody['age'] = $_POST['age'];
+                        $dynamicFilterCombineAPIBody['age'] = intval($_POST['age']);
                     }
 
                     if (isset($_POST['dynamicFilterCombine']) && !empty($_POST['dynamicFilterCombine'])) {
@@ -136,7 +132,6 @@ class Ajax_Handler
                         $decodedFilters = json_decode($dynamicFilterCombine, true); 
                         
                         if ($decodedFilters === null) {
-                        
                             echo "Invalid filter JSON format: " . $_POST['dynamicFilterCombine'];
                             exit;
                         }
@@ -148,32 +143,10 @@ class Ajax_Handler
                     $filter_data = new Bb_Api();
                     $data = $filter_data->bb_get_pagination_data($dynamicFilterCombineAPIBody);
                     $data_in = $dynamicFilterCombineAPIBody;
-                    
-                } else {
-
-                    // Add static and dynamic filters if they are not empty
-                    if (!empty($staticFilter)) {
-                        $dynamicFilterCombineAPIBody['staticFilter'] = $staticFilter;
-                    }
-
-                    if (!empty($dynamicFilter)) {
-                        $dynamicFilterCombineAPIBody['dynamicFilter'] = $dynamicFilter;
-                    }
-
-                    $transient_key = 'paginate_' . md5($apiToken . $procedureId . $websitePropertyId);
-                    if (get_transient($transient_key) !== false) {
-                        $data = get_transient($url);
-                    } else {
-                        $filter_data = new Bb_Api();
-                        $data = $filter_data->bb_get_pagination_data($dynamicFilterCombineAPIBody);
-                    }
                 }
-
-            }
 
             $case_fav = [];
             $sidebar_list = '';
-            // if (isset($_COOKIE['wordpress_favorite_email'])) {
                 $cookieValue = $_COOKIE['wordpress_favorite_email'];
                 $decodedValue = urldecode($cookieValue);
                 $favorite_email_id = htmlspecialchars($decodedValue);
