@@ -1074,7 +1074,11 @@ class Ajax_Handler
         if (isset($form_data['combine_gallery_slug']) && !empty($form_data['combine_gallery_slug'])) {
             $bb_old_combine_gallery = get_option('combine_gallery_slug');
             $slug_input = sanitize_text_field($form_data['combine_gallery_slug']);
+            $bb_combine_seo_page_title = sanitize_text_field($form_data['bb_combine_seo_page_title']);
+            $bb_combine_seo_page_description = sanitize_text_field($form_data['bb_combine_seo_page_description']);
 
+            update_option('bb_combine_seo_page_title', $bb_combine_seo_page_title);
+            update_option('bb_combine_seo_page_description', $bb_combine_seo_page_description);
             update_option('combine_gallery_slug', $slug_input);
             $bb_combine_slug = get_option('combine_gallery_slug');
 
@@ -1427,8 +1431,12 @@ class Ajax_Handler
                     <form method="post" id="bragbook_setting_page">
                         <?php
                         $combine_gallery_slug = '';
+                        $bb_combine_seo_page_title = '';
+                        $bb_combine_seo_page_description = '';
                         if (!empty(get_option('combine_gallery_slug'))) {
                             $combine_gallery_slug = get_option('combine_gallery_slug');
+                            $bb_combine_seo_page_title = get_option('bb_combine_seo_page_title') ? get_option('bb_combine_seo_page_title') : '';
+                            $bb_combine_seo_page_description = get_option('bb_combine_seo_page_description') ? get_option('bb_combine_seo_page_description') : '';
                         }
                         ?>
                         <div class="dynamic-api-table">
@@ -1690,6 +1698,10 @@ class Ajax_Handler
                                         <br>
                                         <input type="text" id="combine_gallery_slug" class="combineGallerySlug"
                                             name="combine_gallery_slug" value="<?php echo esc_attr($combine_gallery_slug); ?>">
+                                        <input type="text" id="bb_combine_seo_page_title" class="combineSeoTitle"
+                                        name="bb_combine_seo_page_title" value="<?php echo esc_attr($bb_combine_seo_page_title); ?>">
+                                        <input type="text" id="bb_combine_seo_page_description" class="combineSeoDescription"
+                                        name="bb_combine_seo_page_description" value="<?php echo esc_attr($bb_combine_seo_page_description); ?>">
                                     </div>
                                 </td>
                             </tr>
@@ -1897,6 +1909,8 @@ class Ajax_Handler
         $gallery_slugs = get_option('bb_gallery_page_slug', []);
         $bb_seo_pages_title = get_option('bb_seo_page_title', []);
         $bb_seo_pages_description = get_option('bb_seo_page_description', []);
+        $bb_combine_seo_page_title = get_option('bb_combine_seo_page_title', []);
+        $bb_combine_seo_page_description = get_option('bb_combine_seo_page_description', []);
 
         //Get caseId from URL if exists
         $caseId = null;
@@ -1906,7 +1920,8 @@ class Ajax_Handler
 
         if(isset($parts[0]) && empty($parts[1]) && empty($parts[2])){
             if($combine_gallery_page_slug == $parts[0]){
-
+                $bb_seo_title = $bb_combine_seo_page_title;
+                $bb_seo_description = $bb_combine_seo_page_description;
             } else {
                 foreach ($api_tokens as $index => $api_token) {
                         $websiteproperty_id = $websiteproperty_ids[$index] ?? '';
@@ -2278,8 +2293,11 @@ class Ajax_Handler
         $current_page_id = get_queried_object_id();
         $stored_pages_ids = get_option('bb_gallery_stored_pages_ids');
         $combine_gallery_page_id = get_option('combine_gallery_page_id');
+        $combine_gallery_page_slug = get_option('combine_gallery_slug');
+        $get_page_slug = get_post($current_page_id);
+        $current_get_page_slug = $get_page_slug->post_name;
 
-        if ((is_array($stored_pages_ids) && in_array($current_page_id, $stored_pages_ids)) || $current_page_id == $combine_gallery_page_id) {
+        if ((is_array($stored_pages_ids) && in_array($current_page_id, $stored_pages_ids)) || $current_page_id == $combine_gallery_page_id || $combine_gallery_page_slug == $current_get_page_slug) {
              if (get_option('bb_seo_plugin_selector') == 1) {
                 add_filter('wpseo_canonical', array($this, 'bb_get_current_url'));
                 add_filter('wpseo_title', array($this, 'bb_get_custom_bragbook_title'));
