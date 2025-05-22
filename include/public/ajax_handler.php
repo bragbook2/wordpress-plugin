@@ -57,99 +57,64 @@ class Ajax_Handler
             $procedureId = sanitize_text_field($_POST['procedureId']);
             $caseId = sanitize_text_field($_POST['caseId']);
             $seoSuffixUrl = sanitize_text_field($_POST['seoSuffixUrl']);
-            // $bb_set_transient_urls = get_option( 'bb_set_transient_url_sidebar', [] );
             $page_slug = sanitize_text_field($_POST['pageSlug']);
             $staticFilter = sanitize_text_field($_POST['staticFilter']);
             $dynamicFilter = sanitize_text_field($_POST['dynamicFilter']);
             $combine_gallery_page_slug = get_option('combine_gallery_slug');
-
-            // }
-            // if ( ! is_array( $bb_set_transient_urls ) ) {
-            //     $bb_set_transient_urls = [];
-            // } 
             
             $filter_get = '';
-            //if(!empty($staticFilter) || !empty($dynamicFilter)){ 
             if ($page_slug == $combine_gallery_page_slug) {
-                $url = BB_BASE_URL . "/api/plugin/combine/filters";
-                $response = wp_remote_post($url, array(
-                    'method' => 'POST',
-                    'body' => json_encode(array(
-                        'apiTokens' => explode(", ", $apiToken),
-                        'procedureIds' => array_map('intval', explode(", ", $procedureId)),
-                        'websitePropertyIds' => array_map('intval', explode(", ", $websitePropertyId)),
-                    )),
-                    'headers' => array(
-                        'Content-Type' => 'application/json',
-                    ),
-                ));
-
-                if (is_wp_error($response)) {
-                    wp_send_json_error(array('message' => $response->get_error_message()));
-                }
-
-                $filter_get = wp_remote_retrieve_body($response);
+               
+                $filter_data = new Bb_Api();
+                $filter_get = $filter_data->bb_get_filter_data($apiToken, $procedureId, $websitePropertyId);
             } else {
-                $filter_api = BB_BASE_URL . "/api/plugin/filters?apiToken={$apiToken}&procedureId={$procedureId}&websitePropertyId={$websitePropertyId}";
-                if (get_transient($filter_api) == false) {
-                    $filter_get = self::case_and_filter_api($filter_api);
+                $transient_key = 'filters_' . md5($apiToken . $procedureId . $websitePropertyId);
+                if (get_transient($transient_key) == false) {
+                    $filter_data = new Bb_Api();
+                    $filter_get = $filter_data->bb_get_filter_data($apiToken, $procedureId, $websitePropertyId);
+                    set_transient($transient_key, $filter_get, 1800);
                 } else {
-                    $filter_get = get_transient($filter_api);
+                    $filter_get = get_transient($transient_key);
                 }
             }
 
-            // }
-           //var_dump($caseId);
             if ($caseId !== "" || $seoSuffixUrl!== "") {
+                $caseId=$caseId?$caseId:'123';
                 if ($page_slug == $combine_gallery_page_slug) {
-                    $caseId=$caseId?$caseId:'123';
-                    $url = BB_BASE_URL . "/api/plugin/combine/cases/$caseId?seoSuffixUrl=$seoSuffixUrl";
-                    $response = wp_remote_post($url, array(
-                        'method' => 'POST',
-                        'body' => json_encode(array(
-                            'apiTokens' => explode(", ", $apiToken),
-                            'procedureIds' => array_map('intval', explode(", ", $procedureId)),
-                            'websitePropertyIds' => array_map('intval', explode(", ", $websitePropertyId)),
-                        )),
-                        'headers' => array(
-                            'Content-Type' => 'application/json',
-                        ),
-                    ));
-
-                    if (is_wp_error($response)) {
-                        wp_send_json_error(array('message' => $response->get_error_message()));
-                    }
-
-                    $data = wp_remote_retrieve_body($response);
+                    $filter_data = new Bb_Api();
+                    $data = $filter_data->bb_get_case_data($caseId, $seoSuffixUrl, $apiToken, $procedureId, $websitePropertyId);
 
                 } else {
-                    $url = BB_BASE_URL . "/api/plugin/cases?websitepropertyId={$websitePropertyId}&apiToken={$apiToken}&caseId={$caseId}&seoSuffixUrl={$seoSuffixUrl}&procedureId={$procedureId}";
-
-                    if (get_transient($url) !== false) {
-                        $data = get_transient($url);
+                    $transient_key = 'cases_' . md5($apiToken . $procedureId . $websitePropertyId);
+                    if (get_transient($transient_key) !== false) {
+                        $data = get_transient($transient_key);
                         
                     } else {
-                        $data = self::case_and_filter_api($url);
+                        $filter_data = new Bb_Api();
+                        $data = $filter_data->bb_get_case_data($caseId, $seoSuffixUrl, $apiToken, $procedureId, $websitePropertyId);
                     }
                 }
-              //  die('here two');
 
             } else {
 
-                if ($page_slug == $combine_gallery_page_slug) {
-                   
-                    $dynamicFilterCombineAPIBody = [];
+                $dynamicFilterCombineAPIBody = [];
+
+                $dynamicFilterCombineAPIBody['apiTokens'] = explode(", ", $apiToken);
+                $dynamicFilterCombineAPIBody['count'] = (int)$count;
+                $dynamicFilterCombineAPIBody['procedureIds'] = array_map('intval', explode(", ", $procedureId));
+                $dynamicFilterCombineAPIBody['websitePropertyIds'] = array_map('intval', explode(", ", $websitePropertyId));
+
 
                     if (isset($_POST['gender']) && !empty($_POST['gender'])) {
                         $dynamicFilterCombineAPIBody['gender'] = preg_replace('/\\\"/', '', $_POST['gender']);
                     }
 
                     if (isset($_POST['height']) && !empty($_POST['height'])) {
-                        $dynamicFilterCombineAPIBody['height'] = $_POST['height'];
+                        $dynamicFilterCombineAPIBody['height'] = intval($_POST['height']);
                     }
 
                     if (isset($_POST['weight']) && !empty($_POST['weight'])) {
-                        $dynamicFilterCombineAPIBody['weight'] = $_POST['weight'];
+                        $dynamicFilterCombineAPIBody['weight'] = intval($_POST['weight']);
                     }
 
                     if (isset($_POST['ethnicity']) && !empty($_POST['ethnicity'])) {
@@ -157,7 +122,7 @@ class Ajax_Handler
                     }
 
                     if (isset($_POST['age']) && !empty($_POST['age'])) {
-                        $dynamicFilterCombineAPIBody['age'] = $_POST['age'];
+                        $dynamicFilterCombineAPIBody['age'] = intval($_POST['age']);
                     }
 
                     if (isset($_POST['dynamicFilterCombine']) && !empty($_POST['dynamicFilterCombine'])) {
@@ -167,7 +132,6 @@ class Ajax_Handler
                         $decodedFilters = json_decode($dynamicFilterCombine, true); 
                         
                         if ($decodedFilters === null) {
-                        
                             echo "Invalid filter JSON format: " . $_POST['dynamicFilterCombine'];
                             exit;
                         }
@@ -176,45 +140,13 @@ class Ajax_Handler
                         $dynamicFilterCombineAPIBody['filters'] = $decodedFilters;
                     }
                     
-                    $dynamicFilterCombineAPIBody['apiTokens'] = explode(", ", $apiToken);
-                    $dynamicFilterCombineAPIBody['count'] = (int)$count;
-                    $dynamicFilterCombineAPIBody['procedureIds'] = array_map('intval', explode(", ", $procedureId));
-                    $dynamicFilterCombineAPIBody['websitePropertyIds'] = array_map('intval', explode(", ", $websitePropertyId));
-
-
-
-                    $url = BB_BASE_URL . "/api/plugin/combine/cases";
-
-                    $response = wp_remote_post($url, array(
-                        'method' => 'POST',
-                        'body' => json_encode($dynamicFilterCombineAPIBody),
-                        'headers' => array(
-                            'Content-Type' => 'application/json',
-                        ),
-                    ));
-                  //  die('here flow');
-                    // Handle the API response
-                    if (is_wp_error($response)) {
-                        wp_send_json_error(array('message' => $response->get_error_message()));
-                    }
-
-                    $data = wp_remote_retrieve_body($response);
+                    $filter_data = new Bb_Api();
+                    $data = $filter_data->bb_get_pagination_data($dynamicFilterCombineAPIBody);
                     $data_in = $dynamicFilterCombineAPIBody;
-                    
-                } else {
-                    $url = BB_BASE_URL . "/api/plugin/cases/paginate?websitePropertyId={$websitePropertyId}&count={$count}&apiToken={$apiToken}&procedureId={$procedureId}{$staticFilter}{$dynamicFilter}";
-                    if (get_transient($url) !== false) {
-                        $data = get_transient($url);
-                    } else {
-                        $data = self::case_and_filter_api($url);
-                    }
                 }
-
-            }
 
             $case_fav = [];
             $sidebar_list = '';
-            // if (isset($_COOKIE['wordpress_favorite_email'])) {
                 $cookieValue = $_COOKIE['wordpress_favorite_email'];
                 $decodedValue = urldecode($cookieValue);
                 $favorite_email_id = htmlspecialchars($decodedValue);
@@ -242,15 +174,17 @@ class Ajax_Handler
                         $seo_page_title = $seo_pages_title[$index] ?? '';
                         $seo_page_description = $seo_pages_description[$index] ?? '';
                         $pageSlugBB = $page_slug_bb;
-                        $url_fav = BB_BASE_URL . "/api/plugin/favorites?apiToken={$apiToken}&websitepropertyId={$websitePropertyId}&email={$favorite_email_id}";
-
-                        $response = wp_remote_get( $url_fav );
-                        if ( is_wp_error( $response ) ) {
-                            $error_message = $response->get_error_message();
-                            echo "Something went wrong: $error_message";
-                        } else {
-                            $favorite_data_brag_json = wp_remote_retrieve_body( $response );
+                        if (!is_array($apiToken)) {
+                            $apiToken = [$apiToken];
                         }
+                        
+                        if (!is_array($websitePropertyId)) {
+                            $websitePropertyId = [(int) $websitePropertyId];
+                        }
+                        
+                        $favorite_list = new Bb_Api();
+                        $favorite_data_brag_json = $favorite_list->bb_get_favorite_list_data($apiToken, $websitePropertyId , $favorite_email_id);
+                        
                         $favorite_data_brag = json_decode($favorite_data_brag_json);
                        
                         foreach ($favorite_data_brag->favorites as $favorite) {
@@ -258,59 +192,25 @@ class Ajax_Handler
                                 $case_fav[] = $caseItem->id;
                             }
                         }
-                        $bb_sidebar_url = BB_BASE_URL . "/api/plugin/sidebar?apiToken={$apiToken}";
                         
                         $cacheKey = "$procedureSlug-single";
                         $sidebar_list = get_transient($cacheKey);
                         if (!$sidebar_list) {
-                            // If cache is empty, fetch data from API
-                            $response = wp_remote_get($bb_sidebar_url);
-                            if (is_wp_error($response)) {
-                                return null;
-                            }
-                            $sidebar_list = wp_remote_retrieve_body($response);
+                            
+                            $sidebar = new Bb_Api();
+                            $sidebar_list = $sidebar->get_api_sidebar_bb($apiToken);
                             set_transient($cacheKey, $sidebar_list, HOUR_IN_SECONDS);
                         }
                         if ($_POST['favorites'] == 'favorites') {
                             $data = $favorite_data_brag_json;
                         }
                     }elseif($page_slug == $combine_gallery_page_slug && $tc == count($api_tokens)) {
-                       // /api/plugin/combine/favorites/list
-                        $url_fav = BB_BASE_URL . "/api/plugin/combine/favorites/list";
-                        $response = wp_remote_post($url_fav, array(
-                            'method' => 'POST',
-                            'body' => json_encode(array(
-                                'apiTokens' => $fav_token,
-                                'websitePropertyIds' => $web_id,
-                                'email' => $favorite_email_id
-                            )),
-                            'headers' => array(
-                                'Content-Type' => 'application/json',
-                            ),
-                        ));
-    
-                        if (is_wp_error($response)) {
-                            wp_send_json_error(array('message' => $response->get_error_message()));
-                        }
                        
-                        $favorite_data_brag_json = wp_remote_retrieve_body($response);
-                        $bb_sidebar_url = BB_BASE_URL . "/api/plugin/combine/sidebar";
-
-                        $response_sidebar = wp_remote_post($bb_sidebar_url, array(
-                            'method'    => 'POST',
-                            'body'      => json_encode(array(
-                                'apiTokens'    => $fav_token
-                            )),
-                            'headers'   => array(
-                                'Content-Type' => 'application/json',
-                            ),
-                        ));
+                        $favorite_list = new Bb_Api();
+                        $favorite_data_brag_json = $favorite_list->bb_get_favorite_list_data($fav_token, $web_id , $favorite_email_id);
                         
-                        if (is_wp_error($response_sidebar)) {
-                            wp_send_json_error(array('message' => $response_sidebar->get_error_message()));
-                        }
-
-                        $sidebar_list = wp_remote_retrieve_body($response_sidebar);
+                        $sidebar = new Bb_Api();
+                        $sidebar_list = $sidebar->get_api_sidebar_bb($fav_token);
                         if ($_POST['favorites'] == 'favorites') {
                             $data = $favorite_data_brag_json;
                         }
@@ -350,6 +250,7 @@ class Ajax_Handler
                     'info' => $info,
                     'page_slug' => $page_slug,
                     'page_slug_bb' => $pageSlugBB,
+                    'combine_page_slug' => $combine_gallery_page_slug,
                     'seo_page_title' => $seo_page_title,
                     'seo_page_description' => $seo_page_description,
                 ]
@@ -1922,50 +1823,10 @@ class Ajax_Handler
         $bbApiTokens = explode(", ", $bbApiTokens[0]); // Splitting the tokens by ", "
         $websiteproperty_id_array = array_map('intval', explode(", ", $bbWebsiteIds[0]));
 
-        $response = wp_remote_post(BB_BASE_URL . '/api/plugin/combine/favorites/add', array(
-            'method' => 'POST',
-            'body' => json_encode(array(
-                "apiTokens"=> $bbApiTokens,
-                "websitePropertyIds"=> $websiteproperty_id_array,
-                'email' => $email,
-                'phone' => $phone,
-                'name' => $name,
-                'caseId' => $caseId,
-            )),
-            'headers' => array(
-                'Content-Type' => 'application/json',
-            ),
-        ));
-        // echo "<pre>";
-        // print_r(json_encode(array(
-        //     "apiTokens"=> $bbApiTokens,
-        //     "websitePropertyIds"=> $websiteproperty_id_array,
-        //     'email' => $email,
-        //     'phone' => $phone,
-        //     'name' => $name,
-        //     'caseId' => $caseIds,
-        // )));
-        // echo "</pre>";
-        // die('here');
-        // $response = wp_remote_post(BB_BASE_URL . '/api/plugin/favorites?apiToken=' . $api_token . '&websitepropertyId=' . $websiteproperty_id, array(
-        //     'method' => 'POST',
-        //     'body' => json_encode(array(
-        //         'email' => $email,
-        //         'phone' => $phone,
-        //         'name' => $name,
-        //         'caseIds' => $caseIds,
-        //     )),
-        //     'headers' => array(
-        //         'Content-Type' => 'application/json',
-        //     ),
-        // ));
-
-        if (is_wp_error($response)) {
-            wp_send_json_error(array('message' => $response->get_error_message()));
-        }
-
-        $body = wp_remote_retrieve_body($response);
-        $data = json_decode($body);
+        $favorite_data = new Bb_Api();
+        $response = $favorite_data->bb_get_favorite_data($bbApiTokens, $websiteproperty_id_array, $email, $phone, $name, $caseId);
+        
+        $data = json_decode($response);
 
         if (isset($data->success) && $data->success) {
             $expireTime = time() + (365 * 24 * 60 * 60); // 1 year
@@ -2062,8 +1923,7 @@ class Ajax_Handler
         }
         if(isset($parts[1]) && empty($parts[2])){
             if($combine_gallery_page_slug == $parts[0]){
-                $bb_sidebar_url = BB_BASE_URL . "/api/plugin/combine/sidebar";
-                $procedureIdsName = $this->getProcedureIDFromSidebar(array_values($api_tokens), $parts[1], $bb_sidebar_url, true);
+                $procedureIdsName = $this->getProcedureIDFromSidebar(array_values($api_tokens), $parts[1], true);
                 $procedureTotalCase = $procedureIdsName["procedureTotalCase"];
             } else {
                 foreach ($api_tokens as $index => $api_token) {
@@ -2073,8 +1933,7 @@ class Ajax_Handler
                         if (empty($api_token) || empty($websiteproperty_id)) {
                             continue;
                         }
-                        $bb_sidebar_url = BB_BASE_URL . "/api/plugin/sidebar?apiToken={$api_token}";
-                        $procedureIdsName = $this->getProcedureIDFromSidebar($api_token, $parts[1], $bb_sidebar_url, false);
+                        $procedureIdsName = $this->getProcedureIDFromSidebar($api_token, $parts[1], false);
                         $procedureTotalCase = $procedureIdsName["procedureTotalCase"];
                     }
                 }
@@ -2088,35 +1947,15 @@ class Ajax_Handler
             } else {
                 $seoSuffixUrl = $parts[2];
             }
+            $caseId = $caseId ? $caseId : '123';
             // Get case data for combine pages
             if ($combine_gallery_page_slug == $parts[0]) {
                 // get procedureIds from sidebar API
-                $bb_sidebar_url = BB_BASE_URL . "/api/plugin/combine/sidebar";
-                $procedureIdsName = $this->getProcedureIDFromSidebar(array_values($api_tokens), $parts[1], $bb_sidebar_url, true);
+                $procedureIdsName = $this->getProcedureIDFromSidebar(array_values($api_tokens), $parts[1], true);
                 $procedureIds = $procedureIdsName["bb_procedure_id"];
                 $procedureName = $procedureIdsName["bb_procedure_name"];
-                $caseId = $caseId ? $caseId : '123';
-                $url = BB_BASE_URL . "/api/plugin/combine/cases/$caseId?seoSuffixUrl=$seoSuffixUrl";
-
-                $json_body = json_encode(array(
-                    'apiTokens' => array_values($api_tokens),
-                    'procedureIds' => $procedureIds,
-                    'websitePropertyIds' => array_map('intval', array_values($websiteproperty_ids)),
-                ));
-
-                $response = wp_remote_post($url, array(
-                    'method' => 'POST',
-                    'body' => $json_body,
-                    'headers' => array(
-                        'Content-Type' => 'application/json',
-                    ),
-                ));
-                
-                if (is_wp_error($response)) {
-                    wp_send_json_error(array('message' => $response->get_error_message()));
-                }
-                
-                $data = wp_remote_retrieve_body($response);
+                $filter_data = new Bb_Api();
+                $data = $filter_data->bb_get_case_data($caseId, $seoSuffixUrl, $api_tokens, $procedureIds, $websiteproperty_ids);
                 
                 $bb_api_data = json_decode($data, true);
         
@@ -2131,18 +1970,17 @@ class Ajax_Handler
                             continue;
                         }
                         // get procedureIds from sidebar API
-                        $bb_sidebar_url = BB_BASE_URL . "/api/plugin/sidebar?apiToken={$api_token}";
-                        $procedureIdsName = $this->getProcedureIDFromSidebar($api_token, $parts[1], $bb_sidebar_url, false);
+                        $procedureIdsName = $this->getProcedureIDFromSidebar($api_token, $parts[1], false);
                         $procedureId = $procedureIdsName["bb_procedure_id"];
                         $procedureName = $procedureIdsName["bb_procedure_name"];
-                        $url = BB_BASE_URL . "/api/plugin/cases?websitepropertyId={$websiteproperty_id}&apiToken={$api_token}&caseId={$caseId}&seoSuffixUrl={$seoSuffixUrl}&procedureId={$procedureId}";
-                        $data = get_transient($url);
-
+                        
+                        $transient_key = 'cases_' . md5($api_token . $procedureId . $websiteproperty_id);
+                        $data = get_transient($transient_key);
 						if ( false === $data ) {
-							$response = wp_remote_get( $url );
-							if ( is_wp_error( $response ) ) return;
-							$data = wp_remote_retrieve_body( $response );
-							set_transient( md5( $url ), $data, 3600 );
+                            $filter_data = new Bb_Api();
+                            $data = $filter_data->bb_get_case_data($caseId, $seoSuffixUrl, $api_token, $procedureId, $websiteproperty_id);
+							
+							set_transient( $transient_key, $data, 3600 );
 						}
     
                         $bb_api_data = json_decode($data, true);
@@ -2188,35 +2026,23 @@ class Ajax_Handler
             }
             $bbrag_procedure_title = $parts[1];
             $bb_pro_title_all_seo = ucwords(str_replace("-", " ", $bbrag_procedure_title));
+            
             $bb_seo_title = "Before and After " . $bb_pro_title_all_seo . " Gallery, " . $procedureTotalCase . " Cases - " . $site_title;
         }
         $bb_title_description_array = ['bb_title' => $bb_seo_title, 'bb_description' => $bb_seo_description, 'bb_procedure_name' => $procedureName];
         return $bb_title_description_array;
     }
 
-    public function getProcedureIDFromSidebar($api_tokens, $procedureSlug, $bb_sidebar_url, $iscombine) {
+    public function getProcedureIDFromSidebar($api_tokens, $procedureSlug, $iscombine) {
         $procedureName = [];
         $bbprocedureTotalCase = [];
         if($iscombine) {
             $cacheKey = "$procedureSlug-combine";
             // Get sidebar data from cache
-            // $sidebar_list = get_transient($cacheKey);
             $sidebar_list = '';
             if (!$sidebar_list) {
-                $response = wp_remote_post($bb_sidebar_url, array(
-                    'method' => 'POST',
-                    'body' => json_encode(array(
-                        'apiTokens' => $api_tokens
-                    )),
-                    'headers' => array(
-                        'Content-Type' => 'application/json',
-                    ),
-                ));
-                
-                if (is_wp_error($response)) {
-                    return null;
-                }
-                $sidebar_list = wp_remote_retrieve_body($response);
+                $sidebar = new Bb_Api();
+                $sidebar_list = $sidebar->get_api_sidebar_bb($api_tokens);
                 set_transient($cacheKey, $sidebar_list, HOUR_IN_SECONDS); 
                 $sidebar = json_decode($sidebar_list);
                 $procedureIds = [];
@@ -2236,22 +2062,17 @@ class Ajax_Handler
             $cacheKey = "$procedureSlug-single";
             $sidebar_list = get_transient($cacheKey);
             if (!$sidebar_list) {
-                // If cache is empty, fetch data from API
-                $response = wp_remote_get($bb_sidebar_url);
-                if (is_wp_error($response)) {
-                    return null;
-                }
-                $sidebar_list = wp_remote_retrieve_body($response);
+                $sidebar = new Bb_Api();
+                $sidebar_list = $sidebar->get_api_sidebar_bb($api_tokens);
                 set_transient($cacheKey, $sidebar_list, HOUR_IN_SECONDS);
             }
-    
             $sidebar = json_decode($sidebar_list);
             $procedureIds = null;
             if (isset($sidebar) && isset($sidebar->data)) {
                 foreach ($sidebar->data as $category) {
                     foreach ($category->procedures as $procedure) {
                         if ($procedure->slugName == $procedureSlug) {
-                            $procedureIds = $procedure->id; 
+                            $procedureIds = $procedure->ids[0]; 
                             $procedureName = $procedure->name; 
                             $bbprocedureTotalCase = $procedure->totalCase; 
                             break 2; 
@@ -2263,37 +2084,6 @@ class Ajax_Handler
         $bb_procedure_id_name_array = ['bb_procedure_id' => $procedureIds, 'bb_procedure_name' => $procedureName, 'procedureTotalCase' => $bbprocedureTotalCase];
         return $bb_procedure_id_name_array;
     }
-
-    public function getSingleProcedureIDFromSidebar($api_token, $procedureSlug)
-    {
-        $bb_sidebar_url = BB_BASE_URL . "/api/plugin/sidebar?apiToken={$api_token}";
-        $sidebar_list = get_transient($bb_sidebar_url);
-
-        if (!$sidebar_list) {
-            // If cache is empty, fetch data from API
-            $response = wp_remote_get($bb_sidebar_url);
-            if (is_wp_error($response)) {
-                return null;
-            }
-            $sidebar_list = wp_remote_retrieve_body($response);
-            set_transient($bb_sidebar_url, $sidebar_list, HOUR_IN_SECONDS); 
-        }
-
-        $sidebar = json_decode($sidebar_list);
-        $procedureId = null;
-        if (isset($sidebar) && isset($sidebar->data)) {
-            foreach ($sidebar->data as $category) {
-                foreach ($category->procedures as $procedure) {
-                    if ($procedure->slugName == $procedureSlug) {
-                        $procedureId = $procedure->id; 
-                        break 2; 
-                    }
-                }
-            }
-        }
-        return $procedureId;
-    }
-
 
     public function bb_get_custom_bragbook_title()
     {

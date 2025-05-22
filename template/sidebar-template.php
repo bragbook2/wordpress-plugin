@@ -12,11 +12,11 @@ $combine_gallery_page_slug = get_option('combine_gallery_slug');
 $page_bb_data = get_page_by_path($parts_page_name[0]);
 $page_id_via_slug = $page_bb_data->ID;
 
+use mvpbrag\Bb_Api;
 /*********************************************************************************************************** */
 function bb_get_sidebar_data($parts_page_name, $combine_gallery_page_slug) {
     ob_start();
     update_option("bb_sidebar_data", []);
-  //  update_option("bb_combine_api_data", []);
     
     $api_tokens = get_option('bragbook_api_token', []); 
     $websiteproperty_ids = get_option('bragbook_websiteproperty_id', []);
@@ -32,41 +32,59 @@ function bb_get_sidebar_data($parts_page_name, $combine_gallery_page_slug) {
             if (empty($api_token) || empty($websiteproperty_id)) {
                 continue;
             }
-            $bb_sidebar_url = BB_BASE_URL . "/api/plugin/sidebar?apiToken={$api_token}";
-            $sidebar_list = get_api_sidebar_bb($bb_sidebar_url); 
-            $sidebar_set = json_decode($sidebar_list, true) ?? []; 
+            
+            $bb_set_transient_urls = get_option( 'bb_set_transient_url_sidebar', [] );
+            if ( ! is_array( $bb_set_transient_urls ) ) {
+                $bb_set_transient_urls = [];
+            }
+            $transient_key = 'bb_sidebar_' . md5($api_token);
+            if (get_transient($transient_key) !== false) {
+                return get_transient($transient_key);
+            }
+            
+            $sidebar = new Bb_Api();
+            $data = $sidebar->get_api_sidebar_bb($api_token);
+            
+            $bb_set_transient_urls[$transient_key] = $data;
+            update_option( 'bb_set_transient_url_sidebar', $bb_set_transient_urls );
+            set_transient($api_token, $data, 1800);
+
+            $sidebar_set = json_decode($data, true) ?? []; 
             $result = [
                 'sidebar_set' => $sidebar_set
             ];
             $single_results_sidebar[$api_token][$websiteproperty_id][$page_slug_bb] = $result;
           
         }elseif($combine_gallery_page_slug == $parts_page_name[0]) {
-            $token_array[] = $api_token;
+            $token_array[] = [
+                'api_token' => $api_token,
+                'websiteproperty_id' => $websiteproperty_id,
+                'page_slug_bb' => $page_slug_bb
+            ];
         }
     }
+
     if (!empty($token_array)) { 
-        $bb_sidebar_url = BB_BASE_URL . "/api/plugin/combine/sidebar";
+        $sidebar = new Bb_Api();
+    
+        foreach ($token_array as $token_data) {
+            $api_token = $token_data['api_token'];
+            $websiteproperty_id = $token_data['websiteproperty_id'];
+            $page_slug_bb = $token_data['page_slug_bb'];
+    
+            if (empty($api_token) || empty($websiteproperty_id) || empty($page_slug_bb)) {
+                continue;
+            }
+    
+            $body = $sidebar->get_api_sidebar_bb($api_token);
+            $sidebar_set = json_decode($body, true) ?? [];
+    
+            $result = [
+                'sidebar_set' => $sidebar_set
+            ];
 
-        $response = wp_remote_post($bb_sidebar_url, array(
-            'method'    => 'POST',
-            'body'      => json_encode(array(
-                'apiTokens'    => $token_array
-            )),
-            'headers'   => array(
-                'Content-Type' => 'application/json',
-            ),
-        ));
-        
-        if (is_wp_error($response)) {
-            wp_send_json_error(array('message' => $response->get_error_message()));
+            $combine_results_sidebar[$api_token][$websiteproperty_id][$page_slug_bb] = $result;
         }
-
-        $body = wp_remote_retrieve_body($response);
-        $sidebar_set = json_decode($body);
-        $result = [
-            'sidebar_set' => $sidebar_set
-        ];
-        $combine_results_sidebar[$api_token][$websiteproperty_id][$page_slug_bb] = $result; 
     }
 
     $bragbook_api_sidebar = json_encode($single_results_sidebar);
@@ -80,32 +98,6 @@ function bb_get_sidebar_data($parts_page_name, $combine_gallery_page_slug) {
 
 bb_get_sidebar_data($parts_page_name, $combine_gallery_page_slug);
 
-function get_api_sidebar_bb($url) {
-   
-    $bb_set_transient_urls = get_option( 'bb_set_transient_url_sidebar', [] );
-    if ( ! is_array( $bb_set_transient_urls ) ) {
-        $bb_set_transient_urls = [];
-    }
-
-    if (get_transient($url) !== false) {
-        return get_transient($url);
-    }
-
-    $response = wp_remote_get( $url );
-    if ( is_wp_error( $response ) ) {
-        $error_message = $response->get_error_message();
-        echo "Something went wrong: $error_message";
-    } else {
-        $data = wp_remote_retrieve_body( $response );
-    }
-   
-    $bb_set_transient_urls[$url] = $data;
-    update_option( 'bb_set_transient_url_sidebar', $bb_set_transient_urls );
-    
-    set_transient($url, $data, 1800);
-    return $data;
-   
-}
 if($combine_gallery_page_slug == $parts_page_name[0]) {
     $data_sidebar = get_option("bb_combine_sidebar_data");
     $bb_f_ajax_page = 'combine';
@@ -141,14 +133,12 @@ if($combine_gallery_page_slug == $parts_page_name[0]) {
             $websiteproperty_ids = get_option('bragbook_websiteproperty_id', []);
             $values_string_webid = implode(", ", $websiteproperty_ids);
 
-
             if (!empty($properties_data) && is_array($properties_data)) {
                 foreach ($properties_data as $api_token_key => $token_bb) {
                     foreach ($token_bb as $websiteproperty_id_key => $website_id_bb) {
                         foreach ($website_id_bb as $websiteproperty_id => $property_data) {
                            
                             if(isset($property_data['sidebar_set']['data']) && !empty($property_data['sidebar_set']['data']) && ($parts_page_name[0] == $websiteproperty_id) || ($combine_gallery_page_slug == $parts_page_name[0])) {
-                               
                                 foreach ($property_data['sidebar_set']['data'] as $procedure_name => $procedure_data) {
                                     ?>
                                     <span class="bb-accordion" cat_title="<?= htmlspecialchars($procedure_data['name']); ?>">
@@ -159,11 +149,10 @@ if($combine_gallery_page_slug == $parts_page_name[0]) {
                                         <ul>
                                         <?php
                                             foreach($procedure_data['procedures'] as $procedure ) {
-                                                
                                                 if($parts_page_name[0] == $websiteproperty_id) {
                                                     ?>
                                                     <li>
-                                                    <a id="<?= esc_attr($procedure['id']); ?>"
+                                                    <a id="<?= esc_attr($procedure['ids'][0]); ?>"
                                                         href="<?= "/" . $parts_page_name[0] . "/" . $procedure['slugName'] . "/"; ?>"
                                                         data-count="1"
                                                         data-api-token="<?= esc_attr($api_token_key); ?>"
@@ -228,84 +217,7 @@ if($combine_gallery_page_slug == $parts_page_name[0]) {
 </div>
 <?php
 /*********************************************************************************************************** */
-function bb_get_grabbook_category_feed($url) {
-    $cats_json = bb_get_grabbook_api($url);
-    return $cats_json;
-}
 
-function bb_get_grabbook_api($url) {
-    $bb_set_transient_urls = get_option( 'bb_set_transient_url', [] );
-    if ( ! is_array( $bb_set_transient_urls ) ) {
-        $bb_set_transient_urls = [];
-    }
-
-    if (get_transient($url) !== false) {
-        return get_transient($url);
-    }
-
-    $response = wp_remote_get( $url );
-    if ( is_wp_error( $response ) ) {
-        $error_message = $response->get_error_message();
-        echo "Something went wrong: $error_message";
-    } else {
-        $data = wp_remote_retrieve_body( $response );
-    }
-
-    $bb_set_transient_urls[$url] = $data;
-    update_option( 'bb_set_transient_url', $bb_set_transient_urls );
-    
-    set_transient($url, $data, 1800);
-    return $data;
-}
-
-function bb_mvp_brag_shortcode($parts_page_name, $combine_gallery_page_slug) {
-    ob_start();
-    update_option("bb_api_data", []);
-    update_option("bb_combine_api_data", []);
-    
-    $api_tokens = get_option('bragbook_api_token', []); 
-    $websiteproperty_ids = get_option('bragbook_websiteproperty_id', []);
-    $gallery_slugs = get_option('bb_gallery_page_slug', []); 
-    
-    $all_results = [];
-    $combine_results = [];
-    
-    foreach ($api_tokens as $index => $api_token) {
-        $websiteproperty_id = $websiteproperty_ids[$index] ?? '';
-        $page_slug_bb = $gallery_slugs[$index] ?? '';
-        if(($page_slug_bb == $parts_page_name[0]) || ($combine_gallery_page_slug == $parts_page_name[0])) {
-            if (empty($api_token) || empty($websiteproperty_id)) {
-                continue;
-            }
-            $cat_url = BB_BASE_URL . "/api/plugin/categories?apiToken={$api_token}&websitepropertyId={$websiteproperty_id}";
-            $category_list = bb_get_grabbook_category_feed($cat_url); 
-            $cat_set = json_decode($category_list, true) ?? []; 
-
-            $url = BB_BASE_URL . "/api/plugin/cases?apiToken={$api_token}&websitepropertyId={$websiteproperty_id}";
-            $data = bb_get_grabbook_api($url);
-            $api_data = json_decode($data, true) ?? []; 
-
-            $result = [
-                'categories' => $cat_set,
-                'api_data' => $api_data
-            ];
-            if($combine_gallery_page_slug == $parts_page_name[0]) {
-                $combine_results[$api_token][$websiteproperty_id][$page_slug_bb] = $result; 
-            } else {
-                $all_results[$api_token][$websiteproperty_id][$page_slug_bb] = $result;
-            }
-        }
-    }
-
-    $bragbook_api_information = json_encode($all_results);
-    $bragbook_combine_api_information = json_encode($combine_results);
-
-    update_option("bb_api_data", $bragbook_api_information);
-    update_option("bb_combine_api_data", $bragbook_combine_api_information);
-
-    ob_clean(); 
-}
-bb_mvp_brag_shortcode($parts_page_name, $combine_gallery_page_slug);
 
 $data = get_option('bb_api_data');
 $favorite_email_id = get_option('bragbook_favorite_email');
