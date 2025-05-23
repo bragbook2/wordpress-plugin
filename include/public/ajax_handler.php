@@ -85,7 +85,7 @@ class Ajax_Handler
                     $data = $filter_data->bb_get_case_data($caseId, $seoSuffixUrl, $apiToken, $procedureId, $websitePropertyId);
 
                 } else {
-                    $transient_key = 'cases_' . md5($apiToken . $procedureId . $websitePropertyId);
+                    $transient_key = 'cases_' . md5($apiToken . $procedureId . $websitePropertyId . $caseId . $seoSuffixUrl);
                     if (get_transient($transient_key) !== false) {
                         $data = get_transient($transient_key);
                         
