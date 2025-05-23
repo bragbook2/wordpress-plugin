@@ -887,6 +887,14 @@ button.bb-sidebar-toggle.bb-sidebar-head-toggle img {
   margin-bottom: 14px;
 }
 
+.bb-demographics span {
+  text-transform: uppercase;
+}
+
+.bb-demographics li {
+  text-transform: capitalize;
+}
+
 .bb-content-box-inner-left p a,
 .bb-content-box-inner-left p button {
   padding: 0;

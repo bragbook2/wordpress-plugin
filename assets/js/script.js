@@ -374,33 +374,33 @@ function fetchCaseData(loadMoreCount) {
                 caseSet.data.forEach((caseItem) => {
                   let patientDetail = caseItem.details || "";
                   let height = caseItem.height
-                    ? `<li>HEIGHT: ${caseItem.height
+                    ? `<li><span>height</span>: ${caseItem.height
                       .toString()
                       .toLowerCase()}</li>`
                     : "";
                   let width = caseItem.weight
-                    ? `<li>WEIGHT: ${caseItem.weight
+                    ? `<li><span>weight</span>: ${caseItem.weight
                       .toString()
                       .toLowerCase()}</li>`
                     : "";
                   let race = caseItem.ethnicity
-                    ? `<li>RACE: ${caseItem.ethnicity.toLowerCase()}</li>`
+                    ? `<li><span>race</span>: ${caseItem.ethnicity.toLowerCase()}</li>`
                     : "";
                   let gender = caseItem.gender
-                    ? `<li>GENDER: ${caseItem.gender.toLowerCase()}</li>`
+                    ? `<li><span>gender</span>: ${caseItem.gender.toLowerCase()}</li>`
                     : "";
                   let age = caseItem.age
-                    ? `<li>AGE: ${caseItem.age.toString().toLowerCase()}</li>`
+                    ? `<li><span>age</span>: ${caseItem.age.toString().toLowerCase()}</li>`
                     : "";
                   let timeframe =
                     caseItem.after1Timeframe && caseItem.after1Unit
-                      ? `<li>POST-OP PERIOD: ${caseItem.after1Timeframe
+                      ? `<li><span>post-op period</span>: ${caseItem.after1Timeframe
                         .toString()
                         .toLowerCase()} ${caseItem.after1Unit.toLowerCase()}</li>`
                       : "";
                   let timeframe2 =
                     caseItem.after2Timeframe && caseItem.after2Unit
-                      ? `<li>2nd AFTER: ${caseItem.after2Timeframe
+                      ? `<li>2nd <span>after</span>: ${caseItem.after2Timeframe
                         .toString()
                         .toLowerCase()} ${caseItem.after2Unit.toLowerCase()}</li>`
                       : "";
@@ -621,7 +621,7 @@ function renderCaseDataBB(data, count, pageSlug, procedureSlug, targetLinkSelect
       proceduralName = caseDetails[0]?.seoHeadline;
     } else {
       let titleWithoutDashes = document.querySelector(`a[href="${window.location.pathname}"]`)?.innerText.replace(/\s*\(\d+\)$/, '');
-      proceduralName = titleWithoutDashes + ': Patient ' + patientCount;
+      proceduralName = titleWithoutDashes + ': <span>Patient ' + patientCount + '</span>';
     }
     images.push(imageObj);
 
