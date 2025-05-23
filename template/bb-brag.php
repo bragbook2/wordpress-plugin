@@ -68,13 +68,27 @@ if(isset($bbrag_procedure_title )) {
     $bbrag_procedure_title = removeAccents_brag($bbrag_procedure_title);
 }
 
-if ($bbrag_case_url == "/".$parts[0]."/consultation/") {
+$base_path = "/" . $parts[0] . "/";
+
+$is_consultation = ($bbrag_case_url === $base_path . "consultation/");
+$is_favorites_base = ($bbrag_case_url === $base_path . "favorites/");
+$is_procedure_page = isset($bbrag_procedure_title) && $bbrag_case_url === $base_path . $bbrag_procedure_title . "/";
+
+$is_procedure_detail_page = false;
+if (isset($bbrag_procedure_title, $bbrag_case_id)) {
+    $expected_procedure_detail_url = $base_path . $bbrag_procedure_title . "/" . $bbrag_case_id . "/";
+    $option_key = $bbrag_case_id . "_bb_procedure_id_" . $page_id_via_slug;
+    $has_valid_option = get_option($option_key) !== '';
+    
+    $is_procedure_detail_page = ($bbrag_case_url === $expected_procedure_detail_url && $has_valid_option);
+}
+
+if ($is_consultation) {
     include plugin_dir_path(__FILE__) . 'bb-consultation.php';
-} elseif (($bbrag_case_url == "/".$parts[0]."/favorites/") || 
-(isset($bbrag_case_id) && $bbrag_case_url == "/".$parts[0]."/favorites/".$bbrag_procedure_title."/". $bbrag_case_id . "/")) {
+} elseif ($is_favorites_base) {
     include plugin_dir_path(__FILE__) . 'bb-favorites.php';
-} elseif (isset($bbrag_procedure_title) && $bbrag_case_url == "/".$parts[0]."/".$bbrag_procedure_title."/") {
-   
+} elseif ($is_procedure_page) {
+       
     ?>
     <div class="bb-container-main">
         <main class="bb-main ">
@@ -275,7 +289,7 @@ if ($bbrag_case_url == "/".$parts[0]."/consultation/") {
     </script>
 
 <?php
-} elseif (isset($bbrag_procedure_title) && isset($bbrag_case_id) && $bbrag_case_url == "/".$parts[0]."/".$bbrag_procedure_title."/". $bbrag_case_id . "/" && get_option($bbrag_case_id . "_bb_procedure_id_" . $page_id_via_slug) !== '') {
+} elseif ($is_procedure_detail_page) {
     
     $api_tokens = get_option('bragbook_api_token', []);
     $websiteproperty_ids = get_option('bragbook_websiteproperty_id', []);
@@ -301,106 +315,11 @@ if ($bbrag_case_url == "/".$parts[0]."/consultation/") {
             ));
         }
     }
-
-    // $bbrag_procedure_id = get_option($bbrag_case_id . "_bb_procedure_id_" . $page_id_via_slug);
-    // $bbrag_case_id = get_option($bbrag_case_id);  
-    // $bbrag_procedure_title = get_option($bbrag_procedure_id . '_title'); 
-    // $bbrag_patient = 1; 
-
-    // $category_to_match =  $bbrag_case_id;
-    // $procedure_title = $bbrag_procedure_title;
-    // $procedure_id = $bbrag_procedure_id;
-    // $patient_id =  $bbrag_patient;
     ?>  
     <div class="bb-container-main">
         <main class="bb-main ">
             <?php 
             include plugin_dir_path(__FILE__) . 'sidebar-template.php';
-            // $matching_data = []; 
-            // $case_id_list = [];
-            // $combine_data = [];
-            // foreach ($properties_data as $token_key_bb => $token_bb) {
-            //     foreach ($token_bb as $bb_website_id => $website_id_bb) { 
-            //         foreach($website_id_bb as $bb_combine_data) {
-            //             $bb_combine_data['api_data']['bb_api_token'] = $token_key_bb;
-            //             $bb_combine_data['api_data']['bb_website_id'] = $bb_website_id;
-            //             $combine_data[] = $bb_combine_data['api_data'];
-            //         }
-            //     }
-            // }
-
-            // $api_data_combine = $combine_data;
-            // if(is_array($api_data_combine) && !empty($api_data_combine)) {
-            //     foreach ($api_data_combine as $bb_item_combine) {
-            //         foreach ($bb_item_combine as $item) {
-            //             if($category_to_match == '') {
-            //                 $category_to_match = $item['photoSets'][0]['caseId'];
-            //             }
-            //             if (isset($item['photoSets'][0]['caseId']) && $item['photoSets'][0]['caseId'] == $category_to_match) {
-            //                 $item['bb_api_token'] = $bb_item_combine['bb_api_token'];
-            //                 $item['bb_website_id'] = $bb_item_combine['bb_website_id'];
-            //                 $matching_data[] = $item;
-            //             }
-            //             if (isset($item['procedureIds']) && in_array($procedure_id, $item['procedureIds'])) {
-            //                 if(!empty($item['photoSets'])) {
-            //                     $case_id_list[] = $item['photoSets'][0]['caseId'];
-            //                 }
-            //             } 
-            //         }
-            //     }
-            // }
-
-            // $case_page_title = isset($parts[1]) ? $parts[1] : '';
-            // if(!empty($case_page_title)) {
-            //     $case_page_title = str_replace('-', ' ', $case_page_title);
-            //     $case_page_title = ucfirst($case_page_title);
-            // }
-            // $images = [];
-            // $setup_wizard = '';
-            // $procedure_description = '';
-            // $default_and_seo_page_title = '';
-            
-            // foreach($matching_data as $procedure_data) {
-            //     if(empty($procedure_description)) {
-            //         $procedure_description = isset($procedure_data['caseDetails'][0]['seoPageDescription']) 
-            //         && !empty($procedure_data['caseDetails'][0]['seoPageDescription']) ? $procedure_data['caseDetails'][0]['seoPageDescription'] : '';
-            //     }
-            //     if(empty($default_and_seo_page_title)) {
-            //         $default_and_seo_page_title = isset($procedure_data['caseDetails'][0]['seoPageTitle']) 
-            //         && !empty($procedure_data['caseDetails'][0]['seoPageTitle']) ? $procedure_data['caseDetails'][0]['seoPageTitle'] : '';
-            //     }
-
-            //     $bb_angle_count = 0;
-            //     foreach ($procedure_data['photoSets'] as $key => $case) {
-            //         $bb_angle_count++;
-            //         $bb_new_image_case = isset($case['highResPostProcessedImageLocation']) && !is_null($case['highResPostProcessedImageLocation'])
-            //             ? $case['highResPostProcessedImageLocation'] 
-            //                 : (isset($case['postProcessedImageLocation']) && !is_null($case['postProcessedImageLocation']) 
-            //                     ? $case['postProcessedImageLocation'] 
-            //                     : $case['originalBeforeLocation']);
-            //         $images[] = [
-            //             '@type' => 'ImageObject',
-            //             'url' => $bb_new_image_case,
-            //             'caption' => empty($default_and_seo_page_title) ? "$case_page_title - angle $bb_angle_count" : "$default_and_seo_page_title - angle $bb_angle_count", 
-            //             'representativeOfPage' => true,
-            //             'thumbnailUrl' => $bb_new_image_case
-            //         ];
-            //     }
-            // }
-
-            // $bb_pro_cat_page = isset($parts[1]) ? home_url() . '/' . $parts[0] . '/' . $parts[1] . '/' : home_url();
-            // $gallery_slug_page_id = $page_id_via_slug;
-            // $bb_gallery_page_title = get_the_title($gallery_slug_page_id);
-            // $default_and_seo_page_title = empty($default_and_seo_page_title) ? $bb_gallery_page_title : $default_and_seo_page_title;
-            
-            // if(isset($parts[2])) {
-            //     $bb_input = $parts[2];
-            //     if (isset($bb_input) && preg_match('/^\d+$/', $bb_input)) {
-            //         $bb_case_url_title = $case_page_title;
-            //     }else {
-            //         $bb_case_url_title = $bb_input;
-            //     }
-            // }
             ?>
             <div class="bb-content-area">
                 <div class="bb-filter-attic bb-filter-attic-borderless">
