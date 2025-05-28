@@ -105,20 +105,9 @@ if ($is_consultation) {
                             <img src="<?php echo BB_PLUGIN_DIR_PATH; ?>assets/images/search-svgrepo-com.svg" class="bb-search-icon" alt="search">
                             <ul id="mobile-search-suggestions" class="search-suggestions"></ul>
                         </form>
-                        <h1 id="procedure-title"><span><?php //echo empty($procedure_title) ? $category_title_ : $procedure_title; ?></span></h1>
+                        <h1 id="procedure-title"><span></span></h1>
                     </div>
-                    <script>
-                        // document.addEventListener("DOMContentLoaded", function() {
-                        //     var procedure_title = "<?php //echo $procedure_title; ?> Before & After Gallery";
-                        //     document.querySelector('head title').textContent = procedure_title;
-                        // });
-                    </script>
-                    
                     <div class="actions-box">
-                        <!-- <div class="action-box actions-search test">
-                            <img src="<?php //echo BB_PLUGIN_DIR_PATH; ?>assets/images/search-svgrepo-com.svg" alt="">
-                            <input placeholder="Search" id="searchField" type="text">
-                        </div> -->
                         <div class="action-box actions-filter ">
                             <div class="action-box-toggle toggle-on-click toggle-actions-filter-box">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="2 2 20 20"><path d="M3 4.6C3 4.03995 3 3.75992 3.10899 3.54601C3.20487 3.35785 3.35785 3.20487 3.54601 3.10899C3.75992 3 4.03995 3 4.6 3H19.4C19.9601 3 20.2401 3 20.454 3.10899C20.6422 3.20487 20.7951 3.35785 20.891 3.54601C21 3.75992 21 4.03995 21 4.6V6.33726C21 6.58185 21 6.70414 20.9724 6.81923C20.9479 6.92127 20.9075 7.01881 20.8526 7.10828C20.7908 7.2092 20.7043 7.29568 20.5314 7.46863L14.4686 13.5314C14.2957 13.7043 14.2092 13.7908 14.1474 13.8917C14.0925 13.9812 14.0521 14.0787 14.0276 14.1808C14 14.2959 14 14.4182 14 14.6627V17L10 21V14.6627C10 14.4182 10 14.2959 9.97237 14.1808C9.94787 14.0787 9.90747 13.9812 9.85264 13.8917C9.7908 13.7908 9.70432 13.7043 9.53137 13.5314L3.46863 7.46863C3.29568 7.29568 3.2092 7.2092 3.14736 7.10828C3.09253 7.01881 3.05213 6.92127 3.02763 6.81923C3 6.70414 3 6.58185 3 6.33726V4.6Z" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
@@ -162,27 +151,6 @@ if ($is_consultation) {
                                     </div>
                                 </div>
                             </div>
-                            <script>
-
-                                // document.addEventListener("DOMContentLoaded", function() {
-                                //     var searchField = document.getElementById('searchField');
-
-                                //     searchField.addEventListener('keyup', function() {
-                                //         var query = this.value.toLowerCase();
-                                //         var contentBoxes = document.querySelectorAll('.bb-content-box');
-
-                                //         contentBoxes.forEach(function(box) {
-                                //             var content = box.textContent.toLowerCase();
-                                //             if (content.includes(query)) {
-                                //                 box.style.display = '';
-                                //             } else {
-                                //                 box.style.display = 'none';
-                                //             }
-                                //         });
-                                //     });
-                                // });
-
-                            </script>
                         </div>
                     </div>
                     <div class="bb-content-boxes">
@@ -192,13 +160,6 @@ if ($is_consultation) {
                     <div class="ajax-load-more" id="load-container" style="display: none;">
                         <button class="bb_ajax-load-more-btn" data-offset="2">Load More</button>
                     </div>
-                   
-<!-- 
-                    <script>
-                        setTimeout(() => {
-                            document.getElementById("load-container").style.display = "flex";
-                        }, 3000); // 3000ms = 3 seconds
-                    </script> -->
                 </div>
             </div>
             <div class="bb-fav-modal">
@@ -234,60 +195,6 @@ if ($is_consultation) {
             </div>
         </main>
     </div>
-    <script>
-        // function handleDynamicCheckboxChange(selectedCheckbox) {
-        //     const filter = selectedCheckbox.dataset.filter;
-        //     const checkboxes = document.querySelectorAll('input[type="checkbox"][data-filter="' + filter + '"]');
-
-        //     checkboxes.forEach(checkbox => {
-        //         if (checkbox !== selectedCheckbox) {
-        //             checkbox.checked = false;
-        //         }
-        //     });
-
-        //     const contentBoxes = document.querySelectorAll('.bb-content-box');
-        //     contentBoxes.forEach(box => {
-        //         const classes = box.className.toLowerCase();
-        //         let showBox = true;
-        //         const checkedCheckboxes = Array.from(document.querySelectorAll('input[type="checkbox"]:checked'));
-        //         checkedCheckboxes.forEach(checkedCheckbox => {
-        //             const currentFilter = checkedCheckbox.dataset.filter.toLowerCase();
-        //             const minValue = checkedCheckbox.dataset.min_value ? parseInt(checkedCheckbox.dataset.min_value, 10) : null;
-        //             const maxValue = checkedCheckbox.dataset.max_value ? parseInt(checkedCheckbox.dataset.max_value, 10) : null;
-        //             const stringValue = checkedCheckbox.dataset.value ? checkedCheckbox.dataset.value.toLowerCase() : '';
-
-        //             const attributeMatch = (function() {
-        //                 const attributeClass = classes.match(new RegExp(`${currentFilter}-(\\d+)`));
-        //                 if (attributeClass) {
-        //                     const value = parseInt(attributeClass[1], 10);
-        //                     if (minValue === null && maxValue === null) {
-        //                         return true;
-        //                     } else if (minValue === null) {
-        //                         return value <= maxValue;
-        //                     } else if (maxValue === null) {
-        //                         return value >= minValue;
-        //                     } else {
-        //                         return value >= minValue && value <= maxValue;
-        //                     }
-        //                 } 
-        //                 return false;
-        //             })();
-        //            const stringMatch = stringValue !== '' && (stringValue === 'all' || classes.includes(`${currentFilter}-${stringValue}`));
-                   
-        //             if (!attributeMatch && !stringMatch) {
-        //                 showBox = false; 
-        //             }
-        //         });
-               
-        //         box.style.display = showBox ? 'block' : 'none';
-        //     });
-        // }
-
-        // document.addEventListener('DOMContentLoaded', function() {
-            
-        // });
-    </script>
-
 <?php
 } elseif ($is_procedure_detail_page) {
     
@@ -375,7 +282,6 @@ if ($is_consultation) {
             </div>
         </main>
     </div>
-    
 <?php  
 } else { 
     ?> 
