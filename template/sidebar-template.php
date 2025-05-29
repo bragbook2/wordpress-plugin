@@ -203,3 +203,149 @@ if($combine_gallery_page_slug == $parts_page_name[0]) {
     <a href="/<?=$parts_page_name[0]?>/consultation/" class="bb-sidebar-btn">REQUEST A CONSULTATION</a>
     <p class="request-promo">Ready for the next step?<br>Contact us to request your consultation.</p>    
 </div>
+<?php
+/*********************************************************************************************************** */
+
+
+$data = get_option('bb_api_data');
+$favorite_email_id = get_option('bragbook_favorite_email');
+$favorite_caseIds_count = 0;
+$favorite_caseIds = [];
+if($combine_gallery_page_slug == $parts_page_name[0]) {
+    $data = get_option("bb_combine_api_data");
+    $bb_f_ajax_page = 'combine';
+} else {
+    $data = get_option('bb_api_data'); 
+    $bb_f_ajax_page = 'single';
+
+}
+
+?> 
+<script>
+    jQuery(document).ready(function($) {
+        function fetchFavoriteData() {
+            var bb_a_page = "<?php echo $bb_f_ajax_page; ?>";
+            var page_name = "<?php echo $parts_page_name[0]; ?>";
+            var page_id = "<?php echo $page_id_via_slug; ?>";
+            var bb_image_link = "<?php echo BB_PLUGIN_DIR_PATH; ?>assets/images/red-heart-outline.svg";
+            $.ajax({
+                type: 'POST',
+                url: bb_plugin_data.ajaxurl,
+                data: {
+                    action: 'bb_fetch_favorite_data',
+                    value: bb_a_page,
+                    page_name: page_name,
+                    page_id: page_id,
+                },
+                beforeSend: function() {
+                    
+                    $('#bb_favorite_caseIds_count').html('<img id="bb_f_gif_sidebar" src="<?php echo BB_PLUGIN_DIR_PATH; ?>assets/images/running-heart.gif" alt="Loading...">');
+                    $('#bb-content-boxes-ajax').html('<img id="bb_f_gif_content" src="<?php echo BB_PLUGIN_DIR_PATH; ?>assets/images/running-heart.gif" alt="Loading...">');
+                },
+                success: function(response) {
+                    if(response.success) {
+                        $('#bb_favorite_caseIds_count').text('(' + response.data.favorite_case_count + ')');
+                        $('#bb-content-boxes-ajax').html(response.data.html);
+                        var favoriteCaseIds = Object.values(response.data.favorite_case_ids);
+                        $('img[data-case-id]').each(function() {
+                            var caseId = $(this).data('case-id');
+                            
+                            if (favoriteCaseIds.includes(caseId)) {
+                                $(this).attr('src', bb_image_link);
+                            }
+                        });
+                    } else { 
+                        $('#bb_favorite_caseIds_count').text('(' + 0 + ')');
+                        console.log('Error: ' + response.data.message);
+                    }
+                },
+                complete: function() {
+                    
+                    $('#bb_f_gif_sidebar').remove();  
+                    $('#bb_f_gif_content').remove();  
+                },
+                error: function(error) {
+                    console.log('AJAX error234:', error);
+                    
+                    $('#bb_f_gif_sidebar').remove();  
+                    $('#bb_f_gif_content').remove(); 
+                }
+            });
+        }
+     //   fetchFavoriteData();  
+    });
+
+</script>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var mobileSearchBar = document.getElementById('mobile-search-bar');
+        var mobileSearchSuggestions = document.getElementById('mobile-search-suggestions');
+        var searchBar = document.getElementById('search-bar');
+        var searchSuggestions = document.getElementById('search-suggestions');
+        if (mobileSearchBar && mobileSearchSuggestions) {
+            mobileSearchBar.addEventListener('input', function() {
+                var searchText = this.value.toLowerCase().trim();
+                mobileSearchSuggestions.innerHTML = '';
+
+                var links = document.querySelectorAll('.bb-nav-accordion a');
+                links.forEach(function(link) {
+                    var procedureTitle = link.textContent.toLowerCase();
+                    var href = link.getAttribute('href');
+                    if (procedureTitle.includes(searchText)) {
+                        var listItem = document.createElement('li');
+                        listItem.innerHTML = '<a href="' + href + '">' + link.textContent + '</a>';
+                        mobileSearchSuggestions.appendChild(listItem);
+                    }
+                });
+
+                var itemsToRemove = mobileSearchSuggestions.querySelectorAll('li a[href="#"]');
+                itemsToRemove.forEach(function(item) {
+                    item.parentElement.remove();
+                });
+                mobileSearchSuggestions.style.display = mobileSearchSuggestions.children.length > 0 ? 'block' : 'none';
+            });
+
+            function toggleSuggestionsVisibility() {
+                mobileSearchSuggestions.style.display = mobileSearchBar.value.trim() === '' ? 'none' : 'block';
+            }
+
+            mobileSearchBar.addEventListener('input', toggleSuggestionsVisibility);
+            mobileSearchBar.addEventListener('keyup', toggleSuggestionsVisibility);
+            mobileSearchBar.addEventListener('keydown', toggleSuggestionsVisibility);
+        }
+
+        if (searchBar && searchSuggestions) {
+            searchBar.addEventListener('input', function() {
+                var searchText = this.value.toLowerCase().trim();
+                searchSuggestions.innerHTML = '';
+
+                var links = document.querySelectorAll('.bb-nav-accordion a');
+                links.forEach(function(link) {
+                    var procedureTitle = link.textContent.toLowerCase();
+                    var href = link.getAttribute('href');
+                    if (procedureTitle.includes(searchText)) {
+                        var listItem = document.createElement('li');
+                        listItem.innerHTML = '<a href="' + href + '">' + link.textContent + '</a>';
+                        searchSuggestions.appendChild(listItem);
+                    }
+                });
+
+                var itemsToRemove = searchSuggestions.querySelectorAll('li a[href="#"]');
+                itemsToRemove.forEach(function(item) {
+                    item.parentElement.remove();
+                });
+
+                searchSuggestions.style.display = searchSuggestions.children.length > 0 ? 'block' : 'none';
+            });
+
+            function SuggestionsVisibility() {
+                searchSuggestions.style.display = searchBar.value.trim() === '' ? 'none' : 'block';
+            }
+            searchBar.addEventListener('input', SuggestionsVisibility);
+            searchBar.addEventListener('keyup', SuggestionsVisibility);
+            searchBar.addEventListener('keydown', SuggestionsVisibility);
+        }
+    });
+</script>
