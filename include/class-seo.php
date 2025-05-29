@@ -129,7 +129,7 @@ class Seo
                         $procedureId = $procedureIdsName["bb_procedure_id"];
                         $procedureName = $procedureIdsName["bb_procedure_name"];
 
-                        $transient_key = 'cases_' . md5($api_token . $procedureId . $websiteproperty_id);
+                        $transient_key = 'cases_' . md5($api_token . $procedureId . $websiteproperty_id . $caseId . $seoSuffixUrl);
                         $data = get_transient($transient_key);
                         if (false === $data) {
                             $filter_data = new Bb_Api();
