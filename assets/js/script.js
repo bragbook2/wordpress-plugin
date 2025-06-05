@@ -804,7 +804,7 @@ function renderPagination(paginationData, caseItem, targetLinkSelector, bb_right
   if (hasPrevious) {
     const prevPageId = paginationData[currentPageIndex - 1].id;
     const prevItem = document.createElement("li");
-    prevItem.innerHTML = `<a href="${baseUrl}${prevPageId}">Previous</a>`;
+    prevItem.innerHTML = `<a href="${baseUrl}${prevPageId}/">Previous</a>`;
     paginationList.appendChild(prevItem);
   }
 
@@ -818,14 +818,14 @@ function renderPagination(paginationData, caseItem, targetLinkSelector, bb_right
     const pageUrl = `${baseUrl}${pageItem.id}`;
     const listItem = document.createElement("li");
     listItem.className = pageItem.id === caseSeoId ? "bb-single-case active" : "bb-single-case";
-    listItem.innerHTML = `<a href="${pageUrl}">${pageItem.caseNumber}</a>`;
+    listItem.innerHTML = `<a href="${pageUrl}/">${pageItem.caseNumber}</a>`;
     paginationList.appendChild(listItem);
   }
 
   if (hasNext) {
     const nextPageId = paginationData[currentPageIndex + 1].id;
     const nextItem = document.createElement("li");
-    nextItem.innerHTML = `<a href="${baseUrl}${nextPageId}">Next</a>`;
+    nextItem.innerHTML = `<a href="${baseUrl}${nextPageId}/">Next</a>`;
     paginationList.appendChild(nextItem);
   }
 }
