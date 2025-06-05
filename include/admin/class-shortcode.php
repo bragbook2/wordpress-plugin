@@ -274,29 +274,29 @@ class Shortcode {
                 $bb_scase_ids_list = [];
                 $spro_title_bb = $result['slugName'];
                 $carousel_data_bb = json_decode($data_car);
-                foreach($carousel_data_bb->data as $procedure_data) {
-                    
-                        if (!empty($procedure_data->photoSets)) { 
-                            ?>
-                            <div class="bb-slick-slide">
-                                <div class="bb-slide">
-                                    <?php
-                                    $bb_new_image_procedure_data = isset($procedure_data->photoSets[0]->highResPostProcessedImageLocation) && !is_null($procedure_data->photoSets[0]->highResPostProcessedImageLocation)
-                                        ? $procedure_data->photoSets[0]->highResPostProcessedImageLocation 
-                                        : (isset($procedure_data->photoSets[0]->postProcessedImageLocation) && !is_null($procedure_data->photoSets[0]->postProcessedImageLocation) 
-                                            ? $procedure_data->photoSets[0]->postProcessedImageLocation 
-                                            : $procedure_data->photoSets[0]->originalBeforeLocation);
-                                    ?>
-                                    <?php 
-                                        $caseSeoSuffixUrl = "";
-                                        if($procedure_data->caseDetails[0] && $procedure_data->caseDetails[0]->seoSuffixUrl) {
-                                            $caseSeoSuffixUrl = $procedure_data->caseDetails[0]->seoSuffixUrl;
-                                        } else {
-                                            $caseSeoSuffixUrl = 'bb-case-' . $procedure_data->id;
-                                        }
-                                    ?>
-                                    <a href="<?php echo "/" . $bb_slug_link . "/" . $spro_title_bb . "/" . $caseSeoSuffixUrl; ?>">
-                                        <img class="bb-slide-thumnail" src="<?php echo $bb_new_image_procedure_data; ?>" 
+                foreach ($carousel_data_bb->data as $procedure_data) {
+
+                    if (!empty($procedure_data->photoSets)) {
+                        ?>
+                        <div class="bb-slick-slide">
+                            <div class="bb-slide">
+                                <?php
+                                $bb_new_image_procedure_data = isset($procedure_data->photoSets[0]->highResPostProcessedImageLocation) && !is_null($procedure_data->photoSets[0]->highResPostProcessedImageLocation)
+                                    ? $procedure_data->photoSets[0]->highResPostProcessedImageLocation
+                                    : (isset($procedure_data->photoSets[0]->postProcessedImageLocation) && !is_null($procedure_data->photoSets[0]->postProcessedImageLocation)
+                                        ? $procedure_data->photoSets[0]->postProcessedImageLocation
+                                        : $procedure_data->photoSets[0]->originalBeforeLocation);
+                                ?>
+                                <?php
+                                $caseSeoSuffixUrl = "";
+                                if ($procedure_data->caseDetails[0] && $procedure_data->caseDetails[0]->seoSuffixUrl) {
+                                    $caseSeoSuffixUrl = $procedure_data->caseDetails[0]->seoSuffixUrl;
+                                } else {
+                                    $caseSeoSuffixUrl = 'bb-case-' . $procedure_data->id;
+                                }
+                                ?>
+                                <a href="<?php echo "/" . $bb_slug_link . "/" . $spro_title_bb . "/" . $caseSeoSuffixUrl . "/"; ?>">
+                                    <img class="bb-slide-thumnail" src="<?php echo $bb_new_image_procedure_data; ?>"
                                         alt="<?php echo isset($procedure_data->photoSets[0]->seoAltText) ? $procedure_data->photoSets[0]->seoAltText : ''; ?>">
                                     </a>
                                     <?php if ($cat_title == 1 || $cat_details == 1) { ?>
