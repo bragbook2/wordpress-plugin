@@ -38,6 +38,10 @@ class Sitemap
 
     function create_bragbook_sitemap()
     {
+
+        $pageURL = (isset($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] == "on") ? 'https://' : 'http://';
+        $siteURL = $pageURL . $_SERVER['HTTP_HOST'] . '/';
+
         $pluginURL = plugin_dir_url(__DIR__) . 'assets/css/brag-book-sitemap-style.xsl';
 
         $revXmlSitemapOutput = '<?xml version="1.0" encoding="UTF-8"?>';
@@ -50,7 +54,7 @@ class Sitemap
         foreach ($bb_sitemap_data as $index => $org_data) {
 
             foreach ($org_data as $sitemap_slug) {
-                $sitemap_url = home_url() . "/" . $gallery_slugs[$index] . $sitemap_slug->url . '/';
+                $sitemap_url = home_url() . "/" . $gallery_slugs[$index] . $sitemap_slug->url;
                 $sitemap_url_date = $sitemap_slug->updatedAt ?? "";
                 $revXmlSitemapOutput .= '<url><loc>' . $sitemap_url . '</loc><lastmod>' . $sitemap_url_date . '</lastmod></url>';
             }

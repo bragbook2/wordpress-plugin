@@ -24,10 +24,13 @@ if (!defined('BB_BASE_URL')) {
     define('BB_BASE_URL', 'https://app.bragbookgallery.com');
 }
 
-require_once BB_PLUGIN_DIR_MAIN_PATH . 'include/admin/class-activator.php';
-require_once BB_PLUGIN_DIR_MAIN_PATH . 'include/admin/class-shortcode.php';
-require_once BB_PLUGIN_DIR_MAIN_PATH . 'include/public/bb_api.php';
-require_once BB_PLUGIN_DIR_MAIN_PATH . 'include/public/ajax_handler.php';
+require_once BB_PLUGIN_DIR_MAIN_PATH . 'include/class-activator.php';
+require_once BB_PLUGIN_DIR_MAIN_PATH . 'include/class-shortcode.php';
+require_once BB_PLUGIN_DIR_MAIN_PATH . 'include/class-bb-api.php';
+require_once BB_PLUGIN_DIR_MAIN_PATH . 'include/class-sitemap.php';
+require_once BB_PLUGIN_DIR_MAIN_PATH . 'include/class-consultation.php';
+require_once BB_PLUGIN_DIR_MAIN_PATH . 'include/class-seo.php';
+require_once BB_PLUGIN_DIR_MAIN_PATH . 'include/class-api-settings.php';
 $theme_directory = get_template(); 
 $header_path = get_stylesheet_directory() . '/header.php'; 
 class mvpbrag {
@@ -40,6 +43,9 @@ class mvpbrag {
         add_action('init', [ $this, 'init' ]);
         add_filter('template_include', [ 'mvpbrag\Activator', 'include_template' ]);
         new \mvpbrag\Ajax_Handler();
+        new \mvpbrag\Sitemap();
+        new \mvpbrag\Seo();
+        new \mvpbrag\Consultation();
     }
 
     public function bragbook_enqueue_scripts() {
