@@ -119,8 +119,7 @@ if($combine_gallery_page_slug == $parts_page_name[0]) {
         </form>
 
         <div class="bb-nav-accordion">
-            <?php 
-            
+        <?php 
             $properties_data_all = json_decode($data_sidebar, true);
             $properties_data = $properties_data_all;
             /* 
@@ -179,27 +178,18 @@ if($combine_gallery_page_slug == $parts_page_name[0]) {
                                                     </li>
                                                     <?php
                                                 }
-                                                ?>
-                                                <?php
                                             }
                                             ?>
                                         </ul>
                                     </div>
                                 <?php
                                 }
-                                   
                             }
                         }
                     }
-                   
                 }
-            }
-           
-
-                    
-                            ?>
-                           
-                           
+            }                  
+        ?>
             <ul>
                 <li>
                     <a class="bb-sidebar_favorites" href="/<?=$parts_page_name[0]?>/favorites/"> 
@@ -211,9 +201,7 @@ if($combine_gallery_page_slug == $parts_page_name[0]) {
     </div> 
     
     <a href="/<?=$parts_page_name[0]?>/consultation/" class="bb-sidebar-btn">REQUEST A CONSULTATION</a>
-    <p class="request-promo">Ready for the next step?<br>Contact us to request your consultation.</p>
-    <!-- <p>Before and after gallery powered by <span style="color:red">BRAG book™</span></p> -->
-    
+    <p class="request-promo">Ready for the next step?<br>Contact us to request your consultation.</p>    
 </div>
 <?php
 /*********************************************************************************************************** */
