@@ -452,6 +452,25 @@ class Ajax_Handler
 
         $seoPluginOptions = get_option('bb_seo_plugin_selector');
         $api_tokens = get_option('bragbook_api_token', []);
+        $domain = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http");
+        $domain .= "://" . $_SERVER['HTTP_HOST'];
+
+        $websitePropertyIds = get_option('bragbook_websiteproperty_id', []);
+        $data_bb = [];
+        foreach ($api_tokens as $pageKey => $token) {
+            $data_bb[] = [
+                'version' => BB_PLUGIN_VERSION,
+                'domain' => $domain,
+                'galleryPage' => $bb_pages_slugs[$pageKey] ?? '',
+                'apiToken' => $token,
+                'websitePropertyId' => isset($websitePropertyIds[$pageKey]) ? (int) $websitePropertyIds[$pageKey] : null,
+            ];
+        }
+
+        $tracker_payload = json_encode(['data' => $data_bb]);
+
+        $bb_tracker = new Bb_Api();
+        $tracker_info = $bb_tracker->send_plugin_version_data($tracker_payload);
 
         $filepath = trailingslashit(ABSPATH) . 'brag-book-sitemap.xml';
 

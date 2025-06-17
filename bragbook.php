@@ -11,6 +11,9 @@ License: A "Slug" license name e.g. GPL2
 
 namespace mvpbrag;
 
+if (!defined('BB_PLUGIN_VERSION')) {
+    define('BB_PLUGIN_VERSION', '2.5.0');
+}
 if (!defined('BB_PLUGIN_DIR_PATH')) {
     define('BB_PLUGIN_DIR_PATH', plugin_dir_url(__FILE__));
 }
