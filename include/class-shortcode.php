@@ -222,7 +222,7 @@ class Shortcode
                                     $caseSeoSuffixUrl = 'bb-case-' . $procedure_data->id;
                                 }
                                 ?>
-                                <a href="<?php echo "/" . $bb_slug_link . "/" . $spro_title_bb . "/" . $caseSeoSuffixUrl; ?>">
+                                <a href="<?php echo "/" . $bb_slug_link . "/" . $spro_title_bb . "/" . $caseSeoSuffixUrl . "/"; ?>">
                                     <img class="bb-slide-thumnail" src="<?php echo $bb_new_image_procedure_data; ?>"
                                         alt="<?php echo isset($procedure_data->photoSets[0]->seoAltText) ? $procedure_data->photoSets[0]->seoAltText : ''; ?>">
                                 </a>
@@ -439,7 +439,7 @@ class Shortcode
                                                         data-count="1" data-api-token="<?= esc_attr($token); ?>"
                                                         data-website-property-id="<?= esc_attr($cat_website_property_id); ?>">
                                                         <?= esc_html($procedure['name']); ?>
-                                                        <span>(<?php echo $procedure['totalCase']; ?>)</span>
+                                                        <span>(<?php echo $procedure['totalCase'] . "/" ?>)</span>
                                                     </a>
 
                                                 </li>
@@ -499,7 +499,7 @@ class Shortcode
                     echo isset($explode_string['1']) ? do_shortcode($explode_string['1']) : '';
                     ?>
 
-                    <a href="<?= $bb_page_name; ?>consultation/" class="bb-sidebar-btn">REQUEST A CONSULTATION</a>
+                    <a href="<?= $bb_slug_link; ?>consultation/" class="bb-sidebar-btn">REQUEST A CONSULTATION</a>
                     <div class="bb-bottom-bar">
                         <img src="<?php echo BB_PLUGIN_DIR_PATH ?>assets/images/myfavs-logo.png" alt="logo">
                         <p>
