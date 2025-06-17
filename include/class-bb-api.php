@@ -27,6 +27,28 @@ class Bb_Api
         return $filter_get;
     }
 
+    public function send_plugin_version_data($json_payload)
+    {
+        $url = BB_BASE_URL . "/api/plugin/tracker";
+        $response = wp_remote_post($url, array(
+            'method' => 'POST',
+            'body' => $json_payload,
+
+            'headers' => array(
+                'Content-Type' => 'application/json',
+            ),
+        ));
+
+
+        if (is_wp_error($response)) {
+            wp_send_json_error(array('message' => $response->get_error_message()));
+        }
+
+        $response_body = wp_remote_retrieve_body($response);
+
+        return $response_body;
+    }
+
     public function bb_get_case_data($caseId, $seoSuffixUrl, $apiToken, $procedureId, $websitePropertyId)
     {
 
