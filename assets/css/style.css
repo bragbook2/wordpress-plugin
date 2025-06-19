@@ -1842,6 +1842,36 @@ p.bb-fav-modal-close-button {
   border-radius: 3px 0 0 3px;
 }
 
+p.bb-carousel-tite {
+  font-size: 17px;
+  font-family: "Manrope", sans-serif;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+#slugFieldContainer {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+  margin-top: 1rem;
+}
+
+.fieldGroup {
+  display: inline-flex;
+  flex-direction: column;
+}
+
+.combine_page_bb {
+  font-weight: 600;
+  margin-bottom: 4px;
+  text-align: center;
+  color: #333333;
+}
+
+#slugFieldContainer input[type="text"] {
+  border-radius: 4px;
+}
+
 @media only screen and (max-width: 1620px) {
   .bb-main .bb-content-area {
     padding-left: 50px;
@@ -2735,11 +2765,4 @@ p.bb-fav-modal-close-button {
     gap: 0;
     flex-direction: column;
   }
-}
-
-p.bb-carousel-tite {
-  font-size: 17px;
-  font-family: "Manrope", sans-serif;
-  font-weight: 500;
-  line-height: 1.4;
 }
