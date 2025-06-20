@@ -14,48 +14,49 @@ $page_id_via_slug = $page_bb_data->ID;
 
 use mvpbrag\Bb_Api;
 /*********************************************************************************************************** */
-function bb_get_sidebar_data($parts_page_name, $combine_gallery_page_slug) {
+function bb_get_sidebar_data($parts_page_name, $combine_gallery_page_slug)
+{
     ob_start();
     update_option("bb_sidebar_data", []);
-    
-    $api_tokens = get_option('bragbook_api_token', []); 
+
+    $api_tokens = get_option('bragbook_api_token', []);
     $websiteproperty_ids = get_option('bragbook_websiteproperty_id', []);
-    $gallery_slugs = get_option('bb_gallery_page_slug', []); 
-    
+    $gallery_slugs = get_option('bb_gallery_page_slug', []);
+
     $single_results_sidebar = [];
     $combine_results_sidebar = [];
     $token_array = [];
     foreach ($api_tokens as $index => $api_token) {
         $websiteproperty_id = $websiteproperty_ids[$index] ?? '';
         $page_slug_bb = $gallery_slugs[$index] ?? '';
-        if(($page_slug_bb == $parts_page_name[0])) {
+        if (($page_slug_bb == $parts_page_name[0])) {
             if (empty($api_token) || empty($websiteproperty_id)) {
                 continue;
             }
-            
-            $bb_set_transient_urls = get_option( 'bb_set_transient_url_sidebar', [] );
-            if ( ! is_array( $bb_set_transient_urls ) ) {
+
+            $bb_set_transient_urls = get_option('bb_set_transient_url_sidebar', []);
+            if (!is_array($bb_set_transient_urls)) {
                 $bb_set_transient_urls = [];
             }
             $transient_key = 'bb_sidebar_' . md5($api_token);
             if (get_transient($transient_key) !== false) {
                 return get_transient($transient_key);
             }
-            
+
             $sidebar = new Bb_Api();
             $data = $sidebar->get_api_sidebar_bb($api_token);
-            
+
             $bb_set_transient_urls[$transient_key] = $data;
-            update_option( 'bb_set_transient_url_sidebar', $bb_set_transient_urls );
+            update_option('bb_set_transient_url_sidebar', $bb_set_transient_urls);
             set_transient($api_token, $data, 1800);
 
-            $sidebar_set = json_decode($data, true) ?? []; 
+            $sidebar_set = json_decode($data, true) ?? [];
             $result = [
                 'sidebar_set' => $sidebar_set
             ];
             $single_results_sidebar[$api_token][$websiteproperty_id][$page_slug_bb] = $result;
-          
-        }elseif($combine_gallery_page_slug == $parts_page_name[0]) {
+
+        } elseif ($combine_gallery_page_slug == $parts_page_name[0]) {
             $token_array[] = [
                 'api_token' => $api_token,
                 'websiteproperty_id' => $websiteproperty_id,
@@ -64,21 +65,21 @@ function bb_get_sidebar_data($parts_page_name, $combine_gallery_page_slug) {
         }
     }
 
-    if (!empty($token_array)) { 
+    if (!empty($token_array)) {
         $sidebar = new Bb_Api();
-    
+
         foreach ($token_array as $token_data) {
             $api_token = $token_data['api_token'];
             $websiteproperty_id = $token_data['websiteproperty_id'];
             $page_slug_bb = $token_data['page_slug_bb'];
-    
+
             if (empty($api_token) || empty($websiteproperty_id) || empty($page_slug_bb)) {
                 continue;
             }
-    
+
             $body = $sidebar->get_api_sidebar_bb($api_token);
             $sidebar_set = json_decode($body, true) ?? [];
-    
+
             $result = [
                 'sidebar_set' => $sidebar_set
             ];
@@ -93,16 +94,16 @@ function bb_get_sidebar_data($parts_page_name, $combine_gallery_page_slug) {
     update_option("bb_single_sidebar_data", $bragbook_api_sidebar);
     update_option("bb_combine_sidebar_data", $bragbook_combine_api_sidebar);
 
-    ob_clean(); 
+    ob_clean();
 }
 
 bb_get_sidebar_data($parts_page_name, $combine_gallery_page_slug);
 
-if($combine_gallery_page_slug == $parts_page_name[0]) {
+if ($combine_gallery_page_slug == $parts_page_name[0]) {
     $data_sidebar = get_option("bb_combine_sidebar_data");
     $bb_f_ajax_page = 'combine';
 } else {
-    $data_sidebar = get_option('bb_single_sidebar_data'); 
+    $data_sidebar = get_option('bb_single_sidebar_data');
     $bb_f_ajax_page = 'single';
 
 }
@@ -114,13 +115,13 @@ if($combine_gallery_page_slug == $parts_page_name[0]) {
         </button>
         <form class="search-container">
             <input type="text" id="search-bar" placeholder="Search Procedures">
-            <img src="<?php echo BB_PLUGIN_DIR_PATH?>assets/images/search-svgrepo-com.svg" class="bb-search-icon" alt="search">
+            <img src="<?php echo BB_PLUGIN_DIR_PATH ?>assets/images/search-svgrepo-com.svg" class="bb-search-icon"
+                alt="search">
             <ul id="search-suggestions" class="search-suggestions"></ul>
         </form>
 
         <div class="bb-nav-accordion">
-            <?php 
-            
+            <?php
             $properties_data_all = json_decode($data_sidebar, true);
             $properties_data = $properties_data_all;
             /* 
@@ -137,83 +138,72 @@ if($combine_gallery_page_slug == $parts_page_name[0]) {
                 foreach ($properties_data as $api_token_key => $token_bb) {
                     foreach ($token_bb as $websiteproperty_id_key => $website_id_bb) {
                         foreach ($website_id_bb as $websiteproperty_id => $property_data) {
-                           
-                            if(isset($property_data['sidebar_set']['data']) && !empty($property_data['sidebar_set']['data']) && ($parts_page_name[0] == $websiteproperty_id) || ($combine_gallery_page_slug == $parts_page_name[0])) {
+
+                            if (isset($property_data['sidebar_set']['data']) && !empty($property_data['sidebar_set']['data']) && ($parts_page_name[0] == $websiteproperty_id) || ($combine_gallery_page_slug == $parts_page_name[0])) {
                                 foreach ($property_data['sidebar_set']['data'] as $procedure_name => $procedure_data) {
                                     ?>
                                     <span class="bb-accordion" cat_title="<?= htmlspecialchars($procedure_data['name']); ?>">
-                                        <span><?= $procedure_data['name']; ?> <p>(<?= $procedure_data['totalCase']; ?>)</p></span>
+                                        <span><?= $procedure_data['name']; ?>
+                                            <p>(<?= $procedure_data['totalCase']; ?>)</p>
+                                        </span>
                                         <img src="<?= BB_PLUGIN_DIR_PATH ?>assets/images/plus-icon.svg" alt="plus icon">
                                     </span>
                                     <div class="bb-panel">
                                         <ul>
-                                        <?php
-                                            foreach($procedure_data['procedures'] as $procedure ) {
-                                                if($parts_page_name[0] == $websiteproperty_id) {
+                                            <?php
+                                            foreach ($procedure_data['procedures'] as $procedure) {
+                                                if ($parts_page_name[0] == $websiteproperty_id) {
                                                     ?>
                                                     <li>
-                                                    <a id="<?= esc_attr($procedure['ids'][0]); ?>"
-                                                        href="<?= "/" . $parts_page_name[0] . "/" . $procedure['slugName'] . "/"; ?>"
-                                                        data-count="1"
-                                                        data-api-token="<?= esc_attr($api_token_key); ?>"
-                                                        data-website-property-id="<?= esc_attr($websiteproperty_id_key); ?>">
-                                                            <?= esc_html($procedure['name']); ?> 
+                                                        <a id="<?= esc_attr($procedure['ids'][0]); ?>"
+                                                            href="<?= "/" . $parts_page_name[0] . "/" . $procedure['slugName'] . "/"; ?>" data-count="1"
+                                                            data-api-token="<?= esc_attr($api_token_key); ?>"
+                                                            data-website-property-id="<?= esc_attr($websiteproperty_id_key); ?>">
+                                                            <?= esc_html($procedure['name']); ?>
                                                             <span>(<?php echo $procedure['totalCase']; ?>)</span>
-                                                    </a>
-                                                    
+                                                        </a>
+
                                                     </li>
                                                     <?php
-                                                }elseif($combine_gallery_page_slug == $parts_page_name[0]) {
+                                                } elseif ($combine_gallery_page_slug == $parts_page_name[0]) {
                                                     $ids_string = implode(", ", $procedure['ids']);
                                                     ?>
                                                     <li>
-                                                    <a id="<?= esc_attr($ids_string); ?>"
-                                                        href="<?= "/" . $parts_page_name[0] . "/" . $procedure['slugName'] . "/"; ?>"
-                                                        data-count="1"
-                                                        data-api-token="<?= esc_attr($values_string); ?>"
-                                                        data-website-property-id="<?= esc_attr($values_string_webid); ?>">
-                                                            <?= esc_html($procedure['name']); ?> 
+                                                        <a id="<?= esc_attr($ids_string); ?>"
+                                                            href="<?= "/" . $parts_page_name[0] . "/" . $procedure['slugName'] . "/"; ?>" data-count="1"
+                                                            data-api-token="<?= esc_attr($values_string); ?>"
+                                                            data-website-property-id="<?= esc_attr($values_string_webid); ?>">
+                                                            <?= esc_html($procedure['name']); ?>
                                                             <span>(<?php echo $procedure['totalCase']; ?>)</span>
-                                                    </a>
-                                                    
+                                                        </a>
+
                                                     </li>
                                                     <?php
                                                 }
-                                                ?>
-                                                <?php
                                             }
                                             ?>
                                         </ul>
                                     </div>
-                                <?php
+                                    <?php
                                 }
-                                   
                             }
                         }
                     }
-                   
                 }
             }
-           
-
-                    
-                            ?>
-                           
-                           
+            ?>
             <ul>
                 <li>
-                    <a class="bb-sidebar_favorites" href="/<?=$parts_page_name[0]?>/favorites/"> 
+                    <a class="bb-sidebar_favorites" href="/<?= $parts_page_name[0] ?>/favorites/">
                         <h3> My Favorites <span id="bb_favorite_caseIds_count">(0)</span></h3>
-                    </a> 
-                </li> 
-            </ul>  
+                    </a>
+                </li>
+            </ul>
         </div>
-    </div> 
-    
-    <a href="/<?=$parts_page_name[0]?>/consultation/" class="bb-sidebar-btn">REQUEST A CONSULTATION</a>
+    </div>
+
+    <a href="/<?= $parts_page_name[0] ?>/consultation/" class="bb-sidebar-btn">REQUEST A CONSULTATION</a>
     <p class="request-promo">Ready for the next step?<br>Contact us to request your consultation.</p>
-    <!-- <p>Before and after gallery powered by <span style="color:red">BRAG book™</span></p> -->
-    
 </div>
 <?php
 /*********************************************************************************************************** */
@@ -223,18 +213,18 @@ $data = get_option('bb_api_data');
 $favorite_email_id = get_option('bragbook_favorite_email');
 $favorite_caseIds_count = 0;
 $favorite_caseIds = [];
-if($combine_gallery_page_slug == $parts_page_name[0]) {
+if ($combine_gallery_page_slug == $parts_page_name[0]) {
     $data = get_option("bb_combine_api_data");
     $bb_f_ajax_page = 'combine';
 } else {
-    $data = get_option('bb_api_data'); 
+    $data = get_option('bb_api_data');
     $bb_f_ajax_page = 'single';
 
 }
 
-?> 
+?>
 <script>
-    jQuery(document).ready(function($) {
+    jQuery(document).ready(function ($) {
         function fetchFavoriteData() {
             var bb_a_page = "<?php echo $bb_f_ajax_page; ?>";
             var page_name = "<?php echo $parts_page_name[0]; ?>";
@@ -249,60 +239,60 @@ if($combine_gallery_page_slug == $parts_page_name[0]) {
                     page_name: page_name,
                     page_id: page_id,
                 },
-                beforeSend: function() {
-                    
+                beforeSend: function () {
+
                     $('#bb_favorite_caseIds_count').html('<img id="bb_f_gif_sidebar" src="<?php echo BB_PLUGIN_DIR_PATH; ?>assets/images/running-heart.gif" alt="Loading...">');
                     $('#bb-content-boxes-ajax').html('<img id="bb_f_gif_content" src="<?php echo BB_PLUGIN_DIR_PATH; ?>assets/images/running-heart.gif" alt="Loading...">');
                 },
-                success: function(response) {
-                    if(response.success) {
+                success: function (response) {
+                    if (response.success) {
                         $('#bb_favorite_caseIds_count').text('(' + response.data.favorite_case_count + ')');
                         $('#bb-content-boxes-ajax').html(response.data.html);
                         var favoriteCaseIds = Object.values(response.data.favorite_case_ids);
-                        $('img[data-case-id]').each(function() {
+                        $('img[data-case-id]').each(function () {
                             var caseId = $(this).data('case-id');
-                            
+
                             if (favoriteCaseIds.includes(caseId)) {
                                 $(this).attr('src', bb_image_link);
                             }
                         });
-                    } else { 
+                    } else {
                         $('#bb_favorite_caseIds_count').text('(' + 0 + ')');
                         console.log('Error: ' + response.data.message);
                     }
                 },
-                complete: function() {
-                    
-                    $('#bb_f_gif_sidebar').remove();  
-                    $('#bb_f_gif_content').remove();  
+                complete: function () {
+
+                    $('#bb_f_gif_sidebar').remove();
+                    $('#bb_f_gif_content').remove();
                 },
-                error: function(error) {
+                error: function (error) {
                     console.log('AJAX error234:', error);
-                    
-                    $('#bb_f_gif_sidebar').remove();  
-                    $('#bb_f_gif_content').remove(); 
+
+                    $('#bb_f_gif_sidebar').remove();
+                    $('#bb_f_gif_content').remove();
                 }
             });
         }
-     //   fetchFavoriteData();  
+        //   fetchFavoriteData();  
     });
 
 </script>
 
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         var mobileSearchBar = document.getElementById('mobile-search-bar');
         var mobileSearchSuggestions = document.getElementById('mobile-search-suggestions');
         var searchBar = document.getElementById('search-bar');
         var searchSuggestions = document.getElementById('search-suggestions');
         if (mobileSearchBar && mobileSearchSuggestions) {
-            mobileSearchBar.addEventListener('input', function() {
+            mobileSearchBar.addEventListener('input', function () {
                 var searchText = this.value.toLowerCase().trim();
                 mobileSearchSuggestions.innerHTML = '';
 
                 var links = document.querySelectorAll('.bb-nav-accordion a');
-                links.forEach(function(link) {
+                links.forEach(function (link) {
                     var procedureTitle = link.textContent.toLowerCase();
                     var href = link.getAttribute('href');
                     if (procedureTitle.includes(searchText)) {
@@ -313,7 +303,7 @@ if($combine_gallery_page_slug == $parts_page_name[0]) {
                 });
 
                 var itemsToRemove = mobileSearchSuggestions.querySelectorAll('li a[href="#"]');
-                itemsToRemove.forEach(function(item) {
+                itemsToRemove.forEach(function (item) {
                     item.parentElement.remove();
                 });
                 mobileSearchSuggestions.style.display = mobileSearchSuggestions.children.length > 0 ? 'block' : 'none';
@@ -329,12 +319,12 @@ if($combine_gallery_page_slug == $parts_page_name[0]) {
         }
 
         if (searchBar && searchSuggestions) {
-            searchBar.addEventListener('input', function() {
+            searchBar.addEventListener('input', function () {
                 var searchText = this.value.toLowerCase().trim();
                 searchSuggestions.innerHTML = '';
 
                 var links = document.querySelectorAll('.bb-nav-accordion a');
-                links.forEach(function(link) {
+                links.forEach(function (link) {
                     var procedureTitle = link.textContent.toLowerCase();
                     var href = link.getAttribute('href');
                     if (procedureTitle.includes(searchText)) {
@@ -345,7 +335,7 @@ if($combine_gallery_page_slug == $parts_page_name[0]) {
                 });
 
                 var itemsToRemove = searchSuggestions.querySelectorAll('li a[href="#"]');
-                itemsToRemove.forEach(function(item) {
+                itemsToRemove.forEach(function (item) {
                     item.parentElement.remove();
                 });
 
