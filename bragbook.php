@@ -3,7 +3,7 @@
 Plugin Name: BRAG Book Gallery
 Plugin URI: https://github.com/bragbook2/wordpress-plugin/releases/latest
 Description: Installs necessary components to display your BRAG book before and after gallery.
-Version: 2.5.0
+Version: 2.6.0
 Author: Candace Crowe Design
 Author URI: https://www.bragbookgallery.com/
 License: A "Slug" license name e.g. GPL2
@@ -31,6 +31,18 @@ require_once BB_PLUGIN_DIR_MAIN_PATH . 'include/class-sitemap.php';
 require_once BB_PLUGIN_DIR_MAIN_PATH . 'include/class-consultation.php';
 require_once BB_PLUGIN_DIR_MAIN_PATH . 'include/class-seo.php';
 require_once BB_PLUGIN_DIR_MAIN_PATH . 'include/class-api-settings.php';
+require_once BB_PLUGIN_DIR_MAIN_PATH . 'updater.php';
+
+add_action('admin_init', function () {
+    if (is_admin()) {
+        $updater = new \mvpbrag\Bragbook_Updater();
+        $updater->authorize( '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' ); // Your auth code goes here for private repos
+
+        $updater->set_username( 'bragbook2' );
+        $updater->set_repository( 'wordpress-plugin' );
+        $updater->initialize(__FILE__ );
+    }
+});
 $theme_directory = get_template();
 $header_path = get_stylesheet_directory() . '/header.php';
 class mvpbrag
