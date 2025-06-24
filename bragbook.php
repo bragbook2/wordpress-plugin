@@ -36,7 +36,6 @@ require_once BB_PLUGIN_DIR_MAIN_PATH . 'updater.php';
 add_action('admin_init', function () {
     if (is_admin()) {
         $updater = new \mvpbrag\Bragbook_Updater();
-        $updater->authorize( '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' ); // Your auth code goes here for private repos
 
         $updater->set_username( 'bragbook2' );
         $updater->set_repository( 'wordpress-plugin' );
