@@ -31,6 +31,17 @@ require_once BB_PLUGIN_DIR_MAIN_PATH . 'include/class-sitemap.php';
 require_once BB_PLUGIN_DIR_MAIN_PATH . 'include/class-consultation.php';
 require_once BB_PLUGIN_DIR_MAIN_PATH . 'include/class-seo.php';
 require_once BB_PLUGIN_DIR_MAIN_PATH . 'include/class-api-settings.php';
+require_once BB_PLUGIN_DIR_MAIN_PATH . 'updater.php';
+
+add_action('admin_init', function () {
+    if (is_admin()) {
+        $updater = new \mvpbrag\Bragbook_Updater();
+
+        $updater->set_username( 'bragbook2' );
+        $updater->set_repository( 'wordpress-plugin' );
+        $updater->initialize(__FILE__ );
+    }
+});
 $theme_directory = get_template();
 $header_path = get_stylesheet_directory() . '/header.php';
 class mvpbrag
