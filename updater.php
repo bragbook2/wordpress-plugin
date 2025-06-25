@@ -65,7 +65,7 @@ class Bragbook_Updater
 			}
 
 			$this->github_response = json_decode(wp_remote_retrieve_body($response), true);
-			
+
 			$this->github_version = ltrim($this->github_response['tag_name'], 'v');
 		}
 	}
@@ -140,9 +140,18 @@ class Bragbook_Updater
 	public function after_install($response, $hook_extra, $result)
 	{
 		global $wp_filesystem;
+		$plugin_slug = 'wordpress-plugin';
 		$install_directory = plugin_dir_path($this->file);
-		$wp_filesystem->move($result['destination'], $install_directory);
-		$result['destination'] = $install_directory;
+		$extracted_dir = $result['destination'];
+
+		$plugins_dir = WP_PLUGIN_DIR;
+		$new_dir = $plugins_dir . '/' . $plugin_slug;
+
+		if ($wp_filesystem->is_dir($new_dir)) {
+			$wp_filesystem->delete($new_dir, true);
+		}
+		$wp_filesystem->move($extracted_dir, $new_dir);
+		$result['destination'] = $new_dir;
 
 		if ($this->active) {
 			activate_plugin($this->basename);
@@ -150,4 +159,5 @@ class Bragbook_Updater
 
 		return $result;
 	}
+
 }
