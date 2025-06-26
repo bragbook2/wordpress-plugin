@@ -3,7 +3,7 @@
 Plugin Name: BRAG Book Gallery
 Plugin URI: https://github.com/bragbook2/wordpress-plugin/releases/latest
 Description: Installs necessary components to display your BRAG book before and after gallery.
-Version: 2.5.4
+Version: 2.5.5
 Author: Candace Crowe Design
 Author URI: https://www.bragbookgallery.com/
 License: A "Slug" license name e.g. GPL2
