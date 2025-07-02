@@ -452,6 +452,25 @@ class Ajax_Handler
 
         $seoPluginOptions = get_option('bb_seo_plugin_selector');
         $api_tokens = get_option('bragbook_api_token', []);
+        $domain = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http");
+        $domain .= "://" . $_SERVER['HTTP_HOST'];
+
+        $websitePropertyIds = get_option('bragbook_websiteproperty_id', []);
+        $data_bb = [];
+        foreach ($api_tokens as $pageKey => $token) {
+            $data_bb[] = [
+                'version' => BB_PLUGIN_VERSION,
+                'domain' => $domain,
+                'galleryPage' => $bb_pages_slugs[$pageKey] ?? '',
+                'apiToken' => $token,
+                'websitePropertyId' => isset($websitePropertyIds[$pageKey]) ? (int) $websitePropertyIds[$pageKey] : null,
+            ];
+        }
+
+        $tracker_payload = json_encode(['data' => $data_bb]);
+
+        $bb_tracker = new Bb_Api();
+        $tracker_info = $bb_tracker->send_plugin_version_data($tracker_payload);
 
         $filepath = trailingslashit(ABSPATH) . 'brag-book-sitemap.xml';
 
@@ -803,20 +822,28 @@ class Ajax_Handler
                         </div>
                         <table class="form-table">
                             <tr valign="top">
-                                <th scope="row">Gallery Slug</th>
                                 <td>
                                     <button type="button" id="createCombineGallery" style="display: none">Create Combine Gallery
                                         Page</button>
+
                                     <div id="slugFieldContainer" style="display: none">
-                                        <br>
-                                        <input type="text" id="combine_gallery_slug" class="combineGallerySlug"
+                                        <div class="fieldGroup">
+                                            <label class="combine_page_bb">Combined Page Slug</label>
+                                            <input type="text" id="combine_gallery_slug" class="combineGallerySlug"
                                             name="combine_gallery_slug" value="<?php echo esc_attr($combine_gallery_slug); ?>">
-                                        <input type="text" id="bb_combine_seo_page_title" class="combineSeoTitle"
+                                        </div>
+                                        <div class="fieldGroup">
+                                            <label class="combine_page_bb">SEO Page Title</label>
+                                            <input type="text" id="bb_combine_seo_page_title" class="combineSeoTitle"
                                             name="bb_combine_seo_page_title"
                                             value="<?php echo esc_attr($bb_combine_seo_page_title); ?>">
-                                        <input type="text" id="bb_combine_seo_page_description" class="combineSeoDescription"
+                                         </div>
+                                        <div class="fieldGroup">
+                                            <label class="combine_page_bb">SEO Page Description</label>
+                                           <input type="text" id="bb_combine_seo_page_description" class="combineSeoDescription"
                                             name="bb_combine_seo_page_description"
                                             value="<?php echo esc_attr($bb_combine_seo_page_description); ?>">
+                                         </div>
                                     </div>
                                 </td>
                             </tr>
