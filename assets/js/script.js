@@ -145,7 +145,7 @@ function fetchCaseData(loadMoreCount) {
     let seoSuffixUrl = caseIdentifier ? "" : pathSegments[2] || "";
 
     const targetLinkSelector = `/${pageSlug}/${procedureSlug}/`;
-    const targetLinkElement = document.querySelector(`a[href="${targetLinkSelector}"]`);
+    const targetLinkElement = document.querySelector(`a[href="${targetLinkSelector}"][data-api-token][data-website-property-id][id]`);
 
     const elementId = targetLinkElement?.id || "";
     const apiToken = targetLinkElement?.getAttribute("data-api-token");
