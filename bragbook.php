@@ -78,6 +78,7 @@ class mvpbrag
         \mvpbrag\Shortcode::register();
         \mvpbrag\Shortcode::custom_rewrite_rules();
         \mvpbrag\Shortcode::custom_rewrite_flush();
+        \mvpbrag\Bb_Api::register_routes();
 
     }
 

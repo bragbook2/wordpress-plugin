@@ -36,7 +36,11 @@ class Activator
             'heartdown' => BB_PLUGIN_DIR_PATH . 'assets/images/down-arrow.svg',
             'heartRed' => BB_PLUGIN_DIR_PATH . 'assets/images/red-heart.svg',
             'heartrunning' => BB_PLUGIN_DIR_PATH . 'assets/images/running-heart.gif',
-            'ajaxurl' => admin_url('admin-ajax.php')
+            'ajaxurl' => admin_url('admin-ajax.php'),
+            'designVersion' => get_option('bb_design_plugin_selector'),
+            'pluginVersion' => BB_PLUGIN_VERSION,
+            'optimizeApiPath' =>  BB_BASE_URL,
+            'siteUrl' => get_site_url(),
         ));
 
     }
