@@ -145,7 +145,7 @@ function fetchCaseData(loadMoreCount) {
     let seoSuffixUrl = caseIdentifier ? "" : pathSegments[2] || "";
 
     const targetLinkSelector = `/${pageSlug}/${procedureSlug}/`;
-    const targetLinkElement = document.querySelector(`a[href="${targetLinkSelector}"]`);
+    const targetLinkElement = document.querySelector(`a[href="${targetLinkSelector}"][data-api-token][data-website-property-id][id]`);
 
     const elementId = targetLinkElement?.id || "";
     const apiToken = targetLinkElement?.getAttribute("data-api-token");
@@ -373,12 +373,26 @@ function fetchCaseData(loadMoreCount) {
               if (patientRightBox) {
                 caseSet.data.forEach((caseItem) => {
                   let patientDetail = caseItem.details || "";
+                  const procedureDetails = caseItem.procedureDetails ? Object.values(caseItem.procedureDetails)[0] : "";
+                  let procedureDetailsUI = "";
+                  if (procedureDetails && typeof procedureDetails === "object") {
+                    procedureDetailsUI = Object.entries(procedureDetails)
+                      .map(([key, value]) => {
+                        const displayValue = Array.isArray(value)
+                          ? value.join(", ")
+                          : value;
+                        return `<li><strong>${key.toUpperCase()}</strong>: ${displayValue}</li>`;
+                      })
+                      .join("");
+                  }
+
+
                   let height = caseItem.height
                     ? `<li><span>height</span>: ${caseItem.height
                       .toString()
                       .toLowerCase()}</li>`
                     : "";
-                  let width = caseItem.weight
+                  let weight = caseItem.weight
                     ? `<li><span>weight</span>: ${caseItem.weight
                       .toString()
                       .toLowerCase()}</li>`
@@ -426,13 +440,16 @@ function fetchCaseData(loadMoreCount) {
                         </div>
                         <ul class="bb-demographics">
                             ${height}
-                            ${width}
+                            ${weight}
                             ${race}
                             ${gender}
                             ${age}
                             ${timeframe}
                             ${timeframe2}
                             ${revisionSurgery}
+                        </ul>
+                        <ul class="bb-procedure-details">
+                            ${procedureDetailsUI}
                         </ul>
                         <div class="bb-case-description">${patientDetail}</div>
                          <div class="bb-patient-slides">
