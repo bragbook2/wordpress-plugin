@@ -14,8 +14,8 @@ const isNotSpecialPage = !isFavoriteListPage && !isConsultationPage;
 
 let linkText;
 
-document.addEventListener("DOMContentLoaded", () => {
-  fetchCaseData(loadMoreCount);
+document.addEventListener("DOMContentLoaded", async () => {
+  await fetchCaseData(loadMoreCount);
   handleLoadMoreButton();
   handleFilterToggle();
   handleSingleClickToggles();
@@ -122,7 +122,7 @@ function removeActiveClass(classname) {
 }
 
 // ============================ Event Listener ===========================================
-document.addEventListener("click", (event) => {
+document.addEventListener("click", async (event) => {
   const loadMoreContainer = event.target.closest(".ajax-load-more");
   if (!loadMoreContainer) return;
 
@@ -130,13 +130,13 @@ document.addEventListener("click", (event) => {
   const loadMoreButton = loadMoreContainer.querySelector(".bb_ajax-load-more-btn");
   if (loadMoreButton) {
     let currentOffset = parseInt(loadMoreButton.getAttribute("data-offset"), 10);
-    fetchCaseData(currentOffset);
+    await fetchCaseData(currentOffset);
     loadMoreButton.setAttribute("data-offset", ++currentOffset);
   }
 });
 
 // ============================ Fetch Data ===========================================
-function fetchCaseData(loadMoreCount) {
+async function fetchCaseData(loadMoreCount) {
   try {
     let count = loadMoreCount;
     const pageSlug = pathSegments[0] || "";
@@ -218,8 +218,8 @@ function fetchCaseData(loadMoreCount) {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded", },
       body: new URLSearchParams(requestData).toString(),
-    }).then((response) => response.json())
-      .then((data) => {
+    }).then(async (response) => response.json())
+      .then(async (data) => {
 
         const caseSets = JSON.parse(data.data.case_set);
         const filterSet = JSON.parse(data.data.filter_data);
@@ -265,9 +265,10 @@ function fetchCaseData(loadMoreCount) {
               if (caseSet.data) {
                 let bb_gallery_page_title = pageSlug.split('-').map(w => w[0].toUpperCase() + w.slice(1)).join(' ');
                 let bb_procedure_Title = procedureSlug.split('-').map(w => w[0].toUpperCase() + w.slice(1)).join(' ');
+                const rendered = await renderCaseDataBB(caseSet.data, count, pageSlug, procedureSlug, targetLinkSelector, apiToken, websitePropertyId, data.data.bragbook_favorite);
 
-                contentBox.innerHTML += renderCaseDataBB(caseSet.data, count, pageSlug, procedureSlug, targetLinkSelector, apiToken, websitePropertyId, data.data.bragbook_favorite).casesUI;
-                images = renderCaseDataBB(caseSet.data, count, pageSlug, procedureSlug, targetLinkSelector, apiToken, websitePropertyId, data.data.bragbook_favorite).images;
+                contentBox.innerHTML += rendered.casesUI;
+                images = rendered.images;
 
                 let schema = {
                   "@context": "https://schema.org",
@@ -319,9 +320,8 @@ function fetchCaseData(loadMoreCount) {
                     slug,
                   };
                 });
-
-
-                contentBox.innerHTML = renderCaseDataBB(data, count, pageSlug, '', targetLinkSelector, apiToken, websitePropertyId, fav_data).casesUI;
+                const rendered_fav = await renderCaseDataBB(data, count, pageSlug, '', targetLinkSelector, apiToken, websitePropertyId, fav_data);
+                contentBox.innerHTML = rendered_fav.casesUI;
               }
             } else {
               let images_case = [];
@@ -462,7 +462,7 @@ function fetchCaseData(loadMoreCount) {
                     caseItem.caseIds,
                     caseItem
                   );
-                  renderPagination(paginationData, caseItem, targetLinkSelector, bb_right_data);
+                  renderPagination(paginationData, caseItem, targetLinkSelector);
                 });
               }
               let bb_procedure_title = currentProcedure ? currentProcedure.name : '';
@@ -608,19 +608,41 @@ function fetchCaseData(loadMoreCount) {
     console.error("Error", error)
   }
 }
+async function getOptimizedImage(imageUrl, token, quality = 'small', format = 'webp') {
+  const proxyUrl = `${bb_plugin_data.siteUrl}/wp-json/bb/v1/optimize-image-proxy?url=${imageUrl}&quality=${quality}&format=${format}`;
 
-function renderCaseDataBB(data, count, pageSlug, procedureSlug, targetLinkSelector, apiToken, websitePropertyId, favData) {
+  try {
+    const response = await fetch(proxyUrl, {
+      method: 'GET',
+      headers: {
+        'x-api-token': token,
+        'x-plugin-version': bb_plugin_data.pluginVersion
+      }
+    });
+
+    const blob = await response.blob();
+    return imageUrl = URL.createObjectURL(blob);
+  } catch (error) {
+    console.error('Fetch error:', error);
+    return imageUrl;
+  }
+}
+
+async function renderCaseDataBB(data, count, pageSlug, procedureSlug, targetLinkSelector, apiToken, websitePropertyId, favData) {
   let caseCount = (count - 1) * 10;
   let bb_procedure_Title = '';
-  if (procedureSlug) procedureSlug.split('-').map(w => w[0].toUpperCase() + w.slice(1)).join(' ');
+  if (procedureSlug) bb_procedure_Title = procedureSlug.split('-').map(w => w[0].toUpperCase() + w.slice(1)).join(' ');
+
   const images = [];
-  const casesUI = data.map(({ photoSets, id, caseDetails, details, patientCount, slug }, index) => {
+
+  const casesUIArray = await Promise.all(data.map(async ({ photoSets, id, caseDetails, details, patientCount, slug }, index) => {
     if (!photoSets?.length) return "";
     patientCount = ++caseCount;
-    const { highResPostProcessedImageLocation, postProcessedImageLocation, beforeLocationUrl, seoAltText } = photoSets[0];
-    const imgSrc = highResPostProcessedImageLocation || postProcessedImageLocation || beforeLocationUrl;
-    const imgAlt = seoAltText + " - angle " + (index + 1) || "Procedure Image";
 
+    const { highResPostProcessedImageLocation, postProcessedImageLocation, beforeLocationUrl, seoAltText } = photoSets[0];
+    const imgSrcB = highResPostProcessedImageLocation || postProcessedImageLocation || beforeLocationUrl;
+    const imgSrc = await getOptimizedImage(imgSrcB, apiToken, 'small', 'webp');
+    const imgAlt = (seoAltText ? seoAltText + " - angle " + (index + 1) : "Procedure Image");
     const caseId = caseDetails[0]?.seoSuffixUrl || `bb-case-${id}`;
     const procedureUrl = `/${pageSlug}/${procedureSlug || slug}/${caseId}/`;
     const heartImage = favData?.includes(id) ? bb_plugin_data.heartBordered : bb_plugin_data.heartRed;
@@ -640,46 +662,49 @@ function renderCaseDataBB(data, count, pageSlug, procedureSlug, targetLinkSelect
       let titleWithoutDashes = document.querySelector(`a[href="${window.location.pathname}"]`)?.innerText.replace(/\s*\(\d+\)$/, '');
       proceduralName = titleWithoutDashes + ': <span>Patient ' + patientCount + '</span>';
     }
+
     images.push(imageObj);
 
     return `
        <div class="bb-content-box">
-                    <div class="bb-content-thumbnail">
-                        <a href="${procedureUrl}">
-                            <img src="${imgSrc}" alt="${imgAlt}">
-                        </a>
-                        <img class="bb-heart-icon bb-open-fav-modal" 
-                            data-case-id="${id}"
-                            data-bb_api_token="${apiToken}" 
-                            data-bb_website_id="${websitePropertyId}" 
-                            src="${heartImage}" 
-                            alt="heart">
-                    </div>
-                    <div class="bb-content-box-inner">
-                        <div class="bb-content-box-inner-left">
-                            <h2>${proceduralName}</h2>
-                            <p>${details || ''}</p> 
-                        </div>
-                        <div class="bb-content-box-inner-right">
-                            <img class="bb-open-fav-modal" 
-                                data-case-id="${id}" 
-                                data-bb_api_token="${apiToken}" 
-                                data-bb_website_id="${websitePropertyId}" 
-                                src="${heartImage}" 
-                                alt="heart">
-                        </div>
-                    </div>
-                    <div class="bb-content-box-cta">
-                        <a class="view-more-btn" href="${procedureUrl}">
-                            View More
-                        </a>
-                    </div>
-                </div>
+         <div class="bb-content-thumbnail">
+           <a href="${procedureUrl}">
+             <img src="${imgSrc}" alt="${imgAlt}">
+           </a>
+           <img class="bb-heart-icon bb-open-fav-modal" 
+                data-case-id="${id}"
+                data-bb_api_token="${apiToken}" 
+                data-bb_website_id="${websitePropertyId}" 
+                src="${heartImage}" 
+                alt="heart">
+         </div>
+         <div class="bb-content-box-inner">
+           <div class="bb-content-box-inner-left">
+             <h2>${proceduralName}</h2>
+             <p>${details || ''}</p> 
+           </div>
+           <div class="bb-content-box-inner-right">
+             <img class="bb-open-fav-modal" 
+                  data-case-id="${id}" 
+                  data-bb_api_token="${apiToken}" 
+                  data-bb_website_id="${websitePropertyId}" 
+                  src="${heartImage}" 
+                  alt="heart">
+           </div>
+         </div>
+         <div class="bb-content-box-cta">
+           <a class="view-more-btn" href="${procedureUrl}">
+             View More
+           </a>
+         </div>
+       </div>
     `;
-  }).join("");
+  }));
 
-  return { images, casesUI }
+  const casesUI = casesUIArray.join("");
+  return { images, casesUI };
 }
+
 
 function createFilterData(count, pageSlug, elementId, apiToken, websitePropertyId, caseIdentifier, staticFilterCombine, dynamicFilterCombine) {
   return {
@@ -721,12 +746,12 @@ function applyFilterBB(count, pageSlug, elementId, apiToken, websitePropertyId, 
     body: new URLSearchParams(data).toString(),
   })
     .then((response) => response.json())
-    .then(({ data }) => {
+    .then(async ({ data }) => {
       if (!data?.case_set) return console.error("Invalid response structure:", data);
-
+      
       const caseSet = JSON.parse(data.case_set);
       handleLoadMoreButton(caseSet.hasLoadMore);
-      contentBox.innerHTML = renderCaseDataBB(caseSet.data, count, pageSlug, procedureSlug, `/${pageSlug}/${procedureSlug}/`, apiToken, websitePropertyId, data.bragbook_favorite).casesUI;
+      contentBox.innerHTML = await renderCaseDataBB(caseSet.data, count, pageSlug, procedureSlug, `/${pageSlug}/${procedureSlug}/`, apiToken, websitePropertyId, data.bragbook_favorite).casesUI;
     })
     .catch((err) => console.error("Error fetching data:", err));
 }
@@ -1470,7 +1495,6 @@ function initFavorite() {
   });
 
   function bb_favorites_submission(data) {
-    console.log(data);
     var caseId = data.caseIds;
     jQuery.ajax({
       url: bb_plugin_data.ajaxurl,
@@ -1603,7 +1627,7 @@ if (document.querySelector(".bb-main .bb-form")) {
   });
 }
 
-setTimeout(() => {
+function openCaseGalleryBB() {
   const bbrag_modal = document.getElementById("bbrag_modal");
   const bbrag_modalImage = document.getElementById("bbrag_modalImage");
   const bbrag_closeModal = document.querySelector(".bbrag_close");
@@ -1644,7 +1668,7 @@ setTimeout(() => {
   if (bbrag_nextArrow) bbrag_nextArrow.addEventListener("click", bbrag_showNextImage);
 
   window.addEventListener("click", (event) => { if (event.target === bbrag_modal) bbrag_closeModalHandler() });
-}, 2000);
+}
 
 document.addEventListener("DOMContentLoaded", function () {
   document.getElementById('popup').style.visibility = 'visible';

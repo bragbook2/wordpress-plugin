@@ -131,6 +131,23 @@ class Shortcode
         }
         return null;
     }
+
+    public static function get_optimize_bb_img($original_url, $api_token)
+    {
+        $bb_new_image_procedure_data = add_query_arg([
+            'url' => urlencode($original_url),
+            'quality' => 'small',
+            'format' => 'webp',
+            'x-api-token' => $api_token,
+            'x-plugin-version' => BB_PLUGIN_VERSION,
+        ], rest_url('bb/v1/optimize-image-proxy'));
+        $response = wp_remote_get($bb_new_image_procedure_data);
+        $image_data = wp_remote_retrieve_body($response);
+        $content_type = wp_remote_retrieve_header($response, 'content-type') ?: 'image/webp';
+
+        $base64 = base64_encode($image_data);
+        return 'data:' . esc_attr($content_type) . ';base64,' . esc_attr($base64);
+    }
     public static function mvp_carousel_shortcode($atts)
     {
         $atts = shortcode_atts(
@@ -156,32 +173,19 @@ class Shortcode
         $api_tokens = get_option('bragbook_api_token', []);
         $websiteproperty_ids = get_option('bragbook_websiteproperty_id', []);
         $gallery_slugs = get_option('bb_gallery_page_slug', []);
-
-        $token = '';
-        foreach ($api_tokens as $index => $api_token) {
-            $websiteproperty_id = $websiteproperty_ids[$index] ?? '';
-            $page_slug_bb = $gallery_slugs[$index] ?? '';
-
-            if (($websiteproperty_id == $cat_website_property_id)) {
-                if (empty($api_token) || empty($websiteproperty_id)) {
-                    continue;
-                }
-
-                $token = $api_token;
-                $bb_slug_link = $page_slug_bb;
-
-                $sidebar = new Bb_Api();
-                $data = $sidebar->get_api_sidebar_bb($api_token);
-                $sidebar_set = json_decode($data, true) ?? [];
-            }
-        }
+        $bb_token_page = array_search($cat_website_property_id, $websiteproperty_ids, true);
+        $api_token = $api_tokens[$bb_token_page];
+        $bb_slug_link = $gallery_slugs[$bb_token_page];
+        $sidebar = new Bb_Api();
+        $data = $sidebar->get_api_sidebar_bb($api_token);
+        $sidebar_set = json_decode($data, true) ?? [];
 
         $result = isset($sidebar_set) ? self::searchData($sidebar_set, $cat_name) : '';
         if (empty($result)) {
             return false;
         }
         $id = $result['ids'][0];
-        $url_car = BB_BASE_URL . "/api/plugin/carousel?websitePropertyId={$cat_website_property_id}&start={$cat_start}&limit={$cat_limit}&apiToken={$token}&procedureId={$id}";
+        $url_car = BB_BASE_URL . "/api/plugin/carousel?websitePropertyId={$cat_website_property_id}&start={$cat_start}&limit={$cat_limit}&apiToken={$api_token}&procedureId={$id}";
 
         $response = wp_remote_get($url_car);
         if (is_wp_error($response)) {
@@ -202,19 +206,18 @@ class Shortcode
                 $spro_title_bb = $result['slugName'];
                 $carousel_data_bb = json_decode($data_car);
                 foreach ($carousel_data_bb->data as $procedure_data) {
-
                     if (!empty($procedure_data->photoSets)) {
                         ?>
                         <div class="bb-slick-slide">
                             <div class="bb-slide">
                                 <?php
-                                $bb_new_image_procedure_data = isset($procedure_data->photoSets[0]->highResPostProcessedImageLocation) && !is_null($procedure_data->photoSets[0]->highResPostProcessedImageLocation)
+                                $bb_new_image_procedure_data_optimize = isset($procedure_data->photoSets[0]->highResPostProcessedImageLocation) && !is_null($procedure_data->photoSets[0]->highResPostProcessedImageLocation)
                                     ? $procedure_data->photoSets[0]->highResPostProcessedImageLocation
                                     : (isset($procedure_data->photoSets[0]->postProcessedImageLocation) && !is_null($procedure_data->photoSets[0]->postProcessedImageLocation)
                                         ? $procedure_data->photoSets[0]->postProcessedImageLocation
                                         : $procedure_data->photoSets[0]->originalBeforeLocation);
-                                ?>
-                                <?php
+                                $bb_new_image_procedure_data = self::get_optimize_bb_img($bb_new_image_procedure_data_optimize, $api_token);
+
                                 $caseSeoSuffixUrl = "";
                                 if ($procedure_data->caseDetails[0] && $procedure_data->caseDetails[0]->seoSuffixUrl) {
                                     $caseSeoSuffixUrl = $procedure_data->caseDetails[0]->seoSuffixUrl;
@@ -223,7 +226,7 @@ class Shortcode
                                 }
                                 ?>
                                 <a href="<?php echo "/" . $bb_slug_link . "/" . $spro_title_bb . "/" . $caseSeoSuffixUrl . "/"; ?>">
-                                    <img class="bb-slide-thumnail" src="<?php echo $bb_new_image_procedure_data; ?>"
+                                    <img class="bb-slide-thumnail" src=<?php echo $bb_new_image_procedure_data; ?>
                                         alt="<?php echo isset($procedure_data->photoSets[0]->seoAltText) ? $procedure_data->photoSets[0]->seoAltText : ''; ?>">
                                 </a>
                                 <?php if ($cat_title == 1 || $cat_details == 1) { ?>
@@ -269,36 +272,24 @@ class Shortcode
         $cat_website_property_id = $atts['website_property_id'];
         $api_tokens = get_option('bragbook_api_token', []);
         $websiteproperty_ids = get_option('bragbook_websiteproperty_id', []);
-        $gallery_slugs = get_option('bb_gallery_page_slug', []);
-
-        $token = '';
-        foreach ($api_tokens as $index => $api_token) {
-            $websiteproperty_id = $websiteproperty_ids[$index] ?? '';
-            $page_slug_bb = $gallery_slugs[$index] ?? '';
-
-            if (($websiteproperty_id == $cat_website_property_id)) {
-                if (empty($api_token) || empty($websiteproperty_id)) {
-                    continue;
-                }
-
-                $token = $api_token;
-                $bb_slug_link = $page_slug_bb;
-
-                $sidebar = new Bb_Api();
-                $data = $sidebar->get_api_sidebar_bb($api_token);
-                $sidebar_set = json_decode($data, true) ?? [];
-            }
-        }
-
+        $bb_token_page = array_search($cat_website_property_id, $websiteproperty_ids, true);
+        $api_token = $api_tokens[$bb_token_page];
+        $sidebar = new Bb_Api();
+        $data = $sidebar->get_api_sidebar_bb($api_token);
+        $sidebar_set = json_decode($data, true) ?? [];
+        $sidebar = new Bb_Api();
+        $data = $sidebar->get_api_sidebar_bb($api_token);
+        $sidebar_set = json_decode($data, true) ?? [];
         $result = isset($sidebar_set) ? self::searchData($sidebar_set, $cat_name) : '';
         if (empty($result)) {
             return false;
         }
 
         $id = $result['ids'][0];
-        $url_case = BB_BASE_URL . "/api/plugin/cases/?websitePropertyId={$cat_website_property_id}&apiToken={$token}&caseId={$caseid}&procedureId={$id}";
+        $url_case = BB_BASE_URL . "/api/plugin/cases/?websitePropertyId={$cat_website_property_id}&apiToken={$api_token}&caseId={$caseid}&procedureId={$id}";
 
         $response = wp_remote_get($url_case);
+
         if (is_wp_error($response)) {
             $error_message = $response->get_error_message();
             echo "Something went wrong: $error_message";
@@ -326,11 +317,12 @@ class Shortcode
                                     ?>
                                     <div class="bb-content-box">
                                         <?php
-                                        $bb_new_image_photoSet = isset($photoSet['highResPostProcessedImageLocation']) && !is_null($photoSet['highResPostProcessedImageLocation'])
+                                        $bb_new_image_photoSet_optimize = isset($photoSet['highResPostProcessedImageLocation']) && !is_null($photoSet['highResPostProcessedImageLocation'])
                                             ? $photoSet['highResPostProcessedImageLocation']
                                             : (isset($photoSet['postProcessedImageLocation']) && !is_null($photoSet['postProcessedImageLocation'])
                                                 ? $photoSet['postProcessedImageLocation']
                                                 : $photoSet['originalBeforeLocation']);
+                                        $bb_new_image_photoSet = self::get_optimize_bb_img($bb_new_image_photoSet_optimize, $api_token);
 
                                         ?>
                                         <img src="<?php echo $bb_new_image_photoSet ?>"
@@ -467,11 +459,9 @@ class Shortcode
 
                     <a href="/<?= $bb_slug_link ?>/consultation/" class="bb-sidebar-btn">REQUEST A CONSULTATION</a>
                     <p class="request-promo">Ready for the next step?<br>Contact us to request your consultation.</p>
-                    <!-- <p>Before and after gallery powered by <span style="color:red">BRAG book™</span></p> -->
 
                 </div>
                 <!-- Sidebar end here -->
-
                 <div class="bb-content-area">
                     <div class="bb-filter-attic bb-filter-attic-borderless">
                         <button type="button" class="bb-sidebar-toggle">
@@ -616,25 +606,16 @@ class Shortcode
         $api_tokens = get_option('bragbook_api_token', []);
         $websiteproperty_ids = get_option('bragbook_websiteproperty_id', []);
         $gallery_slugs = get_option('bb_gallery_page_slug', []);
+        $bb_token_page = array_search($cat_website_property_id, $websiteproperty_ids, true);
+        $api_token = $api_tokens[$bb_token_page];
+        $bb_slug_link = $gallery_slugs[$bb_token_page];
+        $sidebar = new Bb_Api();
+        $data = $sidebar->get_api_sidebar_bb($api_token);
+        $sidebar_set = json_decode($data, true) ?? [];
 
-        $token = '';
-        foreach ($api_tokens as $index => $api_token) {
-            $websiteproperty_id = $websiteproperty_ids[$index] ?? '';
-            $page_slug_bb = $gallery_slugs[$index] ?? '';
-
-            if (($websiteproperty_id == $cat_website_property_id)) {
-                if (empty($api_token) || empty($websiteproperty_id)) {
-                    continue;
-                }
-
-                $token = $api_token;
-                $bb_slug_link = $page_slug_bb;
-
-                $sidebar = new Bb_Api();
-                $data = $sidebar->get_api_sidebar_bb($api_token);
-                $sidebar_set = json_decode($data, true) ?? [];
-            }
-        }
+        $sidebar = new Bb_Api();
+        $data = $sidebar->get_api_sidebar_bb($api_token);
+        $sidebar_set = json_decode($data, true) ?? [];
 
         $result = isset($sidebar_set) ? self::searchData($sidebar_set, $cat_name) : '';
         if (empty($result)) {
@@ -644,7 +625,7 @@ class Shortcode
         $id = $result['ids'][0];
         $procedure_name_bb = $result['slugName'];
 
-        $url_pro = BB_BASE_URL . "/api/plugin/carousel?websitePropertyId={$cat_website_property_id}&start={$cat_start}&limit={$cat_limit}&apiToken={$token}&procedureId={$id}";
+        $url_pro = BB_BASE_URL . "/api/plugin/carousel?websitePropertyId={$cat_website_property_id}&start={$cat_start}&limit={$cat_limit}&apiToken={$api_token}&procedureId={$id}";
 
         $response = wp_remote_get($url_pro);
         if (is_wp_error($response)) {
@@ -670,12 +651,14 @@ class Shortcode
 
 
                 // Start generating content
-                $contentBox = ''; // This will hold the HTML content
+                $contentBox = ''; 
         
                 foreach ($result_pro['data'] as $caseItem) {
                     if (isset($caseItem['photoSets']) && count($caseItem['photoSets']) > 0) {
-                        $photoSet = $caseItem['photoSets'][0]; // Get the first photo set
-                        $imgSrc = $photoSet['highResPostProcessedImageLocation'] ?? $photoSet['postProcessedImageLocation'] ?? $photoSet['originalBeforeLocation'];
+                        $photoSet = $caseItem['photoSets'][0];
+                        $imgSrcOptimize = $photoSet['highResPostProcessedImageLocation'] ?? $photoSet['postProcessedImageLocation'] ?? $photoSet['originalBeforeLocation'];
+                        $imgSrc = self::get_optimize_bb_img($imgSrcOptimize, $api_token);
+
                         $imgAlt = $photoSet['seoAltText'] ?? 'Procedure Image';
                         $caseSeoSuffixUrl = "";
                         if ($caseItem["caseDetails"][0] && $caseItem["caseDetails"][0]["seoSuffixUrl"]) {
@@ -713,11 +696,10 @@ class Shortcode
 
                         $newContent .= "</div>";
 
-                        $contentBox .= $newContent; // Append content
+                        $contentBox .= $newContent;
                     }
                 }
 
-                // Output the generated content
                 echo $contentBox;
                 ?>
             </div>
