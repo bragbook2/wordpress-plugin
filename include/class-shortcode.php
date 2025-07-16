@@ -145,7 +145,6 @@ class Shortcode
         $image_data = wp_remote_retrieve_body($response);
         $content_type = wp_remote_retrieve_header($response, 'content-type') ?: 'image/webp';
 
-        // Output image directly using base64
         $base64 = base64_encode($image_data);
         return 'data:' . esc_attr($content_type) . ';base64,' . esc_attr($base64);
     }
@@ -199,61 +198,61 @@ class Shortcode
 
         ob_start();
         ?>
-                <div class="bb-main">
-                    <div class="bb-slider">
-                        <?php
-                        $limit_count = 0;
-                        $bb_scase_ids_list = [];
-                        $spro_title_bb = $result['slugName'];
-                        $carousel_data_bb = json_decode($data_car);
-                        foreach ($carousel_data_bb->data as $procedure_data) {
-                            if (!empty($procedure_data->photoSets)) {
-                                ?>
-                                        <div class="bb-slick-slide">
-                                            <div class="bb-slide">
-                                                <?php
-                                                $bb_new_image_procedure_data_optimize = isset($procedure_data->photoSets[0]->highResPostProcessedImageLocation) && !is_null($procedure_data->photoSets[0]->highResPostProcessedImageLocation)
-                                                    ? $procedure_data->photoSets[0]->highResPostProcessedImageLocation
-                                                    : (isset($procedure_data->photoSets[0]->postProcessedImageLocation) && !is_null($procedure_data->photoSets[0]->postProcessedImageLocation)
-                                                        ? $procedure_data->photoSets[0]->postProcessedImageLocation
-                                                        : $procedure_data->photoSets[0]->originalBeforeLocation);
-                                                $bb_new_image_procedure_data = self::get_optimize_bb_img($bb_new_image_procedure_data_optimize, $api_token);
-
-                                                $caseSeoSuffixUrl = "";
-                                                if ($procedure_data->caseDetails[0] && $procedure_data->caseDetails[0]->seoSuffixUrl) {
-                                                    $caseSeoSuffixUrl = $procedure_data->caseDetails[0]->seoSuffixUrl;
-                                                } else {
-                                                    $caseSeoSuffixUrl = 'bb-case-' . $procedure_data->id;
-                                                }
-                                                ?>
-                                                <a href="<?php echo "/" . $bb_slug_link . "/" . $spro_title_bb . "/" . $caseSeoSuffixUrl . "/"; ?>">
-                                                    <img class="bb-slide-thumnail" src=<?php echo $bb_new_image_procedure_data; ?>
-                                                        alt="<?php echo isset($procedure_data->photoSets[0]->seoAltText) ? $procedure_data->photoSets[0]->seoAltText : ''; ?>">
-                                                </a>
-                                                <?php if ($cat_title == 1 || $cat_details == 1) { ?>
-                                                                <div class="bb-content-box-inner">
-                                                                    <div class="bb-content-box-inner-left">
-                                                                        <?php if ($cat_title == 1) { ?>
-                                                                                        <p class="bb-carousel-tite">
-                                                                                            <?php echo isset($procedure_data->caseDetails[0]->seoHeadline) ? $procedure_data->caseDetails[0]->seoHeadline : $cat_title_formatted . " Patient"; ?>
-                                                                                        </p>
-                                                                        <?php }
-                                                                        if ($cat_details == 1) { ?>
-                                                                                        <?php echo str_replace('<p>', '<p class="bb-carousel-description">', self::bb_limitWords($procedure_data->details, 50)); ?>
-                                                                        <?php } ?>
-                                                                    </div>
-                                                                </div>
-                                                <?php } ?>
-                                            </div>
-                                        </div>
-                                        <?php
-                            }
-                        }
-                        ?>
-                    </div>
-                </div>
+        <div class="bb-main">
+            <div class="bb-slider">
                 <?php
-                return ob_get_clean();
+                $limit_count = 0;
+                $bb_scase_ids_list = [];
+                $spro_title_bb = $result['slugName'];
+                $carousel_data_bb = json_decode($data_car);
+                foreach ($carousel_data_bb->data as $procedure_data) {
+                    if (!empty($procedure_data->photoSets)) {
+                        ?>
+                        <div class="bb-slick-slide">
+                            <div class="bb-slide">
+                                <?php
+                                $bb_new_image_procedure_data_optimize = isset($procedure_data->photoSets[0]->highResPostProcessedImageLocation) && !is_null($procedure_data->photoSets[0]->highResPostProcessedImageLocation)
+                                    ? $procedure_data->photoSets[0]->highResPostProcessedImageLocation
+                                    : (isset($procedure_data->photoSets[0]->postProcessedImageLocation) && !is_null($procedure_data->photoSets[0]->postProcessedImageLocation)
+                                        ? $procedure_data->photoSets[0]->postProcessedImageLocation
+                                        : $procedure_data->photoSets[0]->originalBeforeLocation);
+                                $bb_new_image_procedure_data = self::get_optimize_bb_img($bb_new_image_procedure_data_optimize, $api_token);
+
+                                $caseSeoSuffixUrl = "";
+                                if ($procedure_data->caseDetails[0] && $procedure_data->caseDetails[0]->seoSuffixUrl) {
+                                    $caseSeoSuffixUrl = $procedure_data->caseDetails[0]->seoSuffixUrl;
+                                } else {
+                                    $caseSeoSuffixUrl = 'bb-case-' . $procedure_data->id;
+                                }
+                                ?>
+                                <a href="<?php echo "/" . $bb_slug_link . "/" . $spro_title_bb . "/" . $caseSeoSuffixUrl . "/"; ?>">
+                                    <img class="bb-slide-thumnail" src=<?php echo $bb_new_image_procedure_data; ?>
+                                        alt="<?php echo isset($procedure_data->photoSets[0]->seoAltText) ? $procedure_data->photoSets[0]->seoAltText : ''; ?>">
+                                </a>
+                                <?php if ($cat_title == 1 || $cat_details == 1) { ?>
+                                    <div class="bb-content-box-inner">
+                                        <div class="bb-content-box-inner-left">
+                                            <?php if ($cat_title == 1) { ?>
+                                                <p class="bb-carousel-tite">
+                                                    <?php echo isset($procedure_data->caseDetails[0]->seoHeadline) ? $procedure_data->caseDetails[0]->seoHeadline : $cat_title_formatted . " Patient"; ?>
+                                                </p>
+                                            <?php }
+                                            if ($cat_details == 1) { ?>
+                                                <?php echo str_replace('<p>', '<p class="bb-carousel-description">', self::bb_limitWords($procedure_data->details, 50)); ?>
+                                            <?php } ?>
+                                        </div>
+                                    </div>
+                                <?php } ?>
+                            </div>
+                        </div>
+                        <?php
+                    }
+                }
+                ?>
+            </div>
+        </div>
+        <?php
+        return ob_get_clean();
     }
 
     public static function mvp_bragbook_set_shortcode($atts)
@@ -290,7 +289,7 @@ class Shortcode
         $url_case = BB_BASE_URL . "/api/plugin/cases/?websitePropertyId={$cat_website_property_id}&apiToken={$api_token}&caseId={$caseid}&procedureId={$id}";
 
         $response = wp_remote_get($url_case);
-       
+
         if (is_wp_error($response)) {
             $error_message = $response->get_error_message();
             echo "Something went wrong: $error_message";
@@ -316,21 +315,21 @@ class Shortcode
 
                                 if ($caseid == $photoSet['caseId']) {
                                     ?>
-                                        <div class="bb-content-box">
-                                            <?php
-                                            $bb_new_image_photoSet_optimize = isset($photoSet['highResPostProcessedImageLocation']) && !is_null($photoSet['highResPostProcessedImageLocation'])
-                                                ? $photoSet['highResPostProcessedImageLocation']
-                                                : (isset($photoSet['postProcessedImageLocation']) && !is_null($photoSet['postProcessedImageLocation'])
-                                                    ? $photoSet['postProcessedImageLocation']
-                                                    : $photoSet['originalBeforeLocation']);
-                                            $bb_new_image_photoSet = self::get_optimize_bb_img($bb_new_image_photoSet_optimize, $api_token);
-                                        
-                                            ?>
-                                            <img src="<?php echo $bb_new_image_photoSet ?>"
-                                                alt="<?php echo isset($photoSet['seoAltText']) ? $photoSet['seoAltText'] : ''; ?>">
-                                        </div>
+                                    <div class="bb-content-box">
                                         <?php
-                                        break;
+                                        $bb_new_image_photoSet_optimize = isset($photoSet['highResPostProcessedImageLocation']) && !is_null($photoSet['highResPostProcessedImageLocation'])
+                                            ? $photoSet['highResPostProcessedImageLocation']
+                                            : (isset($photoSet['postProcessedImageLocation']) && !is_null($photoSet['postProcessedImageLocation'])
+                                                ? $photoSet['postProcessedImageLocation']
+                                                : $photoSet['originalBeforeLocation']);
+                                        $bb_new_image_photoSet = self::get_optimize_bb_img($bb_new_image_photoSet_optimize, $api_token);
+
+                                        ?>
+                                        <img src="<?php echo $bb_new_image_photoSet ?>"
+                                            alt="<?php echo isset($photoSet['seoAltText']) ? $photoSet['seoAltText'] : ''; ?>">
+                                    </div>
+                                    <?php
+                                    break;
                                 }
                             }
                         }
@@ -426,17 +425,17 @@ class Shortcode
                                             <?php
                                             foreach ($procedure_data['procedures'] as $procedure) {
                                                 ?>
-                                                            <li>
-                                                                <a id="<?= esc_attr($procedure['ids']); ?>"
-                                                                    href="<?= "/" . $bb_slug_link . "/" . $procedure['slugName'] . "/"; ?>"
-                                                                    data-count="1" data-api-token="<?= esc_attr($token); ?>"
-                                                                    data-website-property-id="<?= esc_attr($cat_website_property_id); ?>">
-                                                                    <?= esc_html($procedure['name']); ?>
-                                                                    <span>(<?php echo $procedure['totalCase'] . "/" ?>)</span>
-                                                                </a>
+                                                <li>
+                                                    <a id="<?= esc_attr($procedure['ids']); ?>"
+                                                        href="<?= "/" . $bb_slug_link . "/" . $procedure['slugName'] . "/"; ?>"
+                                                        data-count="1" data-api-token="<?= esc_attr($token); ?>"
+                                                        data-website-property-id="<?= esc_attr($cat_website_property_id); ?>">
+                                                        <?= esc_html($procedure['name']); ?>
+                                                        <span>(<?php echo $procedure['totalCase'] . "/" ?>)</span>
+                                                    </a>
 
-                                                            </li>
-                                                            <?php
+                                                </li>
+                                                <?php
                                             }
                                             ?>
                                         </ul>
@@ -460,11 +459,9 @@ class Shortcode
 
                     <a href="/<?= $bb_slug_link ?>/consultation/" class="bb-sidebar-btn">REQUEST A CONSULTATION</a>
                     <p class="request-promo">Ready for the next step?<br>Contact us to request your consultation.</p>
-                    <!-- <p>Before and after gallery powered by <span style="color:red">BRAG book™</span></p> -->
 
                 </div>
                 <!-- Sidebar end here -->
-
                 <div class="bb-content-area">
                     <div class="bb-filter-attic bb-filter-attic-borderless">
                         <button type="button" class="bb-sidebar-toggle">
@@ -645,35 +642,35 @@ class Shortcode
 
         ob_start();
         ?>
-                                <div class="bb-main bb-category-shortcode-main">
-                                    <div class="bb-content-boxes">
-                                        <?
-                                        $bb_case_count = 0;
-                                        $secondPart = $bb_slug_link;
-                                        $thirdPart = $procedure_name_bb;
+        <div class="bb-main bb-category-shortcode-main">
+            <div class="bb-content-boxes">
+                <?
+                $bb_case_count = 0;
+                $secondPart = $bb_slug_link;
+                $thirdPart = $procedure_name_bb;
 
 
-                                        // Start generating content
-                                        $contentBox = ''; // This will hold the HTML content
-                                
-                                        foreach ($result_pro['data'] as $caseItem) {
-                                            if (isset($caseItem['photoSets']) && count($caseItem['photoSets']) > 0) {
-                                                $photoSet = $caseItem['photoSets'][0]; // Get the first photo set
-                                                $imgSrcOptimize = $photoSet['highResPostProcessedImageLocation'] ?? $photoSet['postProcessedImageLocation'] ?? $photoSet['originalBeforeLocation'];
-                                                $imgSrc = self::get_optimize_bb_img($imgSrcOptimize, $api_token);
+                // Start generating content
+                $contentBox = ''; 
+        
+                foreach ($result_pro['data'] as $caseItem) {
+                    if (isset($caseItem['photoSets']) && count($caseItem['photoSets']) > 0) {
+                        $photoSet = $caseItem['photoSets'][0];
+                        $imgSrcOptimize = $photoSet['highResPostProcessedImageLocation'] ?? $photoSet['postProcessedImageLocation'] ?? $photoSet['originalBeforeLocation'];
+                        $imgSrc = self::get_optimize_bb_img($imgSrcOptimize, $api_token);
 
-                                                $imgAlt = $photoSet['seoAltText'] ?? 'Procedure Image';
-                                                $caseSeoSuffixUrl = "";
-                                                if ($caseItem["caseDetails"][0] && $caseItem["caseDetails"][0]["seoSuffixUrl"]) {
-                                                    $caseSeoSuffixUrl = $caseItem["caseDetails"][0]["seoSuffixUrl"];
-                                                } else {
-                                                    $caseSeoSuffixUrl = 'bb-case-' . $caseItem['id'];
-                                                }
-                                                $caseDetails = $caseItem['details'] ?? '';
-                                                $patientCount = ++$bb_case_count;
-                                                $procedureUrl = "/$secondPart/$thirdPart/$caseSeoSuffixUrl/";
+                        $imgAlt = $photoSet['seoAltText'] ?? 'Procedure Image';
+                        $caseSeoSuffixUrl = "";
+                        if ($caseItem["caseDetails"][0] && $caseItem["caseDetails"][0]["seoSuffixUrl"]) {
+                            $caseSeoSuffixUrl = $caseItem["caseDetails"][0]["seoSuffixUrl"];
+                        } else {
+                            $caseSeoSuffixUrl = 'bb-case-' . $caseItem['id'];
+                        }
+                        $caseDetails = $caseItem['details'] ?? '';
+                        $patientCount = ++$bb_case_count;
+                        $procedureUrl = "/$secondPart/$thirdPart/$caseSeoSuffixUrl/";
 
-                                                $newContent = "
+                        $newContent = "
                             <div class='bb-content-box'>
                                 <div class='bb-content-thumbnail'>
                                     <a href='$procedureUrl'>
@@ -681,35 +678,34 @@ class Shortcode
                                     </a>
                                 </div>";
 
-                                                if ($cat_title == 1 || $cat_details == 1) {
+                        if ($cat_title == 1 || $cat_details == 1) {
 
-                                                    $newContent .= "
+                            $newContent .= "
                                 <div class='bb-content-box-inner'>
                                     <div class='bb-content-box-inner-left'>";
-                                                    if ($cat_title == 1)
-                                                        $newContent .= "<p class='bb-carousel-tite'>$thirdPart : Patient $patientCount</p>";
-                                                    if ($cat_details == 1)
-                                                        $newContent .= "<p>$caseDetails</p>";
-                                                    $newContent .= "</div>
+                            if ($cat_title == 1)
+                                $newContent .= "<p class='bb-carousel-tite'>$thirdPart : Patient $patientCount</p>";
+                            if ($cat_details == 1)
+                                $newContent .= "<p>$caseDetails</p>";
+                            $newContent .= "</div>
                                     <div class='bb-content-box-inner-right'>
                                         <!-- You can add content here if needed -->
                                     </div>
                                 </div>";
-                                                }
+                        }
 
-                                                $newContent .= "</div>";
+                        $newContent .= "</div>";
 
-                                                $contentBox .= $newContent; // Append content
-                                            }
-                                        }
+                        $contentBox .= $newContent;
+                    }
+                }
 
-                                        // Output the generated content
-                                        echo $contentBox;
-                                        ?>
-                                    </div>
-                                </div>
-                                <?php
+                echo $contentBox;
+                ?>
+            </div>
+        </div>
+        <?php
 
-                                return ob_get_clean();
+        return ob_get_clean();
     }
 }

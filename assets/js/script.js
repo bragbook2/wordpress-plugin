@@ -627,87 +627,6 @@ async function getOptimizedImage(imageUrl, token, quality = 'small', format = 'w
     return imageUrl;
   }
 }
-// (async () => {
-//   const optimizedUrl = await getOptimizedImage('https://www.bragbook.gallery/assets/gallery/121/eyelid-lift-before-and-after-3F6CFxm8pyQ0_highres.webp', '1ae691c1-5991-466b-82d7-16e085f3e776', 'small', 'webp');
-//   const img = document.createElement('img');
-//   img.src = optimizedUrl;
-//   document.body.appendChild(img);
-//   console.log('Optimized image:', optimizedUrl);
-// })();
-
-// async function renderCaseDataBB(data, count, pageSlug, procedureSlug, targetLinkSelector, apiToken, websitePropertyId, favData) {
-//   let caseCount = (count - 1) * 10;
-//   let bb_procedure_Title = '';
-//   if (procedureSlug) procedureSlug.split('-').map(w => w[0].toUpperCase() + w.slice(1)).join(' ');
-//   const images = [];
-//   // const casesUI = await Promise.all( data.map(async ({ photoSets, id, caseDetails, details, patientCount, slug }, index) => {
-//   const casesUI = data.map(async({ photoSets, id, caseDetails, details, patientCount, slug }, index) => {
-//     if (!photoSets?.length) return "";
-//     patientCount = ++caseCount;
-//     const { highResPostProcessedImageLocation, postProcessedImageLocation, beforeLocationUrl, seoAltText } = photoSets[0];
-//     const imgSrcB = highResPostProcessedImageLocation || postProcessedImageLocation || beforeLocationUrl;
-//     const imgSrc = await getOptimizedImage(imgSrcB, apiToken, 'small', 'webp');
-//    // console.log(imgSrc);
-//     const imgAlt = seoAltText + " - angle " + (index + 1) || "Procedure Image";
-
-//     const caseId = caseDetails[0]?.seoSuffixUrl || `bb-case-${id}`;
-//     const procedureUrl = `/${pageSlug}/${procedureSlug || slug}/${caseId}/`;
-//     const heartImage = favData?.includes(id) ? bb_plugin_data.heartBordered : bb_plugin_data.heartRed;
-
-//     let imageObj = {
-//       "@type": "ImageObject",
-//       "name": bb_procedure_Title,
-//       "description": `Photo gallery of ${bb_procedure_Title} results showing before and after photos from different angles.`,
-//       "url": `${targetLinkSelector}${caseId}`,
-//       "thumbnailUrl": imgSrc
-//     };
-
-//     let proceduralName = "";
-//     if (caseDetails[0]?.seoHeadline) {
-//       proceduralName = caseDetails[0]?.seoHeadline;
-//     } else {
-//       let titleWithoutDashes = document.querySelector(`a[href="${window.location.pathname}"]`)?.innerText.replace(/\s*\(\d+\)$/, '');
-//       proceduralName = titleWithoutDashes + ': <span>Patient ' + patientCount + '</span>';
-//     }
-//     images.push(imageObj);
-//     return `
-//        <div class="bb-content-box">
-//                     <div class="bb-content-thumbnail">
-//                         <a href="${procedureUrl}">
-//                             <img src="${imgSrc}" alt="${imgAlt}">
-//                         </a>
-//                         <img class="bb-heart-icon bb-open-fav-modal" 
-//                             data-case-id="${id}"
-//                             data-bb_api_token="${apiToken}" 
-//                             data-bb_website_id="${websitePropertyId}" 
-//                             src="${heartImage}" 
-//                             alt="heart">
-//                     </div>
-//                     <div class="bb-content-box-inner">
-//                         <div class="bb-content-box-inner-left">
-//                             <h2>${proceduralName}</h2>
-//                             <p>${details || ''}</p> 
-//                         </div>
-//                         <div class="bb-content-box-inner-right">
-//                             <img class="bb-open-fav-modal" 
-//                                 data-case-id="${id}" 
-//                                 data-bb_api_token="${apiToken}" 
-//                                 data-bb_website_id="${websitePropertyId}" 
-//                                 src="${heartImage}" 
-//                                 alt="heart">
-//                         </div>
-//                     </div>
-//                     <div class="bb-content-box-cta">
-//                         <a class="view-more-btn" href="${procedureUrl}">
-//                             View More
-//                         </a>
-//                     </div>
-//                 </div>
-//     `;
-//   }).join("");
-//   //})).join("");
-//   return { images, casesUI }
-// }
 
 async function renderCaseDataBB(data, count, pageSlug, procedureSlug, targetLinkSelector, apiToken, websitePropertyId, favData) {
   let caseCount = (count - 1) * 10;
@@ -786,18 +705,6 @@ async function renderCaseDataBB(data, count, pageSlug, procedureSlug, targetLink
   return { images, casesUI };
 }
 
-
-function convertBlobToBase64(blob) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = reject;
-    reader.onload = () => {
-      const base64data = reader.result.split(',')[1]; // remove `data:image/png;base64,`
-      resolve(base64data);
-    };
-    reader.readAsDataURL(blob);
-  });
-}
 
 function createFilterData(count, pageSlug, elementId, apiToken, websitePropertyId, caseIdentifier, staticFilterCombine, dynamicFilterCombine) {
   return {
