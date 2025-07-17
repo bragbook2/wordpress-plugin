@@ -64,8 +64,15 @@ if (
     return;
 }
 
-// Case listing page
+
 if (isset($bbrag_procedure_title) && $bbrag_case_url == "/" . $parts[0] . "/" . $bbrag_procedure_title . "/") {
+
+    if (get_option('bb_design_plugin_selector') == "v2") {
+        include plugin_dir_path(__FILE__) . 'case-list-template-v2.php';
+        return;
+    }
+
+    // Case listing page
     include plugin_dir_path(__FILE__) . 'case-list-template.php';
     return;
 }
@@ -96,7 +103,10 @@ if (isset($bbrag_procedure_title) && isset($bbrag_case_id) && $bbrag_case_url ==
             ));
         }
     }
-
+    if (get_option('bb_design_plugin_selector') == "v2") {
+        include plugin_dir_path(__FILE__) . 'bb-case-details-v2.php';
+        return;
+    }
     include plugin_dir_path(__FILE__) . 'case-details-template.php';
     return;
 }

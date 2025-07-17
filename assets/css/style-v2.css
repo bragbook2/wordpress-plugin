@@ -1,0 +1,615 @@
+.bbrag-gallery {
+  column-count: 2;
+  column-gap: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.bbrag-gallery-item {
+  display: inline-block;
+  width: 100%;
+  margin-bottom: 20px;
+  background: #fff;
+  padding: 8px;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.bbrag-image {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 4px;
+  object-fit: cover;
+}
+
+/* Optional: Add padding/margin if you have title/buttons */
+.bbrag-details {
+  padding: 10px;
+  text-align: center;
+}
+
+.bbrag-title {
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.bbrag-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bbrag-btn {
+  padding: 8px;
+  font-size: 14px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.bbrag-btn:first-child {
+  background-color: #0a2a53;
+  color: white;
+}
+
+.bbrag-btn:first-child:hover {
+  background-color: #093d7b;
+}
+
+.bbrag-btn:last-child {
+  background-color: #f1f1f1;
+  color: #222;
+}
+
+.bbrag-btn:last-child:hover {
+  background-color: #e2e2e2;
+}
+
+@media (max-width: 768px) {
+  .bbrag-gallery {
+    column-count: 1;
+  }
+}
+
+/* case detail page*/
+
+
+.bbrag-case-detail {
+  max-width: 1200px;
+  margin: auto;
+  padding: 20px;
+  background: #fff;
+}
+
+.bbrag-case-title {
+  margin-bottom: 20px;
+  font-family: 'EB Garamond';
+  font-style: normal;
+  font-weight: 500;
+  font-size: 65px;
+  line-height: 85px;
+  color: #25314C;
+}
+
+.bbrag-patient-id {
+  color: #6c8cbf;
+}
+.bbrag-case-detail-v2 .bbrag-patient-id {
+  color: #BEC1C9;
+}
+
+/* Image Slider */
+.bbrag-slider-wrapper {
+  margin: 0 auto 30px;
+  padding: 0 20px;
+}
+
+.bbrag-main-image {
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.bbrag-main-image img {
+  width: 100%;
+  object-fit: contain;
+  border-radius: 6px;
+  max-height: 600px;
+}
+
+/* THUMBNAIL WRAPPER */
+.bbrag-thumbnails {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  overflow: hidden;
+}
+
+/* LEFT/RIGHT ARROW */
+.bbrag-thumb-arrow-left,
+.bbrag-thumb-arrow-right {
+  background: #fff;
+  border: none;
+  z-index: 1;
+  font-size: 10px;
+  padding: 6px;
+  border-radius: 20px;
+  cursor: pointer;
+  color: #EC292C;
+  height: 30px;
+  width: 30px;
+}
+
+.bbrag-thumb-arrow-left {
+  margin-right: -25px;
+}
+
+.bbrag-thumb-arrow-right {
+  margin-left: -25px;
+}
+
+[class^="bbrag-thumb-arrow-"]:hover,
+[class^="bbrag-thumb-arrow-"]:focus {
+  background: #fff;
+  color: #EC292C;
+}
+
+/* THUMB TRACK */
+.bbrag-thumbnail-track-wrapper {
+  overflow: hidden;
+  width: 100%;
+}
+
+.bbrag-thumbnail-track img {
+  object-fit: cover;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border-color 0.3s;
+  padding: 2px;
+  box-sizing: border-box;
+}
+
+.bbrag-thumbnail-track img:hover,
+.bbrag-thumbnail-track img.active {
+  border-color: #0a2a53;
+}
+
+
+/* Description + Sidebar */
+.bbrag-content {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-top: 30px;
+}
+
+.bbrag-description {
+  flex: 1 1 65%;
+}
+
+.bbrag-description h2,
+.bbrag-description p {
+  font-style: normal;
+  color: #000;
+}
+
+.bbrag-description h2 {
+  font-family: 'EB Garamond';
+  font-weight: 600;
+  font-size: 65px;
+  line-height: 85px;
+  color: #25314C;
+}
+
+.bbrag-description p {
+  font-family: 'Poppins';
+  font-weight: 400;
+  font-size: 20px;
+  line-height: 1.5;
+}
+
+
+.bbrag-btn-dark {
+  background: #25314C;
+  border: 0.5px solid #404040;
+  border-radius: 3px;
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 600;
+  font-size: 18px;
+  line-height: 27px;
+  color: #FFFFFF;
+}
+
+.bbrag-sidebar {
+  flex: 1 1 30%;
+  background: #0a2a53;
+  color: #fff;
+  border-radius: 4px;
+  padding: 15px;
+  text-align: center;
+  margin-top: 120px;
+
+}
+
+.bbrag-sidebar h3 {
+  margin-bottom: 10px;
+  font-family: 'EB Garamond';
+  font-style: normal;
+  font-weight: 600;
+  font-size: 40px;
+  line-height: 52px;
+}
+
+.bbrag-sidebar ul {
+  list-style: none;
+  padding: 0;
+}
+
+.bbrag-sidebar li {
+  margin-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+  color: #ddd;
+  padding-block: 5px;
+  font-weight: 400;
+}
+
+.bbrag-sidebar li strong {
+  color: #fff;
+}
+
+/* Procedure Table */
+.bbrag-procedure-table {
+  background: rgba(229, 229, 229, 0.3);
+  padding: 20px;
+  border-radius: 5px;
+  margin-top: 30px;
+  width: 66%;
+}
+
+.bbrag-procedure-table h3 {
+  margin-bottom: 15px;
+  font-family: 'EB Garamond';
+  font-style: normal;
+  font-weight: 600;
+  font-size: 40px;
+  line-height: 52px;
+
+  color: #11294D;
+}
+
+.bbrag-grid,
+.bbrag-technique {
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 10px;
+  font-family: 'Poppins';
+  font-style: normal;
+  font-size: 20px;
+  color: #11294D;
+}
+
+.bbrag-grid {
+  display: grid;
+}
+
+.bbrag-grid div,
+.bbrag-technique {
+  padding-block: 10px;
+  border-bottom: 1px solid #ddd;
+}
+
+/* Pagination */
+.bbrag-pagination {
+  margin-top: 30px;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.bbrag-pagination .bb-patient-slides ul li {
+  border: 1px solid #ccc;
+  background: #fff;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.bbrag-pagination ul li.active {
+  background-color: #ddd;
+  color: #fff;
+}
+
+.bbrag-pagination .active {
+  background: #0a2a53;
+  color: white;
+  font-weight: bold;
+}
+
+/* dropdown */
+.bbrag-dropdown-wrapper {
+  width: 220px;
+  font-family: 'Poppins', sans-serif;
+  color: #25314C;
+  background: #fff;
+  position: relative;
+}
+
+#bbrag-search {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  box-sizing: border-box;
+  font-size: 14px;
+}
+
+.bbrag-dropdown {
+  border: 1px solid #ccc;
+  border-top: none;
+}
+
+.bbrag-dropdown-header {
+  background: #25314C;
+  color: white;
+  padding: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.bbrag-arrow {
+  font-size: 12px;
+}
+
+.bbrag-dropdown-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 150px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ccc;
+  display: none;
+}
+
+.bbrag-dropdown-list li {
+  padding: 8px 10px;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.bbrag-dropdown-list li:hover {
+  background: #f0f0f0;
+}
+
+.bbrag-dropdown-list li span {
+  color: #999;
+  font-weight: normal;
+}
+
+.bb-main-v2 {
+  display: flex;
+  justify-content: space-between;
+  padding-left: 30px;
+  padding-right: 30px;
+  padding-top: 25px;
+  flex-direction: column;
+}
+
+.bb-main-v2 .bb-content-area {
+  width: 100%;
+  padding-top: 0;
+  padding-left: 0;
+}
+
+.bb-main-v2 .bbrag-dropdown-wrapper {
+  width: 310px;
+
+
+}
+
+.bb-main-v2 .bbrag-dropdown-header {
+  padding: 10px 25px;
+}
+
+.bb-main-v2 .bb-main .bb-filter-attic h1 {
+  font-size: 60px;
+  line-height: 1.2;
+  font-family: ivypresto-display, serif;
+  font-weight: 600;
+  font-style: normal;
+  text-transform: capitalize;
+}
+
+.bb-main-v2 .bbrag-gallery {
+  width: 100%;
+}
+
+.bb-main-v2 .bbrag-gallery-item a {
+  width: 100%;
+}
+
+.bb-main-v2 .bb-filter-attic h1 {
+  font-size: 60px;
+}
+
+.bb-main-v2 .bb-filter-attic h2 {
+  font-size: 30px;
+  width: 100%;
+  font-family: 'dashicons';
+  color: #11294D;
+  padding: 15px;
+  text-align: center;
+}
+
+.bb-main-v2 .bbrag-dropdown-list li {
+  padding: 8px 24px
+}
+
+.bb-main-v2 .bbrag-arrow {
+  font-size: 12px;
+  width: 16px;
+}
+
+.ajax-load-more-v2 .bb_ajax-load-more-btn {
+  padding: 9px 35px;
+  border: 1px solid #11294D;
+  color: #ffffff;
+  background: #11294D;
+  border-radius: 0;
+  font-weight: 500;
+
+}
+
+.bbrag-case-detail-v2 .bbrag-pagination ul li.active {
+  background-color: #0a2a53;
+}
+
+.bbrag-case-detail-v2 .bbrag-pagination ul li.active a {
+  color: #ffffff;
+}
+
+.bbrag-case-detail-v2 .backbtn {
+  font-size: 22px;
+  line-height: 1.2;
+  color: #093d7b;
+  font-weight: 500;
+  display: inline-block;
+  text-transform: capitalize;
+}
+
+.bbrag-slider-outer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 40px;
+}
+.bbrag-case-detail-v2 .case-detail-mobile-gallery{
+  display: none;
+}
+/* Responsive */
+
+@media (max-width: 1024px) {
+  .bbrag-thumbnail-track img {
+    flex: 0 0 33.333%;
+  }
+
+  .bbrag-case-title {
+    font-size: 50px;
+  }
+
+  .bbrag-description h2 {
+    font-size: 50px;
+  }
+
+  .bb-main-v2 .bb-filter-attic h1 {
+    font-size: 30px;
+  }
+
+  .bb-main-v2 .bb-filter-attic h2 {
+    font-size: 23px;
+    padding: 6px;
+  }
+}
+
+@media (max-width: 768px) {
+  .bbrag-thumbnail-track img {
+    flex: 0 0 50%;
+  }
+
+  .bbrag-procedure-table {
+    width: 100%;
+  }
+
+  .bbrag-content {
+    flex-direction: column;
+  }
+
+  .bbrag-description,
+  .bbrag-sidebar {
+    flex: 1 1 100%;
+  }
+
+  .bbrag-case-title,
+  .bbrag-procedure-table h3,
+  .bbrag-sidebar h3,
+  .bbrag-description h2 {
+    font-size: 32px;
+  }
+
+  .bbrag-grid,
+  .bbrag-technique,
+  .bbrag-sidebar li,
+  .bbrag-description p {
+    font-size: 15px;
+  }
+
+  .bb-main-v2 {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .bb-main-v2 .bb-filter-attic h1 {
+    font-size: 30px;
+    text-align: center;
+  }
+
+  .bb-main-v2 .bb-content-area {
+    padding: 0;
+    padding-inline: 0;
+  }
+
+  .bbrag-slider-outer {
+    flex-direction: column;
+    margin-bottom: 40px;
+  }
+
+  .bbrag-slider-outer {
+    flex-direction: column;
+    gap: 25px;
+  }
+
+  .bbrag-case-detail-v2 .backbtn {
+    font-size: 20px;
+    line-height: 1.2;
+    color: #093d7b;
+    font-weight: 700;
+    display: inline-block;
+    padding: 15px 25px;
+    text-transform: capitalize;
+    background: #f3f3f3;
+    max-width: 310px;
+    text-align: center;
+  }
+
+  .bbrag-case-detail-v2 .backbtn img {
+    display: none;
+  }
+
+  .bbrag-case-detail-v2 .bbrag-slider-wrapper {
+    display: none;
+  }
+  .bbrag-case-detail-v2 .bbrag-slider-wrapper {
+    display: none;
+  }
+  .bbrag-case-detail-v2 .case-detail-mobile-gallery{
+    display: flex;
+            flex-direction: column;
+        gap: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .bbrag-thumbnail-track img {
+    flex: 0 0 100%;
+  }
+}

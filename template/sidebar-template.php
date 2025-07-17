@@ -22,7 +22,7 @@ function bb_get_sidebar_data($parts_page_name, $combine_gallery_page_slug)
     $api_tokens = get_option('bragbook_api_token', []);
     $websiteproperty_ids = get_option('bragbook_websiteproperty_id', []);
     $gallery_slugs = get_option('bb_gallery_page_slug', []);
-
+    $design_version = get_option('bb_design_plugin_selector');
     $single_results_sidebar = [];
     $combine_results_sidebar = [];
     $token_array = [];
@@ -44,7 +44,8 @@ function bb_get_sidebar_data($parts_page_name, $combine_gallery_page_slug)
             }
 
             $sidebar = new Bb_Api();
-            $data = $sidebar->get_api_sidebar_bb($api_token);
+            $bb_design_member_id = get_option('bb_design_member_id');
+            $data = $design_version == "v2" ? $sidebar->get_api_sidebar_bb($api_token, $bb_design_member_id) : $sidebar->get_api_sidebar_bb($api_token);
 
             $bb_set_transient_urls[$transient_key] = $data;
             update_option('bb_set_transient_url_sidebar', $bb_set_transient_urls);
@@ -77,9 +78,9 @@ function bb_get_sidebar_data($parts_page_name, $combine_gallery_page_slug)
                 continue;
             }
 
-            $body = $sidebar->get_api_sidebar_bb($api_token);
+            $bb_design_member_id = get_option('bb_design_member_id');
+            $body = $design_version == "v2" ? $sidebar->get_api_sidebar_bb($api_token, $bb_design_member_id) : $sidebar->get_api_sidebar_bb($api_token);
             $sidebar_set = json_decode($body, true) ?? [];
-
             $result = [
                 'sidebar_set' => $sidebar_set
             ];
@@ -107,50 +108,36 @@ if ($combine_gallery_page_slug == $parts_page_name[0]) {
     $bb_f_ajax_page = 'single';
 
 }
-?>
-<div class="bb-sidebar">
-    <div class="bb-sidebar-wrapper">
-        <button type="button" class="bb-sidebar-toggle bb-sidebar-head-toggle">
-            <img src="<?php echo BB_PLUGIN_DIR_PATH; ?>assets/images/caret-right-sm.svg" alt="toggle sidebar">
-        </button>
-        <form class="search-container">
-            <input type="text" id="search-bar" placeholder="Search Procedures">
-            <img src="<?php echo BB_PLUGIN_DIR_PATH ?>assets/images/search-svgrepo-com.svg" class="bb-search-icon"
-                alt="search">
-            <ul id="search-suggestions" class="search-suggestions"></ul>
-        </form>
+if (get_option('bb_design_plugin_selector') == "v2") {
 
-        <div class="bb-nav-accordion">
-            <?php
-            $properties_data_all = json_decode($data_sidebar, true);
-            $properties_data = $properties_data_all;
-            /* 
-            Show data for singal page
-            */
-            $categorized_procedures = [];
-            $all_properties = [];
-            $api_tokens = get_option('bragbook_api_token', []);
-            $values_string = implode(", ", $api_tokens);
-            $websiteproperty_ids = get_option('bragbook_websiteproperty_id', []);
-            $values_string_webid = implode(", ", $websiteproperty_ids);
+    ?>
+    <div class="bbrag-slider-outer">
+        <div class="bbrag-dropdown-wrapper bbrag-dropdown-wrapper-v2">
+            <div class="bbrag-dropdown">
+                <div class="bbrag-dropdown-header" onclick="toggleDropdown()">
+                    Choose a Gallery
+                    <span class="bbrag-arrow"><img src="<?php echo BB_PLUGIN_DIR_PATH; ?>assets/images/chevron_right.png"
+                            alt="arrow"></span>
+                </div>
+                <ul class="bbrag-dropdown-list" id="bbrag-gallery-list">
+                    <?php
+                    $properties_data_all = json_decode($data_sidebar, true);
+                    $properties_data = $properties_data_all;
+                    $categorized_procedures = [];
+                    $all_properties = [];
+                    $api_tokens = get_option('bragbook_api_token', []);
+                    $values_string = implode(", ", $api_tokens);
+                    $websiteproperty_ids = get_option('bragbook_websiteproperty_id', []);
+                    $values_string_webid = implode(", ", $websiteproperty_ids);
 
-            if (!empty($properties_data) && is_array($properties_data)) {
-                foreach ($properties_data as $api_token_key => $token_bb) {
-                    foreach ($token_bb as $websiteproperty_id_key => $website_id_bb) {
-                        foreach ($website_id_bb as $websiteproperty_id => $property_data) {
+                    if (!empty($properties_data) && is_array($properties_data)) {
+                        foreach ($properties_data as $api_token_key => $token_bb) {
+                            foreach ($token_bb as $websiteproperty_id_key => $website_id_bb) {
+                                foreach ($website_id_bb as $websiteproperty_id => $property_data) {
 
-                            if (isset($property_data['sidebar_set']['data']) && !empty($property_data['sidebar_set']['data']) && ($parts_page_name[0] == $websiteproperty_id) || ($combine_gallery_page_slug == $parts_page_name[0])) {
-                                foreach ($property_data['sidebar_set']['data'] as $procedure_name => $procedure_data) {
-                                    ?>
-                                    <span class="bb-accordion" cat_title="<?= htmlspecialchars($procedure_data['name']); ?>">
-                                        <span><?= $procedure_data['name']; ?>
-                                            <p>(<?= $procedure_data['totalCase']; ?>)</p>
-                                        </span>
-                                        <img src="<?= BB_PLUGIN_DIR_PATH ?>assets/images/plus-icon.svg" alt="plus icon">
-                                    </span>
-                                    <div class="bb-panel">
-                                        <ul>
-                                            <?php
+                                    if (isset($property_data['sidebar_set']['data']) && !empty($property_data['sidebar_set']['data']) && ($parts_page_name[0] == $websiteproperty_id) || ($combine_gallery_page_slug == $parts_page_name[0])) {
+                                        foreach ($property_data['sidebar_set']['data'] as $procedure_name => $procedure_data) {
+
                                             foreach ($procedure_data['procedures'] as $procedure) {
                                                 if ($parts_page_name[0] == $websiteproperty_id) {
                                                     ?>
@@ -181,31 +168,138 @@ if ($combine_gallery_page_slug == $parts_page_name[0]) {
                                                     <?php
                                                 }
                                             }
-                                            ?>
-                                        </ul>
-                                    </div>
-                                    <?php
+
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    ?>
+                </ul>
+            </div>
+        </div>
+        <?php
+        $currentUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http");
+        $currentUrl .= "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
+        $trimmedUrl = rtrim($currentUrl, '/');
+        $baseUrl = substr($trimmedUrl, 0, strrpos($trimmedUrl, '/') + 1);
+        $path = parse_url($baseUrl, PHP_URL_PATH);
+        $segments = explode('/', rtrim($path, '/'));
+        $lastSegment = end($segments);
+        $formatted_gallery = ucwords(str_replace('-', ' ', $lastSegment));
+        if (count($parts_page_name) == 3) {
+            ?>
+            <a href="<?php echo $baseUrl; ?>" class="backbtn"><img
+                    src="<?php echo BB_PLUGIN_DIR_PATH; ?>assets/images/backicon.png" alt="arrow"> retrun to
+                <?php echo $formatted_gallery; ?> Gallery</a>
+
+            <?php
+        }
+        ?>
+
+    </div>
+
+    <?php
+} else {
+    ?>
+    <div class="bb-sidebar">
+        <div class="bb-sidebar-wrapper">
+            <button type="button" class="bb-sidebar-toggle bb-sidebar-head-toggle">
+                <img src="<?php echo BB_PLUGIN_DIR_PATH; ?>assets/images/caret-right-sm.svg" alt="toggle sidebar">
+            </button>
+            <form class="search-container">
+                <input type="text" id="search-bar" placeholder="Search Procedures">
+                <img src="<?php echo BB_PLUGIN_DIR_PATH ?>assets/images/search-svgrepo-com.svg" class="bb-search-icon"
+                    alt="search">
+                <ul id="search-suggestions" class="search-suggestions"></ul>
+            </form>
+
+            <div class="bb-nav-accordion">
+                <?php
+                $properties_data_all = json_decode($data_sidebar, true);
+                $properties_data = $properties_data_all;
+
+                $categorized_procedures = [];
+                $all_properties = [];
+                $api_tokens = get_option('bragbook_api_token', []);
+                $values_string = implode(", ", $api_tokens);
+                $websiteproperty_ids = get_option('bragbook_websiteproperty_id', []);
+                $values_string_webid = implode(", ", $websiteproperty_ids);
+
+                if (!empty($properties_data) && is_array($properties_data)) {
+                    foreach ($properties_data as $api_token_key => $token_bb) {
+                        foreach ($token_bb as $websiteproperty_id_key => $website_id_bb) {
+                            foreach ($website_id_bb as $websiteproperty_id => $property_data) {
+
+                                if (isset($property_data['sidebar_set']['data']) && !empty($property_data['sidebar_set']['data']) && ($parts_page_name[0] == $websiteproperty_id) || ($combine_gallery_page_slug == $parts_page_name[0])) {
+                                    foreach ($property_data['sidebar_set']['data'] as $procedure_name => $procedure_data) {
+                                        ?>
+                                        <span class="bb-accordion" cat_title="<?= htmlspecialchars($procedure_data['name']); ?>">
+                                            <span><?= $procedure_data['name']; ?>
+                                                <p>(<?= $procedure_data['totalCase']; ?>)</p>
+                                            </span>
+                                            <img src="<?= BB_PLUGIN_DIR_PATH ?>assets/images/plus-icon.svg" alt="plus icon">
+                                        </span>
+                                        <div class="bb-panel">
+                                            <ul>
+                                                <?php
+                                                foreach ($procedure_data['procedures'] as $procedure) {
+                                                    if ($parts_page_name[0] == $websiteproperty_id) {
+                                                        ?>
+                                                        <li>
+                                                            <a id="<?= esc_attr($procedure['ids'][0]); ?>"
+                                                                href="<?= "/" . $parts_page_name[0] . "/" . $procedure['slugName'] . "/"; ?>" data-count="1"
+                                                                data-api-token="<?= esc_attr($api_token_key); ?>"
+                                                                data-website-property-id="<?= esc_attr($websiteproperty_id_key); ?>">
+                                                                <?= esc_html($procedure['name']); ?>
+                                                                <span>(<?php echo $procedure['totalCase']; ?>)</span>
+                                                            </a>
+
+                                                        </li>
+                                                        <?php
+                                                    } elseif ($combine_gallery_page_slug == $parts_page_name[0]) {
+                                                        $ids_string = implode(", ", $procedure['ids']);
+                                                        ?>
+                                                        <li>
+                                                            <a id="<?= esc_attr($ids_string); ?>"
+                                                                href="<?= "/" . $parts_page_name[0] . "/" . $procedure['slugName'] . "/"; ?>" data-count="1"
+                                                                data-api-token="<?= esc_attr($values_string); ?>"
+                                                                data-website-property-id="<?= esc_attr($values_string_webid); ?>">
+                                                                <?= esc_html($procedure['name']); ?>
+                                                                <span>(<?php echo $procedure['totalCase']; ?>)</span>
+                                                            </a>
+
+                                                        </li>
+                                                        <?php
+                                                    }
+                                                }
+                                                ?>
+                                            </ul>
+                                        </div>
+                                        <?php
+                                    }
                                 }
                             }
                         }
                     }
                 }
-            }
-            ?>
-            <ul>
-                <li>
-                    <a class="bb-sidebar_favorites" href="/<?= $parts_page_name[0] ?>/favorites/">
-                        <h3> My Favorites <span id="bb_favorite_caseIds_count">(0)</span></h3>
-                    </a>
-                </li>
-            </ul>
+                ?>
+                <ul>
+                    <li>
+                        <a class="bb-sidebar_favorites" href="/<?= $parts_page_name[0] ?>/favorites/">
+                            <h3> My Favorites <span id="bb_favorite_caseIds_count">(0)</span></h3>
+                        </a>
+                    </li>
+                </ul>
+            </div>
         </div>
-    </div>
 
-    <a href="/<?= $parts_page_name[0] ?>/consultation/" class="bb-sidebar-btn">REQUEST A CONSULTATION</a>
-    <p class="request-promo">Ready for the next step?<br>Contact us to request your consultation.</p>
-</div>
-<?php
+        <a href="/<?= $parts_page_name[0] ?>/consultation/" class="bb-sidebar-btn">REQUEST A CONSULTATION</a>
+        <p class="request-promo">Ready for the next step?<br>Contact us to request your consultation.</p>
+    </div>
+    <?php
+}
 /*********************************************************************************************************** */
 
 

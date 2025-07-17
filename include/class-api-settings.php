@@ -34,6 +34,8 @@ class Ajax_Handler
             $seoSuffixUrl = sanitize_text_field($_POST['seoSuffixUrl']);
             $page_slug = sanitize_text_field($_POST['pageSlug']);
             $combine_gallery_page_slug = get_option('combine_gallery_slug');
+            $design_version = get_option('bb_design_plugin_selector');
+            $bb_design_member_id = get_option('bb_design_member_id');
 
             $filter_get = '';
             if ($page_slug == $combine_gallery_page_slug) {
@@ -52,17 +54,18 @@ class Ajax_Handler
 
             if ($caseId !== "" || $seoSuffixUrl !== "") {
                 $caseId = $caseId ? $caseId : '123';
+                $memberId = $design_version == 'v2' ? (int) $bb_design_member_id : null;
                 if ($page_slug == $combine_gallery_page_slug) {
                     $filter_data = new Bb_Api();
-                    $data = $filter_data->bb_get_case_data($caseId, $seoSuffixUrl, $apiToken, $procedureId, $websitePropertyId);
+                    $data = $filter_data->bb_get_case_data($caseId, $seoSuffixUrl, $apiToken, $procedureId, $websitePropertyId, $memberId);
                 } else {
-                    $transient_key = 'cases_' . md5($apiToken . $procedureId . $websitePropertyId . $caseId . $seoSuffixUrl);
-                    if (get_transient($transient_key) !== false) {
-                        $data = get_transient($transient_key);
-                    } else {
-                        $filter_data = new Bb_Api();
-                        $data = $filter_data->bb_get_case_data($caseId, $seoSuffixUrl, $apiToken, $procedureId, $websitePropertyId);
-                    }
+                    // $transient_key = 'cases_' . md5($apiToken . $procedureId . $websitePropertyId . $caseId . $seoSuffixUrl);
+                    // if (get_transient($transient_key) !== false) {
+                    //     $data = get_transient($transient_key);
+                    // } else {
+                    $filter_data = new Bb_Api();
+                    $data = $filter_data->bb_get_case_data($caseId, $seoSuffixUrl, $apiToken, $procedureId, $websitePropertyId, $memberId);
+                    // }
                 }
             } else {
                 $dynamicFilterCombineAPIBody = [];
@@ -70,7 +73,7 @@ class Ajax_Handler
                 $dynamicFilterCombineAPIBody['count'] = (int) $count;
                 $dynamicFilterCombineAPIBody['procedureIds'] = array_map('intval', explode(", ", $procedureId));
                 $dynamicFilterCombineAPIBody['websitePropertyIds'] = array_map('intval', explode(", ", $websitePropertyId));
-
+                $dynamicFilterCombineAPIBody['memberId'] = $design_version == 'v2' ? (int) $bb_design_member_id : null;
                 if (isset($_POST['gender']) && !empty($_POST['gender'])) {
                     $dynamicFilterCombineAPIBody['gender'] = preg_replace('/\\\"/', '', $_POST['gender']);
                 }
@@ -377,6 +380,9 @@ class Ajax_Handler
         parse_str($_POST['form_data'], $form_data);
         update_option('bragbook_landing_page_text', wp_kses_post($form_data['bragbook_landing_page_text']));
         update_option('bb_seo_plugin_selector', sanitize_text_field($form_data['bb_seo_plugin_selector']));
+        update_option('bb_design_plugin_selector', sanitize_text_field($form_data['bb_design_plugin_selector']));
+        update_option('bb_design_member_id', sanitize_text_field($form_data['bb_design_member_id']));
+
         $current_user_id = get_current_user_id();
         if (isset($form_data['combine_gallery_slug']) && !empty($form_data['combine_gallery_slug'])) {
             $bb_old_combine_gallery = get_option('combine_gallery_slug');
@@ -830,20 +836,21 @@ class Ajax_Handler
                                         <div class="fieldGroup">
                                             <label class="combine_page_bb">Combined Page Slug</label>
                                             <input type="text" id="combine_gallery_slug" class="combineGallerySlug"
-                                            name="combine_gallery_slug" value="<?php echo esc_attr($combine_gallery_slug); ?>">
+                                                name="combine_gallery_slug"
+                                                value="<?php echo esc_attr($combine_gallery_slug); ?>">
                                         </div>
                                         <div class="fieldGroup">
                                             <label class="combine_page_bb">SEO Page Title</label>
                                             <input type="text" id="bb_combine_seo_page_title" class="combineSeoTitle"
-                                            name="bb_combine_seo_page_title"
-                                            value="<?php echo esc_attr($bb_combine_seo_page_title); ?>">
-                                         </div>
+                                                name="bb_combine_seo_page_title"
+                                                value="<?php echo esc_attr($bb_combine_seo_page_title); ?>">
+                                        </div>
                                         <div class="fieldGroup">
                                             <label class="combine_page_bb">SEO Page Description</label>
-                                           <input type="text" id="bb_combine_seo_page_description" class="combineSeoDescription"
-                                            name="bb_combine_seo_page_description"
-                                            value="<?php echo esc_attr($bb_combine_seo_page_description); ?>">
-                                         </div>
+                                            <input type="text" id="bb_combine_seo_page_description"
+                                                class="combineSeoDescription" name="bb_combine_seo_page_description"
+                                                value="<?php echo esc_attr($bb_combine_seo_page_description); ?>">
+                                        </div>
                                     </div>
                                 </td>
                             </tr>
@@ -876,6 +883,24 @@ class Ajax_Handler
                                         <option value="2" <?php selected($selected_plugin, '2'); ?>>All in One SEO</option>
                                         <option value="3" <?php selected($selected_plugin, '3'); ?>>Rank Math</option>
                                     </select>
+                                </td>
+                            </tr>
+                            <tr valign="top">
+                                <th scope="row">Select Design</th>
+                                <td>
+                                    <?php $selected_design = get_option('bb_design_plugin_selector', ''); ?>
+                                    <select name="bb_design_plugin_selector" id="bb_design_plugin_selector">
+                                        <option value="v1" <?php selected($selected_design, 'v1'); ?>>V1</option>
+                                        <option value="v2" <?php selected($selected_design, 'v2'); ?>>V2</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr valign="top">
+                                <th scope="row">Member Id</th>
+                                <td>
+                                    <?php $bb_design_member_id = get_option('bb_design_member_id', ''); ?>
+                                    <input type="text" id="bb_design_member_id" class="" name="bb_design_member_id"
+                                        value="<?php echo esc_attr($bb_design_member_id); ?>">
                                 </td>
                             </tr>
                             <tr valign="top">

@@ -13,6 +13,7 @@ class Shortcode
         add_shortcode('bb_bragbook_procedure', [__CLASS__, 'bb_mvp_category_shortcode']);
         add_shortcode('bb_bragbook_set', [__CLASS__, 'mvp_bragbook_set_shortcode']);
         add_shortcode('bb_bragbook_home_menu', [__CLASS__, 'mvp_bragbook_home_menu_shortcode']);
+        add_shortcode('bb_bragbook_gallery', [__CLASS__, 'bbrag_gallery_shortcode']);
 
     }
 
@@ -651,8 +652,8 @@ class Shortcode
 
 
                 // Start generating content
-                $contentBox = ''; 
-        
+                $contentBox = '';
+
                 foreach ($result_pro['data'] as $caseItem) {
                     if (isset($caseItem['photoSets']) && count($caseItem['photoSets']) > 0) {
                         $photoSet = $caseItem['photoSets'][0];
@@ -706,6 +707,44 @@ class Shortcode
         </div>
         <?php
 
+        return ob_get_clean();
+    }
+    public static function bbrag_gallery_shortcode($atts)
+    {
+        ob_start();
+        ?>
+        <div class="bbrag-gallery">
+            <div class="bbrag-gallery-item">
+                <img src="https://www.bragbook.gallery/assets/gallery/121/brow-lift-before-and-after-vVID30gP9eqF_highres.webp"
+                    alt="Case Image" class="bbrag-image" />
+
+            </div>
+            <div class="bbrag-gallery-item">
+                <img src="https://ccdbughunt1.wpenginepowered.com/wp-content/plugins/wordpress-plugin/assets/images/bbthumbnail.png"
+                    alt="Case Image" class="bbrag-image" />
+
+            </div>
+            <div class="bbrag-gallery-item">
+                <img src="https://ccdbughunt1.wpenginepowered.com/wp-content/plugins/wordpress-plugin/assets/images/bbthumbnail.png"
+                    alt="Case Image" class="bbrag-image" />
+
+            </div>
+            <div class="bbrag-gallery-item">
+                <img src="https://www.bragbook.gallery/assets/gallery/121/brow-lift-before-and-after-vVID30gP9eqF_highres.webp"
+                    alt="Case Image" class="bbrag-image" />
+
+            </div>
+            <div class="bbrag-gallery-item">
+                <img src="https://www.bragbook.gallery/assets/gallery/121/neck-lift-before-and-after-O1v31HU82kWy_highres.webp"
+                    alt="Case Image" class="bbrag-image" />
+
+            </div>
+            <div class="bbrag-gallery-item">
+                <img src="https://ccdbughunt1.wpenginepowered.com/wp-content/plugins/wordpress-plugin/assets/images/bbthumbnail.png"
+                    alt="Case Image" class="bbrag-image" />
+            </div>
+        </div>
+        <?php
         return ob_get_clean();
     }
 }

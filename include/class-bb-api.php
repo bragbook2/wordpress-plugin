@@ -49,9 +49,8 @@ class Bb_Api
         return $response_body;
     }
 
-    public function bb_get_case_data($caseId, $seoSuffixUrl, $apiToken, $procedureId, $websitePropertyId)
+    public function bb_get_case_data($caseId, $seoSuffixUrl, $apiToken, $procedureId, $websitePropertyId, $memberId = null)
     {
-
         $url = BB_BASE_URL . "/api/plugin/combine/cases/$caseId?seoSuffixUrl=$seoSuffixUrl";
         $response = wp_remote_post($url, array(
             'method' => 'POST',
@@ -59,6 +58,7 @@ class Bb_Api
                 'apiTokens' => explode(", ", is_array($apiToken) ? implode(", ", $apiToken) : $apiToken),
                 'procedureIds' => array_map('intval', explode(", ", is_array($procedureId) ? implode(", ", $procedureId) : $procedureId)),
                 'websitePropertyIds' => array_map('intval', explode(", ", is_array($websitePropertyId) ? implode(", ", $websitePropertyId) : $websitePropertyId)),
+                'memberId' => (int) $memberId ?? null,
             )),
             'headers' => array(
                 'Content-Type' => 'application/json',
@@ -149,7 +149,7 @@ class Bb_Api
         return $data;
     }
 
-    public function get_api_sidebar_bb($api_token)
+    public function get_api_sidebar_bb($api_token, $memberId = null)
     {
 
         if (!is_array($api_token)) {
@@ -163,6 +163,7 @@ class Bb_Api
             ],
             'body' => json_encode([
                 'apiTokens' => $api_token,
+                'memberId' => (int) $memberId ?? null,
             ]),
         ]);
 
@@ -173,7 +174,6 @@ class Bb_Api
         } else {
             $data = wp_remote_retrieve_body($response);
         }
-
         return $data;
     }
 
@@ -198,7 +198,7 @@ class Bb_Api
         $format = $request->get_param('format') ?? 'png';
 
         $api_token = $request->get_header('x-api-token') ?: $request->get_param('x-api-token');
-        $version   = $request->get_header('x-plugin-version') ?: $request->get_param('x-plugin-version');
+        $version = $request->get_header('x-plugin-version') ?: $request->get_param('x-plugin-version');
 
         if (!$image_url || !$api_token) {
             return new \WP_REST_Response(['error' => 'Missing parameters'], 400);
