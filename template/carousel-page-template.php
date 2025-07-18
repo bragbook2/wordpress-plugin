@@ -4,10 +4,12 @@ Template Name: Carousel Page Template
 */
 ?>
 <div class="bb-container-main">
-    <main class="bb-main">
-        <?php include plugin_dir_path(__FILE__) . 'sidebar-template.php'; ?>
-        <?php
-
+    <?php
+    $mainClass = get_option('bb_design_plugin_selector') === 'v2' ? 'bb-main bb-main-v2' : 'bb-main';
+    ?>
+    <main class="<?php echo esc_attr($mainClass); ?>">
+       <?php include plugin_dir_path(__FILE__) . 'sidebar-template.php';
+        
         $brag_page_data = get_option('bragbook_landing_page_text');
         $explode_string = explode('[', $brag_page_data);
         $input_string = $explode_string['1'];

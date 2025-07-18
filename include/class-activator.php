@@ -20,11 +20,18 @@ class Activator
             array(),
             $version
         );
+        wp_enqueue_style(
+            'bragbook-style-2',
+            BB_PLUGIN_DIR_PATH . 'assets/css/style-v2.css',
+            array(),
+            $version
+        );
+        wp_enqueue_style('jquery-ui-css', 'https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css');
         wp_enqueue_style('bragbook-cdn-style', 'https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css');
         wp_enqueue_script('bragbook-cdn-script', 'https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js', array(), null, true);
         wp_enqueue_script('bragbook-script', BB_PLUGIN_DIR_PATH . 'assets/js/script.js', array('jquery'), $version, true);
+        wp_enqueue_script('bragbook-script-v2', BB_PLUGIN_DIR_PATH . 'assets/js/script-v2.js', array('jquery'), $version, true);
         wp_enqueue_script('jquery-ui-accordion');
-        wp_enqueue_style('jquery-ui-css', 'https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css');
 
         // Localize script to pass PHP data to JavaScript
         wp_localize_script('bragbook-script', 'bb_plugin_data', array(
@@ -36,7 +43,11 @@ class Activator
             'heartdown' => BB_PLUGIN_DIR_PATH . 'assets/images/down-arrow.svg',
             'heartRed' => BB_PLUGIN_DIR_PATH . 'assets/images/red-heart.svg',
             'heartrunning' => BB_PLUGIN_DIR_PATH . 'assets/images/running-heart.gif',
-            'ajaxurl' => admin_url('admin-ajax.php')
+            'ajaxurl' => admin_url('admin-ajax.php'),
+            'designVersion' => get_option('bb_design_plugin_selector'),
+            'pluginVersion' => BB_PLUGIN_VERSION,
+            'optimizeApiPath' => BB_BASE_URL,
+            'siteUrl' => get_site_url(),
         ));
 
     }

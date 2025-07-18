@@ -49,9 +49,8 @@ class Bb_Api
         return $response_body;
     }
 
-    public function bb_get_case_data($caseId, $seoSuffixUrl, $apiToken, $procedureId, $websitePropertyId)
+    public function bb_get_case_data($caseId, $seoSuffixUrl, $apiToken, $procedureId, $websitePropertyId, $memberId = null)
     {
-
         $url = BB_BASE_URL . "/api/plugin/combine/cases/$caseId?seoSuffixUrl=$seoSuffixUrl";
         $response = wp_remote_post($url, array(
             'method' => 'POST',
@@ -59,6 +58,7 @@ class Bb_Api
                 'apiTokens' => explode(", ", is_array($apiToken) ? implode(", ", $apiToken) : $apiToken),
                 'procedureIds' => array_map('intval', explode(", ", is_array($procedureId) ? implode(", ", $procedureId) : $procedureId)),
                 'websitePropertyIds' => array_map('intval', explode(", ", is_array($websitePropertyId) ? implode(", ", $websitePropertyId) : $websitePropertyId)),
+                'memberId' => (int) $memberId ?? null,
             )),
             'headers' => array(
                 'Content-Type' => 'application/json',
@@ -149,7 +149,7 @@ class Bb_Api
         return $data;
     }
 
-    public function get_api_sidebar_bb($api_token)
+    public function get_api_sidebar_bb($api_token, $memberId = null)
     {
 
         if (!is_array($api_token)) {
@@ -163,6 +163,7 @@ class Bb_Api
             ],
             'body' => json_encode([
                 'apiTokens' => $api_token,
+                'memberId' => (int) $memberId ?? null,
             ]),
         ]);
 
@@ -173,7 +174,63 @@ class Bb_Api
         } else {
             $data = wp_remote_retrieve_body($response);
         }
-
         return $data;
+    }
+
+    public static function register_routes()
+    {
+        add_action('rest_api_init', [__CLASS__, 'register_proxy_endpoint']);
+    }
+
+    public static function register_proxy_endpoint()
+    {
+        register_rest_route('bb/v1', '/optimize-image-proxy', [
+            'methods' => 'GET',
+            'callback' => [__CLASS__, 'proxy_optimize_image'],
+            'permission_callback' => '__return_true',
+        ]);
+    }
+
+    public static function proxy_optimize_image(\WP_REST_Request $request)
+    {
+        $image_url = $request->get_param('url');
+        $quality = $request->get_param('quality') ?? 'small';
+        $format = $request->get_param('format') ?? 'png';
+
+        $api_token = $request->get_header('x-api-token') ?: $request->get_param('x-api-token');
+        $version = $request->get_header('x-plugin-version') ?: $request->get_param('x-plugin-version');
+
+        if (!$image_url || !$api_token) {
+            return new \WP_REST_Response(['error' => 'Missing parameters'], 400);
+        }
+
+        $target_url = BB_BASE_URL . "/api/plugin/optimize-image?" . http_build_query([
+            'url' => $image_url,
+            'quality' => $quality,
+            'format' => $format,
+        ]);
+
+        $response = wp_remote_get($target_url, [
+            'headers' => [
+                'x-api-token' => $api_token,
+                'x-plugin-version' => $version,
+            ]
+        ]);
+
+        if (is_wp_error($response)) {
+            return new \WP_REST_Response(['error' => $response->get_error_message()], 500);
+        }
+
+        $body = wp_remote_retrieve_body($response);
+        $content_type = wp_remote_retrieve_header($response, 'content-type') ?: 'image/' . $format;
+        add_filter('rest_pre_echo_response', function () {
+            return true;
+        });
+
+        ob_clean();
+        header('Content-Type: ' . $content_type);
+        header('Content-Length: ' . strlen($body));
+        echo $body;
+        exit;
     }
 }
