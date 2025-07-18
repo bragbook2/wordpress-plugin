@@ -95,10 +95,8 @@
   color: #25314C;
 }
 
-.bbrag-patient-id {
-  color: #6c8cbf;
-}
-.bbrag-case-detail-v2 .bbrag-patient-id {
+.bbrag-case-detail-v2 .bbrag-patient-id,
+#procedure-title>span {
   color: #BEC1C9;
 }
 
@@ -493,9 +491,11 @@
   align-items: center;
   margin-bottom: 40px;
 }
-.bbrag-case-detail-v2 .case-detail-mobile-gallery{
+
+.bbrag-case-detail-v2 .case-detail-mobile-gallery {
   display: none;
 }
+
 /* Responsive */
 
 @media (max-width: 1024px) {
@@ -598,13 +598,15 @@
   .bbrag-case-detail-v2 .bbrag-slider-wrapper {
     display: none;
   }
+
   .bbrag-case-detail-v2 .bbrag-slider-wrapper {
     display: none;
   }
-  .bbrag-case-detail-v2 .case-detail-mobile-gallery{
+
+  .bbrag-case-detail-v2 .case-detail-mobile-gallery {
     display: flex;
-            flex-direction: column;
-        gap: 20px;
+    flex-direction: column;
+    gap: 20px;
   }
 }
 

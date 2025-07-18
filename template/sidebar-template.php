@@ -44,8 +44,7 @@ function bb_get_sidebar_data($parts_page_name, $combine_gallery_page_slug)
             }
 
             $sidebar = new Bb_Api();
-            $bb_design_member_id = get_option('bb_design_member_id');
-            $data = $design_version == "v2" ? $sidebar->get_api_sidebar_bb($api_token, $bb_design_member_id) : $sidebar->get_api_sidebar_bb($api_token);
+            $data = $sidebar->get_api_sidebar_bb($api_token);
 
             $bb_set_transient_urls[$transient_key] = $data;
             update_option('bb_set_transient_url_sidebar', $bb_set_transient_urls);
@@ -78,8 +77,7 @@ function bb_get_sidebar_data($parts_page_name, $combine_gallery_page_slug)
                 continue;
             }
 
-            $bb_design_member_id = get_option('bb_design_member_id');
-            $body = $design_version == "v2" ? $sidebar->get_api_sidebar_bb($api_token, $bb_design_member_id) : $sidebar->get_api_sidebar_bb($api_token);
+            $body = $sidebar->get_api_sidebar_bb($api_token);
             $sidebar_set = json_decode($body, true) ?? [];
             $result = [
                 'sidebar_set' => $sidebar_set

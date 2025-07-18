@@ -84,9 +84,7 @@ function initGalleryDropdown() {
   const selectedSlug = getSelectedSlugFromURL();
   if (!selectedSlug) return;
 
-  const formattedName = formatSlugToTitle(selectedSlug);
-  updateDropdownHeader(header, formattedName);
-  highlightSelectedItem(anchors, selectedSlug);
+  highlightSelectedItem(header, selectedSlug, anchors);
 }
 
 function getSelectedSlugFromURL() {
@@ -94,24 +92,18 @@ function getSelectedSlugFromURL() {
   return pathParts.length > 2 ? pathParts[2] : null;
 }
 
-function formatSlugToTitle(slug) {
-  return slug
-    .split('-')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
-}
-
 function updateDropdownHeader(headerElement, text) {
   headerElement.childNodes[0].nodeValue = `${text} `;
 }
 
-function highlightSelectedItem(anchors, selectedSlug) {
+function highlightSelectedItem(header, selectedSlug, anchors) {
   anchors.forEach(anchor => {
     const href = anchor.getAttribute('href') || '';
     if (href.includes(`/${selectedSlug}/`)) {
       const parentLi = anchor.parentElement;
       if (parentLi) {
         parentLi.style.backgroundColor = '#f0f0f0';
+        updateDropdownHeader(header, parentLi.textContent);
         anchor.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       }
     }

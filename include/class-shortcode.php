@@ -636,10 +636,6 @@ class Shortcode
             $data_pro = wp_remote_retrieve_body($response);
             $result_pro = json_decode($data_pro, true);
         }
-        $api_data = [];
-        $categories = [];
-
-
 
         ob_start();
         ?>
@@ -649,9 +645,6 @@ class Shortcode
                 $bb_case_count = 0;
                 $secondPart = $bb_slug_link;
                 $thirdPart = $procedure_name_bb;
-
-
-                // Start generating content
                 $contentBox = '';
 
                 foreach ($result_pro['data'] as $caseItem) {
@@ -711,38 +704,67 @@ class Shortcode
     }
     public static function bbrag_gallery_shortcode($atts)
     {
+        $atts = shortcode_atts(
+            array(
+                'website_property_id' => null,
+                'memberid' => null,
+                'case_owner' => 0
+            ),
+            $atts
+        );
+
+        $cat_owner = $atts['case_owner'];
+        $cat_memeberId = $atts['memberid'];
+        $cat_website_property_id = $atts['website_property_id'];
+
+        $api_tokens = get_option('bragbook_api_token', []);
+        $websiteproperty_ids = get_option('bragbook_websiteproperty_id', []);
+        $bb_token_page = array_search($cat_website_property_id, $websiteproperty_ids, true);
+        $api_token = $api_tokens[$bb_token_page];
+        $dynamicFilterCombineAPIBody = [];
+        $dynamicFilterCombineAPIBody['apiTokens'] = explode(", ", $api_token);
+        $dynamicFilterCombineAPIBody['count'] = 1;
+        $dynamicFilterCombineAPIBody['websitePropertyIds'] = array_map('intval', explode(", ", $cat_website_property_id));
+        $dynamicFilterCombineAPIBody['memberId'] = (int) $cat_memeberId;
+        $shortcode_data = new Bb_Api();
+
+        $data = $shortcode_data->bb_get_pagination_data($dynamicFilterCombineAPIBody);
+        $result_pro = json_decode($data, true);
+
         ob_start();
         ?>
-        <div class="bbrag-gallery">
-            <div class="bbrag-gallery-item">
-                <img src="https://www.bragbook.gallery/assets/gallery/121/brow-lift-before-and-after-vVID30gP9eqF_highres.webp"
-                    alt="Case Image" class="bbrag-image" />
+        <div class="bb-container-main bb-container-main-v2">
+            <main class="bb-main bb-main-v2">
+                <div class="bb-content-area bb-filter-attic">
+                    <div class="bbrag-gallery">
+                        <?
+                        $contentBox = '';
+                        foreach ($result_pro['data'] as $caseItem) {
+                            if (isset($caseItem['photoSets']) && count($caseItem['photoSets']) > 0) {
+                                $photoSet = $caseItem['photoSets'][0];
+                                $imgSrcOptimize = $photoSet['highResPostProcessedImageLocation'] ?? $photoSet['postProcessedImageLocation'] ?? $photoSet['originalBeforeLocation'];
+                                $imgSrc = self::get_optimize_bb_img($imgSrcOptimize, $api_token);
 
-            </div>
-            <div class="bbrag-gallery-item">
-                <img src="https://ccdbughunt1.wpenginepowered.com/wp-content/plugins/wordpress-plugin/assets/images/bbthumbnail.png"
-                    alt="Case Image" class="bbrag-image" />
+                                $imgAlt = $photoSet['seoAltText'] ?? 'Procedure Image';
 
-            </div>
-            <div class="bbrag-gallery-item">
-                <img src="https://ccdbughunt1.wpenginepowered.com/wp-content/plugins/wordpress-plugin/assets/images/bbthumbnail.png"
-                    alt="Case Image" class="bbrag-image" />
+                                $owner_name = $cat_owner == 1 && isset($caseItem['user']) ? '<h2>' . $caseItem['user']['firstName'] . ", " . $caseItem['user']['lastName'] . '</h2>' : '';
+                                $newContent = "
+                                    <div class='bbrag-gallery-item'>
+                                           
+                                                <img class='bbrag-image' src='$imgSrc' alt='$imgAlt'>
+                                                $owner_name
+                                           
+                                        </div>";
 
-            </div>
-            <div class="bbrag-gallery-item">
-                <img src="https://www.bragbook.gallery/assets/gallery/121/brow-lift-before-and-after-vVID30gP9eqF_highres.webp"
-                    alt="Case Image" class="bbrag-image" />
+                                $contentBox .= $newContent;
+                            }
+                        }
 
-            </div>
-            <div class="bbrag-gallery-item">
-                <img src="https://www.bragbook.gallery/assets/gallery/121/neck-lift-before-and-after-O1v31HU82kWy_highres.webp"
-                    alt="Case Image" class="bbrag-image" />
-
-            </div>
-            <div class="bbrag-gallery-item">
-                <img src="https://ccdbughunt1.wpenginepowered.com/wp-content/plugins/wordpress-plugin/assets/images/bbthumbnail.png"
-                    alt="Case Image" class="bbrag-image" />
-            </div>
+                        echo $contentBox;
+                        ?>
+                    </div>
+                </div>
+            </main>
         </div>
         <?php
         return ob_get_clean();

@@ -264,7 +264,7 @@ async function fetchCaseData(loadMoreCount) {
               if (caseSet.data) {
                 let bb_gallery_page_title = pageSlug.split('-').map(w => w[0].toUpperCase() + w.slice(1)).join(' ');
                 let bb_procedure_Title = procedureSlug.split('-').map(w => w[0].toUpperCase() + w.slice(1)).join(' ');
-                const rendered = await renderCaseDataBB(caseSet.data, count, pageSlug, procedureSlug, targetLinkSelector, apiToken, websitePropertyId, data.data.bragbook_favorite, caseSet.user);
+                const rendered = await renderCaseDataBB(caseSet.data, count, pageSlug, procedureSlug, targetLinkSelector, apiToken, websitePropertyId, data.data.bragbook_favorite);
                 contentBox.innerHTML += rendered.casesUI;
                 images = rendered.images;
 
@@ -758,14 +758,14 @@ async function getOptimizedImage(imageUrl, token, quality = 'small', format = 'w
   }
 }
 
-async function renderCaseDataBB(data, count, pageSlug, procedureSlug, targetLinkSelector, apiToken, websitePropertyId, favData, user = null) {
+async function renderCaseDataBB(data, count, pageSlug, procedureSlug, targetLinkSelector, apiToken, websitePropertyId, favData) {
   let caseCount = (count - 1) * 10;
   let bb_procedure_Title = '';
   if (procedureSlug) bb_procedure_Title = procedureSlug.split('-').map(w => w[0].toUpperCase() + w.slice(1)).join(' ');
 
   const images = [];
 
-  const casesUIArray = await Promise.all(data.map(async ({ photoSets, id, caseDetails, details, patientCount, slug }, index) => {
+  const casesUIArray = await Promise.all(data.map(async ({ photoSets, id, caseDetails, details, patientCount, slug, user }, index) => {
     if (!photoSets?.length) return "";
     patientCount = ++caseCount;
 
@@ -1038,9 +1038,19 @@ for (let i = 0; i < accordion.length; i++) {
 }
 
 function displayProcedureTitle(sidebarData, procedureSlug) {
-  const procedureTitle = document.querySelector(`a[href="${window.location.pathname}"]`)?.innerText.replace(/\s*\(\d+\)$/, '');
-  if (document.getElementById("procedure-title")) document.getElementById("procedure-title").innerHTML = `${procedureTitle ? procedureTitle : ""} Before & After Gallery`;
+  const titleElement = document.getElementById("procedure-title");
+  if (!titleElement) return;
+
+  const link = document.querySelector(`a[href="${window.location.pathname}"]`);
+  const baseTitle = link?.childNodes[0]?.textContent.trim().replace(/\s*\(\d+\)$/, '') || '';
+
+  if (isV2) {
+    titleElement.innerHTML = `${baseTitle.toUpperCase()} <span> GALLERY </span>`;
+  } else {
+    titleElement.textContent = `${baseTitle} Before & After Gallery`;
+  }
 }
+
 
 
 function verifyFormData(form) {
